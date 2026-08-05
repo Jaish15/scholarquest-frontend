@@ -3467,36 +3467,41 @@ button, .btn {
 
 .social-auth-row {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 10px;
 }
 
 .social-auth-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 9px 8px;
-  background: rgba(20, 16, 11, 0.8);
-  border: 1px solid rgba(245, 158, 11, 0.2);
-  border-radius: 10px;
-  color: #f5e8d7;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  border-radius: 50% !important;
+  background: rgba(22, 17, 12, 0.9) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  color: #f5e8d7 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
 }
 
 .social-auth-btn:hover {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  background: rgba(245, 158, 11, 0.2) !important;
+  border-color: #f59e0b !important;
+  transform: translateY(-3px) scale(1.08) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.7), 0 0 18px rgba(245, 158, 11, 0.35) !important;
 }
 
-.social-auth-btn svg,
-.social-auth-btn i {
-  flex-shrink: 0;
+.social-auth-btn svg {
+  width: 22px !important;
+  height: 22px !important;
+  flex-shrink: 0 !important;
 }
 
 

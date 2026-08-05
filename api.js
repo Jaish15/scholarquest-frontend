@@ -68,6 +68,11 @@ export const api = {
       return result;
     }
 
+    // If server responded with a HTTP error (e.g. 409 user already exists), return error to user
+    if (result.error && !result.error.toLowerCase().includes('failed to fetch')) {
+      return result;
+    }
+
     // Offline / Fallback mode: Create local scholar session so registration ALWAYS works!
     console.warn('[API] Server offline — creating local scholar session');
     const mockToken = `local_token_${Date.now()}`;
@@ -99,6 +104,7 @@ export const api = {
       }
     };
   },
+
 
   /**
    * Login an existing user (with backend sync & offline fallback)

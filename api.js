@@ -107,10 +107,10 @@ export const api = {
 
 
   /**
-   * Login an existing user (with backend sync & offline fallback)
+   * Login an existing user by Email or Username (with backend sync & offline fallback)
    */
-  async login(email, password) {
-    const result = await request('POST', '/auth/login', { email, password }, false);
+  async login(emailOrUsername, password) {
+    const result = await request('POST', '/auth/login', { email: emailOrUsername, identifier: emailOrUsername, password }, false);
     if (result.ok) {
       auth.setToken(result.data.token);
       auth.setUserId(result.data.user.id);
@@ -121,11 +121,11 @@ export const api = {
     console.warn('[API] Server offline — logging in locally');
     const mockToken = `local_token_${Date.now()}`;
     const mockId = `local_user_1`;
-    const username = email.split('@')[0] || 'Scholar';
+    const username = emailOrUsername.includes('@') ? emailOrUsername.split('@')[0] : emailOrUsername;
     const mockUser = {
       id: mockId,
       username: username.charAt(0).toUpperCase() + username.slice(1),
-      email: email,
+      email: emailOrUsername.includes('@') ? emailOrUsername : `${emailOrUsername}@scholarquest.edu`,
       level: 1,
       xp: 0,
       coins: 150,
@@ -141,7 +141,7 @@ export const api = {
     return {
       ok: true,
       data: {
-        message: `Welcome back, ${mockUser.username}! 🏹`,
+        message: '⚔️ Scholar logged in! Welcome back.',
         token: mockToken,
         user: mockUser
       }

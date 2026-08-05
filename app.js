@@ -456,18 +456,20 @@ const HERO_DISPLAY_DATA = {
   nun:           { name: 'Cleric',         tagline: 'StudySync Reward',     sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniNun.png',       pack: 'villagers2' },
 };
 
-const FRAME_SIZE_JS = { villagers: 48, humans: 64, villagers2: 64 };
+const FRAME_SIZE_JS = { villagers: 48, villagers2: 48, humans: 64 };
 
 function makeSpriteStyle(hero, displayPx) {
-  const frameSize = FRAME_SIZE_JS[hero.pack] || 48;
+  const frameW = FRAME_SIZE_JS[hero.pack] || 48;
+  const scale = displayPx / frameW;
   return `
     width: ${displayPx}px;
     height: ${displayPx}px;
     background-image: url(${hero.sprite});
     background-repeat: no-repeat;
     background-position: 0 0;
-    background-size: ${displayPx * 4}px auto;
+    background-size: ${4 * frameW * scale}px auto;
     image-rendering: pixelated;
+    overflow: hidden;
     flex-shrink: 0;
     display: block;
   `;

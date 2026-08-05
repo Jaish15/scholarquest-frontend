@@ -197,11 +197,6 @@
           <div class="sidebar-avatar-level" id="sidebar-avatar-level">LV <span id="sidebar-level-num">1</span></div>
         </div>
       </div>
-
-      <div class="sidebar-footer">
-        <div class="footer-title">MSc IT - II Year</div>
-        <div class="footer-subtitle">Mini Project 2026</div>
-      </div>
     </aside>
     
     <!-- MAIN WORKSPACE -->
@@ -939,20 +934,25 @@ console.log(greet());
     ];
 
     // Frame size per sprite pack
-    // villagers: 48x48 frames | humans & villagers2: 64x64 frames
-    const FRAME_SIZE = { villagers: 48, humans: 64, villagers2: 64 };
+    // villagers & villagers2: 48x48 frames | humans: 64x64 frames
+    const FRAME_SIZE = { villagers: 48, villagers2: 48, humans: 64 };
 
-    // Returns CSS style object to display one frame of a sprite sheet
-    const spriteStyle = (char, displayPx) => ({
-      width: displayPx + 'px',
-      height: displayPx + 'px',
-      backgroundImage: `url(${char.sprite})`,
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: '0 0',
-      backgroundSize: `${displayPx * 4}px auto`,
-      imageRendering: 'pixelated',
-      flexShrink: 0
-    });
+    // Returns CSS style object to display one single standing frame of a sprite sheet
+    const spriteStyle = (char, displayPx) => {
+      const frameW = FRAME_SIZE[char.pack] || 48;
+      const scale = displayPx / frameW;
+      return {
+        width: displayPx + 'px',
+        height: displayPx + 'px',
+        backgroundImage: `url(${char.sprite})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: '0 0',
+        backgroundSize: `${4 * frameW * scale}px auto`,
+        imageRendering: 'pixelated',
+        overflow: 'hidden',
+        flexShrink: 0
+      };
+    };
 
     // ── 4 BASE HERO CLASSES (always selectable) ──────────────────────────────
     const BASE_HEROES = [

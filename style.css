@@ -3215,142 +3215,229 @@ button, .btn {
 }
 
 /* ============================================================
-   PIXEL-PERFECT DAMMUS GAMING LAUNCHER DASHBOARD
+   PIXEL-PERFECT DAMMUS GAMING LAUNCHER DASHBOARD (STRICT GRID)
    ============================================================ */
 
-.dammus-dashboard-container {
-  display: grid;
-  grid-template-columns: 1fr 340px;
+.dammus-dashboard-layout {
+  display: flex;
+  flex-direction: column;
   gap: 24px;
 }
 
+/* TOP ROW: Hero Showcase (66%) + Stacked Launchers (34%) */
+.dammus-top-row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: stretch;
+}
+
 @media (max-width: 1024px) {
-  .dammus-dashboard-container {
+  .dammus-top-row {
     grid-template-columns: 1fr;
   }
 }
 
-.dammus-left-col {
+.hero-showcase-banner {
+  background: linear-gradient(135deg, rgba(38, 25, 11, 0.95), rgba(20, 14, 8, 0.98)), url('./assets/login_artwork.jpg') right center / cover no-repeat;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 20px;
+  padding: 24px 28px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.hero-showcase-left {
+  display: flex;
+  align-items: center;
   gap: 20px;
 }
 
-.dammus-right-col {
+.hero-showcase-actions {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
-/* Section Headers */
+/* 3 Stacked Launchers */
+.dammus-launchers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+
+.launcher-mini-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(22, 17, 12, 0.85);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.launcher-mini-card:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.5);
+  transform: translateX(4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.launcher-mini-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mini-icon {
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 158, 11, 0.12);
+  border-radius: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.mini-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #f59e0b;
+}
+
+.mini-sub {
+  font-size: 11px;
+  color: rgba(245, 232, 215, 0.55);
+}
+
+.mini-arrow {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(245, 158, 11, 0.5);
+}
+
+/* MAIN BOTTOM ROW: Left Main (66%) + Right Sidebar (34%) */
+.dammus-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .dammus-bottom-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dammus-main-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.dammus-main-right {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Section Header */
 .dammus-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 6px;
   margin-bottom: 12px;
 }
 
 .dammus-section-header h3 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   color: #f59e0b;
   margin: 0;
   letter-spacing: 0.03em;
 }
 
-/* New Modules 2-Card Row */
-.dammus-modules-row {
+/* 2 Square Poster Cards Side by Side */
+.dammus-poster-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 16px;
 }
 
-@media (max-width: 640px) {
-  .dammus-modules-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-.dammus-mod-card {
-  padding: 0;
-  overflow: hidden;
+.dammus-poster-card {
+  height: 150px;
   border-radius: 18px;
-  background: rgba(22, 17, 12, 0.8);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(245, 158, 11, 0.25);
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
 }
 
-.dammus-mod-card:hover {
+.dammus-poster-card.habit-poster {
+  background: linear-gradient(to top, rgba(14, 10, 6, 0.95), rgba(14, 10, 6, 0.2)), url('./assets/login_artwork.jpg') center/cover;
+}
+
+.dammus-poster-card.sync-poster {
+  background: linear-gradient(to top, rgba(10, 14, 26, 0.95), rgba(10, 14, 26, 0.2)), url('./assets/login_artwork.jpg') center/cover;
+}
+
+.dammus-poster-card:hover {
   transform: translateY(-4px);
   border-color: #f59e0b;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 25px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 25px rgba(245, 158, 11, 0.25);
 }
 
-.dammus-mod-artwork {
-  height: 120px;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(38, 25, 11, 0.9)), url('./assets/login_artwork.jpg') center/cover;
-  position: relative;
+.poster-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 16px;
   display: flex;
-  align-items: flex-end;
-  padding: 12px;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.sync-art {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(15, 23, 42, 0.9)), url('./assets/login_artwork.jpg') center/cover;
-}
-
-.mod-play-icon {
+.poster-play-btn {
   width: 34px;
   height: 34px;
   border-radius: 50%;
   background: rgba(10, 8, 5, 0.85);
-  border: 1px solid rgba(245, 158, 11, 0.5);
+  border: 1px solid rgba(245, 158, 11, 0.6);
   color: #f59e0b;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
-.mod-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 9px;
+.poster-info h4 {
+  font-size: 16px;
   font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: rgba(10, 8, 5, 0.8);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #ffffff;
+  margin: 0 0 3px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
-.dammus-mod-content {
-  padding: 14px 16px;
-}
-
-.dammus-mod-content h4 {
-  font-size: 15px;
-  font-weight: 800;
-  color: #f5e8d7;
-  margin: 0 0 4px 0;
-}
-
-.dammus-mod-content p {
+.poster-info p {
   font-size: 11px;
-  color: rgba(245, 232, 215, 0.55);
+  color: rgba(245, 232, 215, 0.75);
   margin: 0;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
 
-/* Horizontal Last Quests Progress Bar */
+/* Horizontal Last Quest Bar */
 .dammus-last-quest-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
+  padding: 14px 18px;
   border-radius: 16px;
   background: rgba(22, 17, 12, 0.85);
   border: 1px solid rgba(245, 158, 11, 0.2);
@@ -3359,13 +3446,13 @@ button, .btn {
 .quest-bar-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .quest-logo-box {
   font-size: 20px;
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   background: rgba(245, 158, 11, 0.12);
   border-radius: 10px;
   border: 1px solid rgba(245, 158, 11, 0.25);
@@ -3375,7 +3462,7 @@ button, .btn {
 }
 
 .quest-bar-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   color: #f5e8d7;
 }
@@ -3383,13 +3470,12 @@ button, .btn {
 .quest-bar-sub {
   font-size: 11px;
   color: rgba(245, 232, 215, 0.5);
-  margin-top: 2px;
 }
 
 .quest-bar-right {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .quest-time-text {
@@ -3399,80 +3485,12 @@ button, .btn {
 }
 
 .mini-play-btn {
-  padding: 8px 14px !important;
+  padding: 6px 12px !important;
   border-radius: 8px !important;
   font-size: 12px !important;
 }
 
-/* Launchers Column */
-.dammus-launchers-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.launcher-mini-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-radius: 14px;
-  background: rgba(22, 17, 12, 0.85);
-  border: 1px solid rgba(245, 158, 11, 0.18);
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.launcher-mini-card:hover {
-  background: rgba(245, 158, 11, 0.12);
-  border-color: rgba(245, 158, 11, 0.4);
-  transform: translateX(4px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-.launcher-mini-left {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.mini-icon {
-  font-size: 20px;
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(245, 158, 11, 0.1);
-  border-radius: 10px;
-  border: 1px solid rgba(245, 158, 11, 0.2);
-}
-
-.mini-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: #f59e0b;
-}
-
-.mini-sub {
-  font-size: 11px;
-  color: rgba(245, 232, 215, 0.55);
-  margin-top: 2px;
-}
-
-.mini-arrow {
-  font-size: 20px;
-  font-weight: 700;
-  color: rgba(245, 158, 11, 0.5);
-  transition: transform 0.2s;
-}
-
-.launcher-mini-card:hover .mini-arrow {
-  color: #f59e0b;
-  transform: translateX(3px);
-}
-
-/* Donut Statistics Card */
+/* Statistics Donut Card */
 .dammus-stats-card {
   padding: 20px;
   border-radius: 20px;
@@ -3484,20 +3502,20 @@ button, .btn {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px 0 16px;
+  padding: 16px 0;
 }
 
 .dammus-ring-wrapper {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 130px;
+  height: 130px;
 }
 
 .dammus-stat-pills-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  padding-top: 16px;
+  gap: 8px;
+  padding-top: 14px;
   border-top: 1px dashed rgba(245, 158, 11, 0.15);
   text-align: center;
 }
@@ -3509,20 +3527,20 @@ button, .btn {
 }
 
 .pill-icon {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  margin-bottom: 6px;
+  font-size: 15px;
+  margin-bottom: 4px;
 }
 
 .pill-count {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: #f59e0b;
 }
@@ -3530,8 +3548,8 @@ button, .btn {
 .pill-label {
   font-size: 10px;
   color: rgba(245, 232, 215, 0.5);
-  margin-top: 2px;
 }
+
 
 
 

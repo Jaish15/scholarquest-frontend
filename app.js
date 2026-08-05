@@ -619,12 +619,19 @@ function initAuth() {
     });
   }
 
-  // Close Modal
+  // Close Modal (Continue as Guest)
   if (btnCloseAuth) {
     btnCloseAuth.addEventListener('click', () => {
       modal.classList.add('hidden');
     });
   }
+
+  // 🚀 Auto-open Login Portal on page load if user is NOT logged in
+  if (!auth.isLoggedIn()) {
+    switchTab('login');
+    modal.classList.remove('hidden');
+  }
+
 
   // Tab button listeners
   if (tabLogin) tabLogin.addEventListener('click', () => switchTab('login'));

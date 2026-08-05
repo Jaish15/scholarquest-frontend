@@ -9,6 +9,8 @@ import { initHabits } from './modules/habits.js';
 import { initStudySync } from './modules/studysync.js';
 import { initCodeScroll } from './modules/codescroll.js';
 import { initShop, updateShopAndInventoryUI } from './modules/shop.js';
+import api, { auth } from './api.js';
+
 
 // Default State Configuration
 const DEFAULT_STATE = {
@@ -46,12 +48,13 @@ const DEFAULT_STATE = {
 export let state = { ...DEFAULT_STATE };
 
 // Initialize Application
-document.addEventListener('DOMContentLoaded', () => {
-  loadState();
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadState();
   window.saveState = saveState;
   window.updateUI = updateUI;
   initNavigation();
   initCore();
+  initAuth();
   
   // Initialize Subsystems
   initAvatar();
@@ -72,35 +75,47 @@ document.addEventListener('DOMContentLoaded', () => {
   generateDailyQuests();
 });
 
-// Load state from localStorage
-function loadState() {
-  const saved = localStorage.getItem('scholarquest_state');
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      // Deep merge state to make sure all structures exist
-      state = {
-        ...DEFAULT_STATE,
-        ...parsed,
-        stats: { ...DEFAULT_STATE.stats, ...parsed.stats },
-        avatar: { ...DEFAULT_STATE.avatar, ...parsed.avatar },
-        equipped: { ...DEFAULT_STATE.equipped, ...parsed.equipped },
-        inventory: parsed.inventory || DEFAULT_STATE.inventory,
-        habits: parsed.habits || DEFAULT_STATE.habits
-      };
-    } catch (e) {
-      console.error('Failed to parse save state, loading default.', e);
-      state = { ...DEFAULT_STATE };
+// Load state (from backend API if logged in, with localStorage fallback)
+async function loadState() {
+  let loadedState = null;
+  if (auth.isLoggedIn()) {
+    loadedState = await api.loadState();
+  }
+
+  if (!loadedState) {
+    const saved = localStorage.getItem('scholarquest_state');
+    if (saved) {
+      try {
+        loadedState = JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse save state, loading default.', e);
+      }
     }
+  }
+
+  if (loadedState) {
+    state = {
+      ...DEFAULT_STATE,
+      ...loadedState,
+      stats: { ...DEFAULT_STATE.stats, ...loadedState.stats },
+      avatar: { ...DEFAULT_STATE.avatar, ...loadedState.avatar },
+      equipped: { ...DEFAULT_STATE.equipped, ...loadedState.equipped },
+      inventory: loadedState.inventory || DEFAULT_STATE.inventory,
+      habits: loadedState.habits || DEFAULT_STATE.habits
+    };
   } else {
     state = { ...DEFAULT_STATE };
   }
 }
 
-// Save state to localStorage
+// Save state (saves locally and syncs to backend if logged in)
 export function saveState() {
   localStorage.setItem('scholarquest_state', JSON.stringify(state));
+  if (auth.isLoggedIn()) {
+    api.saveState(state);
+  }
 }
+
 
 // Navigation Logic (Tab switching)
 function initNavigation() {
@@ -279,9 +294,17 @@ function generateDailyQuests() {
 
 // Global UI Updater
 export function updateUI() {
+  // Update greeting
+  const greetingEl = document.getElementById('greeting');
+  if (greetingEl) {
+    const name = state.username || localStorage.getItem('sq_username') || 'Scholar';
+    greetingEl.innerText = `Welcome, ${name}!`;
+  }
+
   // Update header indicators
   document.getElementById('coin-count').innerText = state.coins;
   document.getElementById('level-badge').innerText = `LV ${state.level}`;
+
   
   // Update XP Fill
   const xpNeeded = getXPForNextLevel(state.level);
@@ -428,3 +451,313 @@ function syncAvatarDisplay() {
 
 // Export so it can be called externally
 window.syncAvatarDisplay = syncAvatarDisplay;
+
+/* ============================================================
+   AUTHENTICATION MODULE CONTROLLER
+   ============================================================ */
+function initAuth() {
+  const modal = document.getElementById('auth-modal');
+  const btnOpenAuth = document.getElementById('btn-open-auth');
+  const btnCloseAuth = document.getElementById('btn-close-auth');
+  const authBtnLabel = document.getElementById('auth-btn-label');
+  const alertEl = document.getElementById('auth-alert');
+
+  // Tabs
+  const tabLogin = document.getElementById('tab-auth-login');
+  const tabRegister = document.getElementById('tab-auth-register');
+  const tabForgot = document.getElementById('tab-auth-forgot');
+
+  // Forms & Containers
+  const formLogin = document.getElementById('form-auth-login');
+  const formRegister = document.getElementById('form-auth-register');
+  const containerForgot = document.getElementById('auth-forgot-container');
+  const containerProfile = document.getElementById('auth-profile-container');
+
+  // Forgot password forms & step elements
+  const formForgot1 = document.getElementById('form-auth-forgot-step1');
+  const formForgot2 = document.getElementById('form-auth-forgot-step2');
+  const demoCodeBox = document.getElementById('demo-code-box');
+  const demoCodeVal = document.getElementById('demo-code-val');
+
+  // Links
+  const btnGotoForgot = document.getElementById('btn-goto-forgot');
+  const btnGotoLogin = document.getElementById('btn-goto-login');
+  const btnLogout = document.getElementById('btn-submit-logout');
+  const btnSyncState = document.getElementById('btn-sync-state');
+
+  // Helper: Show Alert
+  function showAlert(msg, type = 'error') {
+    if (!alertEl) return;
+    alertEl.className = `auth-alert ${type}`;
+    alertEl.innerText = msg;
+    alertEl.classList.remove('hidden');
+  }
+
+  function hideAlert() {
+    if (!alertEl) return;
+    alertEl.classList.add('hidden');
+    alertEl.innerText = '';
+  }
+
+  // Update Auth Header Pill
+  function updateAuthHeaderBtn() {
+    if (!btnOpenAuth || !authBtnLabel) return;
+    if (auth.isLoggedIn()) {
+      const username = state.username || localStorage.getItem('sq_username') || 'Scholar';
+      authBtnLabel.innerText = username;
+      btnOpenAuth.classList.add('logged-in');
+    } else {
+      authBtnLabel.innerText = 'Login';
+      btnOpenAuth.classList.remove('logged-in');
+    }
+  }
+  updateAuthHeaderBtn();
+  window.updateAuthHeaderBtn = updateAuthHeaderBtn;
+
+  // Switch Tab View
+  function switchTab(targetTab) {
+    hideAlert();
+    [tabLogin, tabRegister, tabForgot].forEach(tab => tab && tab.classList.remove('active'));
+
+    formLogin.classList.add('hidden');
+    formRegister.classList.add('hidden');
+    containerForgot.classList.add('hidden');
+    containerProfile.classList.add('hidden');
+
+    if (targetTab === 'login') {
+      tabLogin.classList.add('active');
+      formLogin.classList.remove('hidden');
+    } else if (targetTab === 'register') {
+      tabRegister.classList.add('active');
+      formRegister.classList.remove('hidden');
+    } else if (targetTab === 'forgot') {
+      tabForgot.classList.add('active');
+      containerForgot.classList.remove('hidden');
+      formForgot1.classList.remove('hidden');
+      formForgot2.classList.add('hidden');
+      demoCodeBox.classList.add('hidden');
+    } else if (targetTab === 'profile') {
+      containerProfile.classList.remove('hidden');
+      document.querySelector('.auth-tabs').style.display = 'none';
+
+      // Fill profile details
+      document.getElementById('profile-username').innerText = state.username || 'Scholar';
+      document.getElementById('profile-email').innerText = state.email || 'scholar@mscit.edu';
+      document.getElementById('profile-level-badge').innerText = `LV ${state.level}`;
+      document.getElementById('profile-coins-badge').innerText = `🪙 ${state.coins}`;
+
+      // Render profile sprite
+      const avatarId = state.avatar ? state.avatar.id || 'peasant' : 'peasant';
+      const hero = HERO_DISPLAY_DATA[avatarId] || HERO_DISPLAY_DATA['peasant'];
+      const profileSprite = document.getElementById('profile-avatar-sprite');
+      if (profileSprite) {
+        profileSprite.style.cssText = makeSpriteStyle(hero, 48);
+      }
+      return;
+    }
+    document.querySelector('.auth-tabs').style.display = 'flex';
+  }
+
+  // Open Modal
+  if (btnOpenAuth) {
+    btnOpenAuth.addEventListener('click', () => {
+      if (auth.isLoggedIn()) {
+        switchTab('profile');
+      } else {
+        switchTab('login');
+      }
+      modal.classList.remove('hidden');
+    });
+  }
+
+  // Close Modal
+  if (btnCloseAuth) {
+    btnCloseAuth.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+  }
+
+  // Tab button listeners
+  if (tabLogin) tabLogin.addEventListener('click', () => switchTab('login'));
+  if (tabRegister) tabRegister.addEventListener('click', () => switchTab('register'));
+  if (tabForgot) tabForgot.addEventListener('click', () => switchTab('forgot'));
+
+  if (btnGotoForgot) btnGotoForgot.addEventListener('click', () => switchTab('forgot'));
+  if (btnGotoLogin) btnGotoLogin.addEventListener('click', () => switchTab('login'));
+
+  // ── FORM 1: LOGIN ─────────────────────────────────────────────
+  if (formLogin) {
+    formLogin.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      const btnSubmit = document.getElementById('btn-submit-login');
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = 'Authenticating... ⚔️';
+
+      const res = await api.login(email, password);
+
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<span>Enter Realm ⚔️</span>';
+
+      if (res.ok) {
+        showAlert(res.data.message || 'Welcome back, Scholar!', 'success');
+        if (res.data.user) {
+          state.username = res.data.user.username;
+          state.email = res.data.user.email;
+          localStorage.setItem('sq_username', res.data.user.username);
+          
+          // Deep merge server user data
+          state = { ...state, ...res.data.user };
+        }
+        updateUI();
+        updateAuthHeaderBtn();
+
+        setTimeout(() => {
+          modal.classList.add('hidden');
+          hideAlert();
+        }, 800);
+      } else {
+        showAlert(res.error || 'Login failed. Please check credentials.');
+      }
+    });
+  }
+
+  // ── FORM 2: REGISTER ──────────────────────────────────────────
+  if (formRegister) {
+    formRegister.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const username = document.getElementById('reg-username').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+
+      const btnSubmit = document.getElementById('btn-submit-register');
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = 'Creating Account... 🚀';
+
+      const res = await api.register(username, email, password);
+
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<span>Join the Quest 🚀</span>';
+
+      if (res.ok) {
+        showAlert(res.data.message || 'Scholar registered!', 'success');
+        if (res.data.user) {
+          state.username = res.data.user.username;
+          state.email = res.data.user.email;
+          localStorage.setItem('sq_username', res.data.user.username);
+          state = { ...state, ...res.data.user };
+        }
+        updateUI();
+        updateAuthHeaderBtn();
+
+        setTimeout(() => {
+          modal.classList.add('hidden');
+          hideAlert();
+        }, 800);
+      } else {
+        showAlert(res.error || 'Registration failed.');
+      }
+    });
+  }
+
+  // ── FORM 3: FORGOT PASSWORD STEP 1 ────────────────────────────
+  if (formForgot1) {
+    formForgot1.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const email = document.getElementById('forgot-email').value.trim();
+      const btnSubmit = document.getElementById('btn-submit-forgot1');
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = 'Sending Code... ✉️';
+
+      const res = await api.forgotPassword(email);
+
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<span>Send Recovery Code ✉️</span>';
+
+      if (res.ok) {
+        showAlert('Recovery code dispatched! Check your code below.', 'success');
+
+        // Show code box for demo
+        if (res.data.resetCode) {
+          demoCodeVal.innerText = res.data.resetCode;
+          demoCodeBox.classList.remove('hidden');
+          document.getElementById('reset-code').value = res.data.resetCode;
+        }
+
+        // Show Step 2
+        formForgot1.classList.add('hidden');
+        formForgot2.classList.remove('hidden');
+      } else {
+        showAlert(res.error || 'Failed to dispatch recovery code.');
+      }
+    });
+  }
+
+  // ── FORM 3: FORGOT PASSWORD STEP 2 ────────────────────────────
+  if (formForgot2) {
+    formForgot2.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const email = document.getElementById('forgot-email').value.trim();
+      const resetCode = document.getElementById('reset-code').value.trim();
+      const newPassword = document.getElementById('reset-new-password').value;
+
+      const btnSubmit = document.getElementById('btn-submit-forgot2');
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = 'Updating Password... 🔑';
+
+      const res = await api.resetPassword(email, resetCode, newPassword);
+
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<span>Update Password 🔑</span>';
+
+      if (res.ok) {
+        showAlert(res.data.message || 'Password reset successfully!', 'success');
+        document.getElementById('login-email').value = email;
+
+        setTimeout(() => {
+          switchTab('login');
+          showAlert('Password updated! Please log in with your new password.', 'success');
+        }, 1200);
+      } else {
+        showAlert(res.error || 'Password reset failed.');
+      }
+    });
+  }
+
+  // ── LOGOUT & SYNC ─────────────────────────────────────────────
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      api.logout();
+      state.username = 'Scholar';
+      delete state.email;
+      updateAuthHeaderBtn();
+      updateUI();
+      switchTab('login');
+      showAlert('Logged out successfully.', 'success');
+    });
+  }
+
+  if (btnSyncState) {
+    btnSyncState.addEventListener('click', async () => {
+      btnSyncState.disabled = true;
+      btnSyncState.innerText = 'Syncing...';
+      await api.saveState(state);
+      btnSyncState.disabled = false;
+      btnSyncState.innerHTML = '<i data-lucide="refresh-cw"></i> Sync Progress with Server';
+      showAlert('Progress synced with backend server!', 'success');
+      if (window.lucide) window.lucide.createIcons();
+    });
+  }
+}
+

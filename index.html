@@ -107,6 +107,12 @@
             <i data-lucide="coins" class="text-gold animate-bounce"></i>
             <span id="coin-count">150</span>
           </div>
+
+          <!-- Auth Control Button -->
+          <button class="btn auth-header-btn" id="btn-open-auth" title="Account Portal">
+            <i data-lucide="user"></i>
+            <span id="auth-btn-label">Login</span>
+          </button>
         </div>
       </header>
       
@@ -962,5 +968,137 @@ console.log(greet());
 
     if (window.state) window.onStateUpdate(window.state);
   </script>
+
+  <!-- ==================== AUTHENTICATION PORTAL MODAL ==================== -->
+  <div id="auth-modal" class="auth-modal-backdrop hidden">
+    <div class="auth-card glass glow-gold">
+      
+      <!-- Close button / Guest mode -->
+      <button class="auth-close-btn" id="btn-close-auth" title="Close / Continue as Guest">
+        <i data-lucide="x"></i>
+      </button>
+
+      <!-- Modal Header -->
+      <div class="auth-header">
+        <div class="auth-emblem">⚔️</div>
+        <h2 id="auth-title">Scholar Quest Portal</h2>
+        <p id="auth-subtitle" class="text-sub">Authenticate to sync progress & unlock global leaderboards</p>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-auth-login" data-tab="login">Login</button>
+        <button class="auth-tab" id="tab-auth-register" data-tab="register">Register</button>
+        <button class="auth-tab" id="tab-auth-forgot" data-tab="forgot">Forgot Password</button>
+      </div>
+
+      <!-- Error / Success Alert Banner -->
+      <div id="auth-alert" class="auth-alert hidden"></div>
+
+      <!-- FORM 1: LOGIN -->
+      <form id="form-auth-login" class="auth-form">
+        <div class="form-group">
+          <label for="login-email"><i data-lucide="mail"></i> Email Address</label>
+          <input type="email" id="login-email" required placeholder="scholar@mscit.edu" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="login-password"><i data-lucide="key-round"></i> Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="auth-form-footer-link">
+          <button type="button" class="btn-link" id="btn-goto-forgot">Forgot your password?</button>
+        </div>
+        <button type="submit" class="btn primary-btn auth-submit-btn" id="btn-submit-login">
+          <span>Enter Realm ⚔️</span>
+        </button>
+      </form>
+
+      <!-- FORM 2: REGISTER -->
+      <form id="form-auth-register" class="auth-form hidden">
+        <div class="form-group">
+          <label for="reg-username"><i data-lucide="user"></i> Scholar Name (Username)</label>
+          <input type="text" id="reg-username" required placeholder="KnightCoder" minlength="3">
+        </div>
+        <div class="form-group">
+          <label for="reg-email"><i data-lucide="mail"></i> Email Address</label>
+          <input type="email" id="reg-email" required placeholder="scholar@mscit.edu">
+        </div>
+        <div class="form-group">
+          <label for="reg-password"><i data-lucide="lock"></i> Password</label>
+          <input type="password" id="reg-password" required placeholder="At least 4 characters" minlength="4">
+        </div>
+        <button type="submit" class="btn primary-btn auth-submit-btn" id="btn-submit-register">
+          <span>Join the Quest 🚀</span>
+        </button>
+      </form>
+
+      <!-- FORM 3: FORGOT PASSWORD (2-Step) -->
+      <div id="auth-forgot-container" class="auth-form hidden">
+        
+        <!-- Step 1: Request Code -->
+        <form id="form-auth-forgot-step1">
+          <p class="auth-step-desc">Enter your account email to dispatch a 6-digit recovery code.</p>
+          <div class="form-group">
+            <label for="forgot-email"><i data-lucide="mail"></i> Registered Email</label>
+            <input type="email" id="forgot-email" required placeholder="scholar@mscit.edu">
+          </div>
+          <button type="submit" class="btn primary-btn auth-submit-btn" id="btn-submit-forgot1">
+            <span>Send Recovery Code ✉️</span>
+          </button>
+        </form>
+
+        <!-- Demo Code Display Box (Shown when code generated) -->
+        <div id="demo-code-box" class="demo-code-box hidden">
+          <div class="demo-code-title">🔑 DEMO RECOVERY CODE</div>
+          <div class="demo-code-val" id="demo-code-val">------</div>
+          <p class="demo-code-sub">Code pre-filled below for instant testing!</p>
+        </div>
+
+        <!-- Step 2: Reset Password -->
+        <form id="form-auth-forgot-step2" class="hidden" style="margin-top: 15px;">
+          <div class="form-group">
+            <label for="reset-code"><i data-lucide="shield-alert"></i> 6-Digit Recovery Code</label>
+            <input type="text" id="reset-code" required placeholder="123456" maxlength="6">
+          </div>
+          <div class="form-group">
+            <label for="reset-new-password"><i data-lucide="key"></i> New Password</label>
+            <input type="password" id="reset-new-password" required placeholder="Enter new password" minlength="4">
+          </div>
+          <button type="submit" class="btn primary-btn auth-submit-btn" id="btn-submit-forgot2">
+            <span>Update Password 🔑</span>
+          </button>
+        </form>
+
+        <div class="auth-form-footer-link" style="text-align: center; margin-top: 12px;">
+          <button type="button" class="btn-link" id="btn-goto-login">← Back to Login</button>
+        </div>
+      </div>
+
+      <!-- LOGGED IN USER PROFILE VIEW (When open while logged in) -->
+      <div id="auth-profile-container" class="auth-form hidden">
+        <div class="user-profile-banner">
+          <div class="user-profile-avatar" id="profile-avatar-sprite"></div>
+          <div class="user-profile-info">
+            <h3 id="profile-username">Scholar</h3>
+            <p id="profile-email" class="text-sub">scholar@mscit.edu</p>
+            <div class="profile-badges">
+              <span class="badge" id="profile-level-badge">LV 1</span>
+              <span class="badge coin-badge" id="profile-coins-badge">🪙 150</span>
+            </div>
+          </div>
+        </div>
+        <div class="profile-actions">
+          <button type="button" class="btn secondary-btn" id="btn-sync-state" style="width: 100%; margin-bottom: 8px;">
+            <i data-lucide="refresh-cw"></i> Sync Progress with Server
+          </button>
+          <button type="button" class="btn danger-btn" id="btn-submit-logout" style="width: 100%;">
+            <i data-lucide="log-out"></i> Logout
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </body>
 </html>
+

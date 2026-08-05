@@ -80,11 +80,22 @@ export const api = {
     return result;
   },
 
+  /** Request password reset OTP code */
+  async forgotPassword(email) {
+    return await request('POST', '/auth/forgot-password', { email }, false);
+  },
+
+  /** Reset password with code */
+  async resetPassword(email, resetCode, newPassword) {
+    return await request('POST', '/auth/reset-password', { email, resetCode, newPassword }, false);
+  },
+
   /** Logout — clear token & user ID */
   logout() {
     auth.clearToken();
     console.log('[API] Logged out.');
   },
+
 
   // ── User State ──────────────────────────────────────────────
 

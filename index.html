@@ -252,12 +252,12 @@
         
         <!-- ==================== DASHBOARD VIEW ==================== -->
         <section id="view-dashboard" class="content-view active">
-          <div class="dammus-dashboard-layout">
+          <div class="dammus-wrapper">
             
-            <!-- TOP ROW: HERO BANNER (LEFT 66%) + STACKED LAUNCHERS (RIGHT 34%) -->
-            <div class="dammus-top-row">
+            <!-- LEFT MAIN COLUMN (65% width) -->
+            <div class="dammus-column-left">
               
-              <!-- HERO SHOWCASE CARD (Popular / Active Hero Banner) -->
+              <!-- 1. POPULAR HERO SHOWCASE BANNER -->
               <div class="hero-showcase-banner" id="hero-showcase-banner">
                 <div class="hero-showcase-left">
                   <div class="hero-showcase-sprite-area">
@@ -265,7 +265,7 @@
                     <div class="hero-showcase-level-badge">LV <span id="showcase-level">1</span></div>
                   </div>
                   <div class="hero-showcase-info">
-                    <div class="hero-showcase-subtitle">⚔️ POPULAR HERO CLASS</div>
+                    <div class="hero-showcase-subtitle">🔥 POPULAR REALM HERO</div>
                     <div class="hero-showcase-name" id="showcase-name">The Scholar</div>
                     <div class="hero-showcase-tagline" id="showcase-tagline">Diligent & Focused • MSc IT 2026</div>
                     <div class="hero-showcase-stats">
@@ -276,7 +276,7 @@
                   </div>
                 </div>
 
-                <!-- Quick Action Buttons inside Banner -->
+                <!-- Action Buttons inside Banner -->
                 <div class="hero-showcase-actions">
                   <button class="hero-action-btn primary-action" data-nav="quizforge">
                     <i data-lucide="swords"></i>
@@ -289,14 +289,80 @@
                 </div>
               </div>
 
-              <!-- TOP RIGHT STACKED LAUNCHERS (3 Horizontal Pills) -->
+              <!-- 2. NEW MODULES SECTION (2 Square Visual Poster Cards) -->
+              <div class="dammus-section-header">
+                <h3>New Modules</h3>
+                <span class="text-sub">See More ›</span>
+              </div>
+              
+              <div class="dammus-poster-grid">
+                <!-- Poster Card 1: HabitDojo -->
+                <div class="glass card dammus-poster-card habit-poster" data-nav="habitdojo">
+                  <div class="poster-badge-row">
+                    <span class="poster-play-btn">▶</span>
+                    <span class="poster-lock-icon">🔒</span>
+                  </div>
+                  <div class="poster-info">
+                    <h4>HABIT DOJO</h4>
+                    <p>Daily streak multipliers & habit tracking</p>
+                  </div>
+                </div>
+
+                <!-- Poster Card 2: StudySync -->
+                <div class="glass card dammus-poster-card sync-poster" data-nav="studysync">
+                  <div class="poster-badge-row">
+                    <span class="poster-play-btn">🌐</span>
+                    <span class="poster-tag">LIVE</span>
+                  </div>
+                  <div class="poster-info">
+                    <h4>STUDY SYNC</h4>
+                    <p>Virtual study rooms & real-time scholar chat</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. LAST DOWNLOADS / ACTIVE QUESTS BAR -->
+              <div class="dammus-section-header">
+                <h3>Active Quests & Quizzes</h3>
+                <span class="text-sub">See More ›</span>
+              </div>
+              
+              <div class="glass dammus-last-quest-bar">
+                <div class="quest-bar-left">
+                  <div class="quest-logo-box">⚔️</div>
+                  <div>
+                    <div class="quest-bar-title">DSA & Algorithm QuizForge</div>
+                    <div class="quest-bar-sub">Computer Science & Data Structures</div>
+                  </div>
+                </div>
+                <div class="quest-bar-right">
+                  <span class="quest-time-text">1 hour 30 min.</span>
+                  <button class="btn primary-btn mini-play-btn" data-nav="quizforge">▶</button>
+                </div>
+              </div>
+
+              <!-- Collapsible Hero Class Selector Drawer -->
+              <details class="dammus-hero-drawer glass">
+                <summary class="hero-drawer-summary">
+                  <span>🧙‍♂️ Choose & Swap Hero Avatar Class</span>
+                  <span class="drawer-arrow">▼</span>
+                </summary>
+                <div id="avatar-selector-root" class="drawer-content"></div>
+              </details>
+
+            </div>
+
+            <!-- RIGHT SIDEBAR COLUMN (35% width) -->
+            <div class="dammus-column-right">
+              
+              <!-- 1. TOP 3 STACKED LAUNCHER PILLS -->
               <div class="dammus-launchers-list">
                 <div class="glass launcher-mini-card" data-nav="quizforge">
                   <div class="launcher-mini-left">
                     <span class="mini-icon">⚔️</span>
                     <div>
                       <div class="mini-title">QuizForge</div>
-                      <div class="mini-sub"><span id="dash-quick-quizzes">5</span> Battles Ready</div>
+                      <div class="mini-sub"><span id="dash-quick-quizzes">5</span> Battles</div>
                     </div>
                   </div>
                   <span class="mini-arrow">›</span>
@@ -325,128 +391,61 @@
                 </div>
               </div>
 
-            </div>
-
-            <!-- MAIN BOTTOM ROW: LEFT CONTENT (66%) + RIGHT STATISTICS (34%) -->
-            <div class="dammus-bottom-row">
-              
-              <!-- LEFT MAIN COLUMN -->
-              <div class="dammus-main-left">
-                
-                <!-- NEW MODULES SECTION (2 Square Poster Cards) -->
-                <div class="dammus-section-header">
-                  <h3>New Modules</h3>
-                  <span class="text-sub">See More ›</span>
+              <!-- 2. STATISTICS CARD WITH LARGE DONUT GAUGE -->
+              <div class="glass card dammus-stats-card">
+                <div class="card-header">
+                  <h2>Statistics</h2>
+                  <span class="text-sub">→</span>
                 </div>
-                
-                <div class="dammus-poster-grid">
-                  <!-- Poster 1: HabitDojo -->
-                  <div class="glass card dammus-poster-card habit-poster" data-nav="habitdojo">
-                    <div class="poster-overlay">
-                      <span class="poster-play-btn">▶</span>
-                      <div class="poster-info">
-                        <h4>HabitDojo</h4>
-                        <p>Daily streak multipliers & habit tracking</p>
-                      </div>
-                    </div>
-                  </div>
 
-                  <!-- Poster 2: StudySync -->
-                  <div class="glass card dammus-poster-card sync-poster" data-nav="studysync">
-                    <div class="poster-overlay">
-                      <span class="poster-play-btn">🌐</span>
-                      <div class="poster-info">
-                        <h4>StudySync</h4>
-                        <p>Virtual study rooms & scholar chat</p>
-                      </div>
+                <div class="dammus-donut-box">
+                  <div class="dammus-ring-wrapper">
+                    <svg class="ring-svg" viewBox="0 0 100 100">
+                      <circle class="ring-bg" cx="50" cy="50" r="38" />
+                      <circle class="ring-progress" id="dash-xp-ring" cx="50" cy="50" r="38" />
+                    </svg>
+                    <div class="ring-center-info">
+                      <span class="ring-val" id="dash-ring-level">LV 1</span>
+                      <span class="ring-sub" id="dash-ring-xp">0/100 XP</span>
                     </div>
                   </div>
                 </div>
 
-                <!-- LAST QUESTS BAR (Horizontal Bottom Bar) -->
-                <div class="dammus-section-header" style="margin-top: 20px;">
-                  <h3>Active Quests & Quizzes</h3>
-                  <span class="text-sub">See More ›</span>
-                </div>
-                
-                <div class="glass dammus-last-quest-bar">
-                  <div class="quest-bar-left">
-                    <span class="quest-logo-box">⚔️</span>
-                    <div>
-                      <div class="quest-bar-title">DSA & Algorithm QuizForge</div>
-                      <div class="quest-bar-sub">Computer Science & Data Structures</div>
-                    </div>
+                <!-- 3 Circular Stat Pills at Bottom -->
+                <div class="dammus-stat-pills-row">
+                  <div class="dammus-stat-pill">
+                    <div class="pill-icon">⚔️</div>
+                    <div class="pill-count" id="stat-quizzes-completed">0</div>
+                    <div class="pill-label">Quizzes</div>
                   </div>
-                  <div class="quest-bar-right">
-                    <span class="quest-time-text">25 min • +50 XP</span>
-                    <button class="btn primary-btn mini-play-btn" data-nav="quizforge">▶</button>
+                  <div class="dammus-stat-pill">
+                    <div class="pill-icon">⏱️</div>
+                    <div class="pill-count" id="stat-focus-time">0m</div>
+                    <div class="pill-label">Focus</div>
+                  </div>
+                  <div class="dammus-stat-pill">
+                    <div class="pill-icon">🔥</div>
+                    <div class="pill-count" id="stat-habits-streak">0</div>
+                    <div class="pill-label">Streak</div>
                   </div>
                 </div>
-
-                <!-- AVATAR HERO SELECTOR (React Mount) -->
-                <div id="avatar-selector-root" class="my-4"></div>
-
               </div>
 
-              <!-- RIGHT SIDEBAR COLUMN (STATISTICS & QUESTS) -->
-              <div class="dammus-main-right">
-                
-                <!-- STATISTICS CARD WITH DONUT GAUGE -->
-                <div class="glass card dammus-stats-card">
-                  <div class="card-header">
-                    <h2>Statistics</h2>
-                    <span class="text-sub">→</span>
-                  </div>
-
-                  <div class="dammus-donut-box">
-                    <div class="dammus-ring-wrapper">
-                      <svg class="ring-svg" viewBox="0 0 100 100">
-                        <circle class="ring-bg" cx="50" cy="50" r="38" />
-                        <circle class="ring-progress" id="dash-xp-ring" cx="50" cy="50" r="38" />
-                      </svg>
-                      <div class="ring-center-info">
-                        <span class="ring-val" id="dash-ring-level">LV 1</span>
-                        <span class="ring-sub" id="dash-ring-xp">0/100 XP</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 3 Circular Stat Icons Pills at Bottom -->
-                  <div class="dammus-stat-pills-row">
-                    <div class="dammus-stat-pill">
-                      <div class="pill-icon">⚔️</div>
-                      <div class="pill-count" id="stat-quizzes-completed">0</div>
-                      <div class="pill-label">Quizzes</div>
-                    </div>
-                    <div class="dammus-stat-pill">
-                      <div class="pill-icon">⏱️</div>
-                      <div class="pill-count" id="stat-focus-time">0m</div>
-                      <div class="pill-label">Focus</div>
-                    </div>
-                    <div class="dammus-stat-pill">
-                      <div class="pill-icon">🔥</div>
-                      <div class="pill-count" id="stat-habits-streak">0</div>
-                      <div class="pill-label">Streak</div>
-                    </div>
-                  </div>
+              <!-- 3. DAILY QUESTS CARD -->
+              <div class="glass card quests-card" style="margin-top: 16px;">
+                <div class="card-header">
+                  <h2><i data-lucide="target" class="text-gold"></i> Daily Quests</h2>
                 </div>
-
-                <!-- DAILY QUESTS CARD -->
-                <div class="glass card quests-card" style="margin-top: 18px;">
-                  <div class="card-header">
-                    <h2><i data-lucide="target" class="text-gold"></i> Daily Quests</h2>
-                  </div>
-                  <div class="quests-list" id="dashboard-quests">
-                    <!-- Injected dynamically -->
-                  </div>
+                <div class="quests-list" id="dashboard-quests">
+                  <!-- Injected dynamically -->
                 </div>
-
               </div>
 
             </div>
 
           </div>
         </section>
+
 
 
         

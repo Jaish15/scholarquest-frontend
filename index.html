@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScholarQuest | Level Up Your Learning</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-gold dark-mode">
+  
+  <div class="app-container">
+    
+    <!-- LEFT SIDEBAR: Navigation -->
+    <aside class="sidebar">
+      <div class="logo-area">
+        <span class="logo-icon">⚔️</span>
+        <span class="logo-text">ScholarQuest</span>
+      </div>
+      
+      <nav class="nav-menu">
+        <button class="nav-item active" data-target="dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-target="quizforge">
+          <i data-lucide="swords"></i>
+          <span>QuizForge</span>
+        </button>
+        <button class="nav-item" data-target="focusarena">
+          <i data-lucide="hourglass"></i>
+          <span>Focus Arena</span>
+        </button>
+        <button class="nav-item" data-target="habitdojo">
+          <i data-lucide="shield-check"></i>
+          <span>HabitDojo</span>
+        </button>
+        <button class="nav-item" data-target="studysync">
+          <i data-lucide="users"></i>
+          <span>StudySync</span>
+        </button>
+        <button class="nav-item" data-target="codescroll">
+          <i data-lucide="terminal"></i>
+          <span>CodeScroll</span>
+        </button>
+        <button class="nav-item" data-target="shop">
+          <i data-lucide="shopping-cart"></i>
+          <span>Shop & Inv</span>
+        </button>
+      </nav>
+      
+      <!-- Character Avatar Widget in sidebar -->
+      <div class="sidebar-avatar-widget" id="sidebar-avatar-widget">
+        <div class="sidebar-avatar-sprite" id="sidebar-avatar-sprite"></div>
+        <div class="sidebar-avatar-info">
+          <div class="sidebar-avatar-name" id="sidebar-avatar-name">Scholar</div>
+          <div class="sidebar-avatar-level" id="sidebar-avatar-level">LV <span id="sidebar-level-num">1</span></div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="footer-title">MSc IT - II Year</div>
+        <div class="footer-subtitle">Mini Project 2026</div>
+      </div>
+    </aside>
+    
+    <!-- MAIN WORKSPACE -->
+    <main class="main-workspace">
+      
+      <!-- TOP STATUS BAR: User Level, XP, Coins, HP -->
+      <header class="top-bar glass">
+        <div class="welcome-text">
+          <h1 id="greeting">Welcome, Scholar!</h1>
+          <p id="sub-greeting">Your quest awaits. Ready to earn some XP?</p>
+        </div>
+        
+        <div class="stats-panel">
+          <!-- HP Bar -->
+          <div class="stat-group tooltip" data-tooltip="Health Points: Lose streak to lose HP. Reset at 0.">
+            <span class="stat-label"><i data-lucide="heart" class="text-red"></i></span>
+            <div class="progress-bar-container hp-container">
+              <div id="hp-fill" class="progress-fill hp-fill" style="width: 100%;"></div>
+              <span id="hp-text" class="progress-text">100/100 HP</span>
+            </div>
+          </div>
+          
+          <!-- XP Bar & Level -->
+          <div class="stat-group tooltip" data-tooltip="Experience Points: Complete quests to level up!">
+            <span class="stat-label font-bold" id="level-badge">LV 1</span>
+            <div class="progress-bar-container xp-container">
+              <div id="xp-fill" class="progress-fill xp-fill" style="width: 0%;"></div>
+              <span id="xp-text" class="progress-text">0/100 XP</span>
+            </div>
+          </div>
+          
+          <!-- Gold Coins -->
+          <div class="coin-display tooltip" data-tooltip="Coins: Earned with XP. Spend in Shop.">
+            <i data-lucide="coins" class="text-gold animate-bounce"></i>
+            <span id="coin-count">150</span>
+          </div>
+        </div>
+      </header>
+      
+      <!-- CENTRAL CONTENT AREA -->
+      <div class="content-body">
+        
+        <!-- ==================== DASHBOARD VIEW ==================== -->
+        <section id="view-dashboard" class="content-view active">
+          
+          <!-- PROMINENT HERO SHOWCASE (top of dashboard) -->
+          <div class="hero-showcase-banner" id="hero-showcase-banner">
+            <div class="hero-showcase-sprite-area">
+              <div class="hero-showcase-sprite" id="showcase-sprite"></div>
+              <div class="hero-showcase-level-badge">LV <span id="showcase-level">1</span></div>
+            </div>
+            <div class="hero-showcase-info">
+              <div class="hero-showcase-subtitle">YOUR ACTIVE HERO</div>
+              <div class="hero-showcase-name" id="showcase-name">The Scholar</div>
+              <div class="hero-showcase-tagline" id="showcase-tagline">Diligent & Focused</div>
+              <div class="hero-showcase-stats">
+                <span>⭐ <span id="showcase-stat-level">1</span></span>
+                <span>🪙 <span id="showcase-stat-gold">0</span></span>
+                <span>🧱 <span id="showcase-stat-streak">0</span></span>
+                <span>🍯 <span id="showcase-stat-focus">0</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            
+            <!-- LEFT: Avatar Selector React Mount -->
+            <div id="avatar-selector-root" class="span-full mb-4"></div>
+            
+            <!-- RIGHT: Quests & Daily Stats -->
+            <div class="glass card quests-card">
+              <div class="card-header">
+                <h2>Daily Quests</h2>
+                <span class="text-sub">Refreshes every session</span>
+              </div>
+              <div class="quests-list" id="dashboard-quests">
+                <!-- Injected dynamically -->
+              </div>
+            </div>
+            
+            <!-- STATS SUMMARY CARD -->
+            <div class="glass card stats-summary-card">
+              <h2>My Achievements & Streaks</h2>
+              <div class="stats-summary-grid">
+                <div class="summary-box">
+                  <div class="summary-val" id="stat-quizzes-completed">0</div>
+                  <div class="summary-lbl">Quizzes Solved</div>
+                </div>
+                <div class="summary-box">
+                  <div class="summary-val" id="stat-focus-time">0m</div>
+                  <div class="summary-lbl">Focus Time</div>
+                </div>
+                <div class="summary-box">
+                  <div class="summary-val" id="stat-lessons-completed">0</div>
+                  <div class="summary-lbl">Lessons Mastered</div>
+                </div>
+                <div class="summary-box">
+                  <div class="summary-val" id="stat-habits-streak">0</div>
+                  <div class="summary-lbl">Max Habit Streak</div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </section>
+        
+        <!-- ==================== QUIZFORGE VIEW ==================== -->
+        <section id="view-quizforge" class="content-view">
+          <div class="module-hero-chip" id="chip-quizforge">
+            <div class="module-hero-chip-sprite" id="chip-sprite-quizforge"></div>
+            <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; QuizForge</span>
+          </div>
+          <div class="quizforge-grid">
+            
+            <!-- Quiz List Section -->
+            <div class="glass card quiz-list-card" id="quiz-selection-panel">
+              <div class="card-header">
+                <h2>Available Quizzes</h2>
+                <button class="btn primary-btn" id="btn-custom-quiz">Create Quiz</button>
+              </div>
+              <div class="quizzes-grid" id="quizzes-container">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+            
+            <!-- Active Quiz Board (Hidden by default, shown during quiz) -->
+            <div class="glass card quiz-active-card hidden" id="quiz-active-panel">
+              <div class="quiz-active-header">
+                <h2 id="active-quiz-title">Quiz Name</h2>
+                <div class="quiz-timer" id="quiz-timer-box">
+                  <i data-lucide="clock"></i> <span id="quiz-time-left">30</span>s
+                </div>
+              </div>
+              <div class="quiz-progress-bar">
+                <div class="quiz-progress-fill" id="quiz-progress-fill" style="width: 0%;"></div>
+              </div>
+              <div class="question-container">
+                <h3 id="question-text">Question text goes here?</h3>
+                <div class="options-grid" id="options-container">
+                  <!-- Options injected here -->
+                </div>
+              </div>
+              <div class="quiz-footer">
+                <button class="btn secondary-btn" id="btn-quit-quiz">Quit Battle</button>
+                <button class="btn primary-btn" id="btn-next-question" disabled>Next Question</button>
+              </div>
+            </div>
+            
+            <!-- Quiz Results Pane -->
+            <div class="glass card quiz-results-card hidden" id="quiz-results-panel">
+              <div class="results-visual animate-scale">
+                <div class="badge-icon">🏆</div>
+                <h2 id="results-title">Quest Cleared!</h2>
+                <p id="results-stats">You scored 5/5!</p>
+                <div class="results-rewards">
+                  <div class="reward-pill xp-reward"><i data-lucide="sparkles"></i> <span id="results-xp-gain">+50 XP</span></div>
+                  <div class="reward-pill coin-reward"><i data-lucide="coins"></i> <span id="results-coin-gain">+20 Coins</span></div>
+                </div>
+                <button class="btn primary-btn" id="btn-close-results">Back to Quizzes</button>
+              </div>
+            </div>
+            
+            <!-- Custom Quiz Creator (Modal/Panel) -->
+            <div class="glass card quiz-creator-card hidden" id="quiz-creator-panel">
+              <div class="card-header">
+                <h2>Forge Your Own Quiz</h2>
+                <button class="close-btn" id="btn-close-creator"><i data-lucide="x"></i></button>
+              </div>
+              <form id="custom-quiz-form" class="creator-form">
+                <div class="form-group">
+                  <label for="quiz-title-input">Quiz Title</label>
+                  <input type="text" id="quiz-title-input" required placeholder="e.g., Python Basics Masterclass">
+                </div>
+                <div class="form-group">
+                  <label for="quiz-subject-input">Subject/Language</label>
+                  <select id="quiz-subject-input">
+                    <option value="JavaScript">JavaScript</option>
+                    <option value="Python">Python</option>
+                    <option value="DSA">Data Structures & Algorithms</option>
+                    <option value="General Coding">General Programming</option>
+                  </select>
+                </div>
+                <div id="creator-questions-list">
+                  <!-- 3 questions template -->
+                  <div class="creator-question-block" data-idx="0">
+                    <h4>Question 1</h4>
+                    <input type="text" class="q-text" required placeholder="Question description" style="margin-bottom: 8px;">
+                    <div class="options-inputs">
+                      <input type="text" class="opt-0" required placeholder="Option A (Correct Answer)">
+                      <input type="text" class="opt-1" required placeholder="Option B">
+                      <input type="text" class="opt-2" required placeholder="Option C">
+                      <input type="text" class="opt-3" required placeholder="Option D">
+                    </div>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn primary-btn">Forge Quiz</button>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Leaderboard Sidecar -->
+            <div class="glass card quiz-leaderboard-card">
+              <div class="card-header">
+                <h2>Hall of Fame</h2>
+                <i data-lucide="trophy" class="text-gold"></i>
+              </div>
+              <div class="leaderboard-list" id="quiz-leaderboards">
+                <!-- Injected dynamically -->
+              </div>
+            </div>
+            
+          </div>
+        </section>
+        
+        <!-- ==================== FOCUS ARENA VIEW ==================== -->
+        <section id="view-focusarena" class="content-view">
+          <div class="module-hero-chip" id="chip-focusarena">
+            <div class="module-hero-chip-sprite" id="chip-sprite-focusarena"></div>
+            <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; Focus Arena</span>
+          </div>
+          <div class="focus-arena-grid">
+            
+            <!-- Left: Pomodoro Timer Visuals -->
+            <div class="glass card focus-timer-card">
+              <div class="card-header">
+                <h2>Focus Arena</h2>
+                <div class="streak-multiplier" id="focus-multiplier">
+                  Multiplier: 1.0x
+                </div>
+              </div>
+              
+              <div class="timer-display-container">
+                <svg class="timer-ring" width="280" height="280">
+                  <circle class="timer-ring-bg" stroke="#1e1e2d" stroke-width="12" fill="transparent" r="120" cx="140" cy="140" />
+                  <circle id="timer-ring-progress" class="timer-ring-progress" stroke="var(--primary-color)" stroke-width="12" stroke-dasharray="753.98" stroke-dashoffset="0" fill="transparent" r="120" cx="140" cy="140" />
+                </svg>
+                <div class="timer-text-container">
+                  <span id="timer-time">25:00</span>
+                  <span id="timer-status">Get Ready!</span>
+                </div>
+              </div>
+              
+              <div class="timer-controls">
+                <button class="btn icon-btn tooltip" id="btn-toggle-timer" data-tooltip="Start / Pause">
+                  <i data-lucide="play" id="btn-timer-icon"></i>
+                </button>
+                <button class="btn icon-btn secondary-btn tooltip" id="btn-reset-timer" data-tooltip="Reset Timer">
+                  <i data-lucide="rotate-ccw"></i>
+                </button>
+              </div>
+              
+              <div class="timer-presets">
+                <button class="preset-btn active" data-time="25">Focus (25m)</button>
+                <button class="preset-btn" data-time="5">Short Break (5m)</button>
+                <button class="preset-btn" data-time="15">Long Break (15m)</button>
+              </div>
+            </div>
+            
+            <!-- Right: Ambient Sounds & Stats -->
+            <div class="focus-sidecar-grid">
+              
+              <!-- Ambient Sounds -->
+              <div class="glass card sound-card">
+                <h2>Ambient Sound Generator</h2>
+                <p class="text-sub">Boost focus with synthetic soundscapes</p>
+                <div class="sound-controls">
+                  <div class="sound-row">
+                    <span>🌧️ Rain Storm</span>
+                    <button class="sound-toggle-btn" data-sound="rain"><i data-lucide="play"></i> Play</button>
+                  </div>
+                  <div class="sound-row">
+                    <span>🔥 Cozy Campfire</span>
+                    <button class="sound-toggle-btn" data-sound="fire"><i data-lucide="play"></i> Play</button>
+                  </div>
+                  <div class="sound-row">
+                    <span>🎹 Lo-Fi Beats</span>
+                    <button class="sound-toggle-btn" data-sound="lofi"><i data-lucide="play"></i> Play</button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Arena History / Logs -->
+              <div class="glass card history-card">
+                <h2>Battle Logs</h2>
+                <div class="logs-container" id="focus-logs">
+                  <div class="empty-log">Enter the Arena to log focus sessions!</div>
+                </div>
+              </div>
+              
+            </div>
+            
+          </div>
+        </section>
+        
+        <!-- ==================== HABITDOJO VIEW ==================== -->
+        <section id="view-habitdojo" class="content-view">
+          <div class="module-hero-chip" id="chip-habitdojo">
+            <div class="module-hero-chip-sprite" id="chip-sprite-habitdojo"></div>
+            <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; HabitDojo</span>
+          </div>
+          <div class="habit-dojo-grid">
+            
+            <!-- Habits List Card -->
+            <div class="glass card habits-card">
+              <div class="card-header">
+                <h2>My Active Habits</h2>
+                <button class="btn primary-btn" id="btn-add-habit">Add Habit</button>
+              </div>
+              
+              <div class="habits-list" id="habits-container">
+                <!-- Injected dynamically -->
+              </div>
+            </div>
+            
+            <!-- Add Habit Sidecar / Form (Hidden initially or in modal state) -->
+            <div class="glass card habit-form-card hidden" id="habit-form-panel">
+              <div class="card-header">
+                <h2>Add Dojo Challenge</h2>
+                <button class="close-btn" id="btn-close-habit-form"><i data-lucide="x"></i></button>
+              </div>
+              <form id="habit-form" class="creator-form">
+                <div class="form-group">
+                  <label for="habit-name-input">Habit Name</label>
+                  <input type="text" id="habit-name-input" required placeholder="e.g. Read DSA for 30 mins">
+                </div>
+                <div class="form-group">
+                  <label for="habit-difficulty">Difficulty (HP Risk)</label>
+                  <select id="habit-difficulty">
+                    <option value="easy">Easy (Lose 5 HP if missed)</option>
+                    <option value="medium">Medium (Lose 15 HP if missed)</option>
+                    <option value="hard">Hard (Lose 30 HP if missed)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="habit-frequency">Frequency</label>
+                  <select id="habit-frequency" disabled>
+                    <option value="daily">Daily Quest</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn primary-btn" style="width: 100%; margin-top: 15px;">Create Quest</button>
+              </form>
+            </div>
+            
+            <!-- Dojo Rules / Info -->
+            <div class="glass card dojo-info-card">
+              <div class="card-header">
+                <h2>Dojo Laws</h2>
+                <i data-lucide="info" class="text-blue"></i>
+              </div>
+              <div class="dojo-rules-content">
+                <div class="rule-block">
+                  <div class="rule-title"><span class="text-green">⚡ Streaks</span></div>
+                  <p>Complete a habit daily to increment your streak. Higher streaks yield XP multipliers on completion.</p>
+                </div>
+                <div class="rule-block">
+                  <div class="rule-title"><span class="text-red">💀 Blood Penalty</span></div>
+                  <p>Fail to check off an active habit by clicking "Miss Quest" (simulates the transition to next day), and you will take HP damage relative to its difficulty. If HP falls to 0, your character faints, losing 50% of current coins, and resetting level progress!</p>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </section>
+        
+        <!-- ==================== STUDYSYNC VIEW ==================== -->
+        <section id="view-studysync" class="content-view">
+          <div class="module-hero-chip" id="chip-studysync">
+            <div class="module-hero-chip-sprite" id="chip-sprite-studysync"></div>
+            <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; StudySync</span>
+          </div>
+          <div class="studysync-grid">
+            
+            <!-- Lobby Entry / Creation Board -->
+            <div class="glass card sync-lobby-card" id="sync-lobby-panel">
+              <div class="lobby-welcome">
+                <div class="lobby-icon">📡</div>
+                <h2>StudySync Multiplayer Rooms</h2>
+                <p class="text-sub">Join forces with peers in real-time Pomodoro sessions and Quiz Battles.</p>
+              </div>
+              
+              <div class="lobby-actions">
+                <div class="join-action">
+                  <input type="text" id="room-code-input" placeholder="e.g. SCQ-4829" class="glass-input">
+                  <button class="btn primary-btn" id="btn-join-room">Join Room</button>
+                </div>
+                <div class="divider"><span>OR</span></div>
+                <button class="btn secondary-btn" id="btn-create-room">Create Study Room</button>
+              </div>
+            </div>
+            
+            <!-- Active Room Arena (Hidden initially) -->
+            <div class="glass card sync-room-card hidden" id="sync-room-panel">
+              <div class="room-header">
+                <div class="room-title-info">
+                  <h2 id="room-id-display">Room: SCQ-4829</h2>
+                  <span class="active-badge"><span class="pulse-dot"></span> <span id="room-occupant-count">4</span> Online</span>
+                </div>
+                <button class="btn secondary-btn btn-sm" id="btn-leave-room">Leave Room</button>
+              </div>
+              
+              <div class="room-main-layout">
+                <!-- Group Timer & Lobby Partners -->
+                <div class="room-workspace-side">
+                  <!-- Team Focus Timer -->
+                  <div class="group-timer-box">
+                    <h3>Group Pomodoro</h3>
+                    <div id="room-timer-display" class="timer-countdown">25:00</div>
+                    <p class="text-sub text-center" id="room-timer-status">Sync timer active</p>
+                  </div>
+                  
+                  <!-- Squad Members -->
+                  <div class="squad-box">
+                    <h3>Squad Members</h3>
+                    <div class="squad-list" id="squad-members-container">
+                      <!-- Dynamically populated -->
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Chat and Live Battle Box -->
+                <div class="room-interaction-side">
+                  <!-- Tab toggles for Chat and Quiz Battles -->
+                  <div class="room-tabs">
+                    <button class="room-tab active" data-tab="chat">Room Chat</button>
+                    <button class="room-tab" data-tab="battle">Quiz Battle</button>
+                  </div>
+                  
+                  <!-- Chat Tab -->
+                  <div class="room-tab-content active" id="room-chat-tab">
+                    <div class="chat-messages-container" id="chat-messages">
+                      <!-- Chat messages -->
+                    </div>
+                    <div class="chat-input-row">
+                      <input type="text" id="chat-input-field" placeholder="Send a message to your squad...">
+                      <button class="btn primary-btn" id="btn-send-chat"><i data-lucide="send"></i></button>
+                    </div>
+                  </div>
+                  
+                  <!-- Battle Tab -->
+                  <div class="room-tab-content" id="room-battle-tab">
+                    <div class="battle-lobby" id="battle-lobby-pane">
+                      <h3>Multiplayer Quiz Battle</h3>
+                      <p class="text-sub">Compete in a timed battle. Speed gives bonus points.</p>
+                      <button class="btn primary-btn btn-lg" id="btn-start-quiz-battle">Start Live Battle</button>
+                    </div>
+                    
+                    <div class="battle-active hidden" id="battle-active-pane">
+                      <div class="battle-question">
+                        <h4 id="battle-question-title">Loading question...</h4>
+                        <div class="options-grid" id="battle-options-container">
+                          <!-- Injected options -->
+                        </div>
+                      </div>
+                      <div class="battle-leaderboard-box">
+                        <h5>Live Battle Standing</h5>
+                        <div class="battle-leaderboard-list" id="battle-standing-list">
+                          <!-- Standings -->
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="battle-finished hidden" id="battle-finished-pane">
+                      <h4>Battle Completed!</h4>
+                      <div class="winner-announcement" id="battle-winner-text">You took 1st Place!</div>
+                      <div class="rewards-display">
+                        <span class="reward-pill xp-reward">+40 XP</span>
+                        <span class="reward-pill coin-reward">+15 Coins</span>
+                      </div>
+                      <button class="btn secondary-btn" id="btn-reset-battle">Return to Lobby</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </section>
+        
+        <!-- ==================== CODESCROLL VIEW ==================== -->
+        <section id="view-codescroll" class="content-view">
+          <div class="module-hero-chip" id="chip-codescroll">
+            <div class="module-hero-chip-sprite" id="chip-sprite-codescroll"></div>
+            <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; CodeScroll</span>
+          </div>
+          <div class="codescroll-grid">
+            
+            <!-- Left Side: Lessons List -->
+            <div class="glass card lessons-list-card">
+              <h2>CodeScroll Scrolls</h2>
+              <p class="text-sub">Unlock levels by programming interactively</p>
+              <div class="lessons-container" id="lessons-list">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+            
+            <!-- Right Side: Coding Console and Workspace -->
+            <div class="glass card coding-workspace-card">
+              <div class="workspace-header">
+                <h3 id="current-lesson-title">Select a Lesson to Begin</h3>
+                <span class="badge" id="current-lesson-lang">JavaScript</span>
+              </div>
+              
+              <div class="workspace-body">
+                <!-- Description Panel -->
+                <div class="lesson-desc-panel" id="lesson-desc">
+                  <p>Choose a scroll from the list on the left to load its coding quest. You will write Javascript code to solve problems and execute it inside the browser console.</p>
+                </div>
+                
+                <!-- Editor Panel (Stylized Mock Editor) -->
+                <div class="editor-pane">
+                  <div class="editor-title-bar">
+                    <span class="file-name">index.js</span>
+                    <span class="editor-lang-indicator">JS Sandbox</span>
+                  </div>
+                  <div class="editor-textarea-wrapper">
+                    <div class="line-numbers">
+                      <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div>
+                    </div>
+                    <textarea id="code-editor-input" class="editor-textarea" spellcheck="false">// Write your JS code here
+function greet() {
+  return "Welcome to ScholarQuest!";
+}
+console.log(greet());
+</textarea>
+                  </div>
+                </div>
+                
+                <!-- Console/Output Area -->
+                <div class="console-pane">
+                  <div class="console-title-bar">
+                    <span>Console Log</span>
+                    <button class="btn btn-sm secondary-btn" id="btn-clear-console">Clear</button>
+                  </div>
+                  <div class="console-output" id="console-output-text">
+                    [System] Console initialized. Ready to execute scroll logic.
+                  </div>
+                </div>
+              </div>
+              
+              <div class="workspace-footer">
+                <button class="btn secondary-btn" id="btn-run-code"><i data-lucide="play"></i> Run Code</button>
+                <button class="btn primary-btn" id="btn-submit-code"><i data-lucide="check"></i> Submit Quest</button>
+              </div>
+            </div>
+            
+          </div>
+        </section>
+        
+        <!-- ==================== SHOP & INVENTORY VIEW ==================== -->
+        <section id="view-shop" class="content-view">
+          <div class="module-hero-chip" id="chip-shop">
+            <div class="module-hero-chip-sprite" id="chip-sprite-shop"></div>
+            <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; Shop &amp; Inv</span>
+          </div>
+          <div class="shop-inventory-grid">
+            
+            <!-- Left Side: Shop Categories and Catalog -->
+            <div class="glass card shop-card">
+              <div class="card-header">
+                <h2>Coin Exchange & Shop</h2>
+                <div class="coin-display-shop">
+                  <i data-lucide="coins" class="text-gold"></i>
+                  <span id="shop-coin-count">150</span>
+                </div>
+              </div>
+              
+              <div class="shop-tabs">
+                <button class="shop-tab active" data-category="accessories">Avatar Upgrades</button>
+                <button class="shop-tab" data-category="themes">UI Themes</button>
+                <button class="shop-tab" data-category="boosters">Boosters</button>
+              </div>
+              
+              <div class="shop-items-grid" id="shop-items-container">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+            
+            <!-- Right Side: Inventory Drawer -->
+            <div class="glass card inventory-card">
+              <div class="card-header">
+                <h2>Equipment Drawer</h2>
+                <span class="text-sub">View and equip unlocked gear</span>
+              </div>
+              
+              <div class="inventory-container">
+                <h3>Equipped Items</h3>
+                <div class="equipped-list" id="equipped-items-container">
+                  <!-- Currently active gear -->
+                </div>
+                
+                <h3 style="margin-top: 25px;">Backpack Inventory</h3>
+                <div class="backpack-grid" id="backpack-items-container">
+                  <!-- Owned items -->
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </section>
+        
+      </div>
+    </main>
+    
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="module" src="app.js?v=6"></script>
+
+  <script type="text/babel">
+    const AVATAR_CHARACTERS = [
+      { id: 'peasant', name: 'Peasant', sprite: './src/modules/avatar/assets/characters/villagers/MiniPeasant.png', pack: 'villagers', tier: 'Base Starter', unlockType: 'default', unlockValue: null, description: 'A humble beginner scholar. Honest work and eager to learn.' },
+      { id: 'worker', name: 'Worker', sprite: './src/modules/avatar/assets/characters/villagers/MiniWorker.png', pack: 'villagers', tier: 'Base Starter', unlockType: 'default', unlockValue: null, description: 'Builds their knowledge foundation brick by brick.' },
+      { id: 'villager_man', name: 'Villager Scholar (M)', sprite: './src/modules/avatar/assets/characters/villagers/MiniVillagerMan.png', pack: 'villagers', tier: 'Base Starter', unlockType: 'default', unlockValue: null, description: 'A standard scholar avatar dedicated to daily learning tasks.' },
+      { id: 'villager_woman', name: 'Villager Scholar (F)', sprite: './src/modules/avatar/assets/characters/villagers/MiniVillagerWoman.png', pack: 'villagers', tier: 'Base Starter', unlockType: 'default', unlockValue: null, description: 'An enthusiastic student ready to complete core quizzes.' },
+      { id: 'gatherer', name: 'Gatherer', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniGatherer.png', pack: 'villagers2', tier: 'Level Reward', unlockType: 'level', unlockValue: 2, description: 'Gathers notes and references from all online tutorials.' },
+      { id: 'lumberjack', name: 'Lumberjack', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniLumberjack.png', pack: 'villagers2', tier: 'Level Reward', unlockType: 'level', unlockValue: 3, description: 'Chops down complex problems into manageable micro-tasks.' },
+      { id: 'miner', name: 'Miner', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniMiner.png', pack: 'villagers2', tier: 'Level Reward', unlockType: 'level', unlockValue: 4, description: 'Digs deep into textbooks and core documentation.' },
+      { id: 'shield_man', name: 'Shield Defender', sprite: './src/modules/avatar/assets/characters/humans/MiniShieldMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 5, description: 'Defends their study streak from external distractions.' },
+      { id: 'hunter', name: 'Hunter', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniHunter.png', pack: 'villagers2', tier: 'Level Reward', unlockType: 'level', unlockValue: 6, description: 'Hunts down rare bugs and solves performance leaks.' },
+      { id: 'sword_man', name: 'Sword Fighter', sprite: './src/modules/avatar/assets/characters/humans/MiniSwordMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 8, description: 'Slashes through complex code challenges with confidence.' },
+      { id: 'grave_digger', name: 'Grave Digger', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniGraveDigger.png', pack: 'villagers2', tier: 'Level Reward', unlockType: 'level', unlockValue: 9, description: 'Buries outdated concepts and deprecated libraries.' },
+      { id: 'prince', name: 'Prince', sprite: './src/modules/avatar/assets/characters/humans/MiniPrinceMan.png', pack: 'humans', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 10, description: 'Royal descendant who has mastered mid-tier curriculum.' },
+      { id: 'princess', name: 'Princess', sprite: './src/modules/avatar/assets/characters/villagers/MiniPrincess.png', pack: 'villagers', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 10, description: 'Noble scholar excelling in algorithmic synchronization.' },
+      { id: 'old_man', name: 'Sage Mentor (M)', sprite: './src/modules/avatar/assets/characters/villagers/MiniOldMan.png', pack: 'villagers', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 12, description: 'A wise advisor who guides students through difficult semesters.' },
+      { id: 'old_woman', name: 'Sage Mentor (F)', sprite: './src/modules/avatar/assets/characters/villagers/MiniOldWoman.png', pack: 'villagers', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 12, description: 'Possesses decades of experience in software engineering concepts.' },
+      { id: 'noble_man', name: 'Noble Lord', sprite: './src/modules/avatar/assets/characters/villagers/MiniNobleMan.png', pack: 'villagers', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 15, description: 'Patron of the arts and compiler optimizations.' },
+      { id: 'noble_woman', name: 'Noble Lady', sprite: './src/modules/avatar/assets/characters/villagers/MiniNobleWoman.png', pack: 'villagers', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 15, description: 'Exquisite scholar who drafts elegant structural designs.' },
+      { id: 'king', name: 'King', sprite: './src/modules/avatar/assets/characters/humans/MiniKingMan.png', pack: 'humans', tier: 'Legendary', unlockType: 'level', unlockValue: 20, description: 'Ruler of the ScholarQuest leaderboards.' },
+      { id: 'queen', name: 'Queen', sprite: './src/modules/avatar/assets/characters/villagers/MiniQueen.png', pack: 'villagers', tier: 'Legendary', unlockType: 'level', unlockValue: 20, description: 'Supreme organizer of multiplayer study sync strategies.' },
+      { id: 'merchant', name: 'Gold Shop Merchant', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniMerchant.png', pack: 'villagers2', tier: 'Gold Exchange', unlockType: 'gold', unlockValue: 150, description: 'Owner of the Honesty Gold Shop. Unlocks for custom trade.' },
+      { id: 'blacksmith', name: 'Blacksmith', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniBlacksmith.png', pack: 'villagers2', tier: 'Gold Exchange', unlockType: 'gold', unlockValue: 200, description: 'Forges powerful learning habits and workspace themes.' },
+      { id: 'suspicious_merchant', name: 'Suspicious Merchant', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniSuspiciousMerchant.png', pack: 'villagers2', tier: 'Gold Exchange', unlockType: 'gold', unlockValue: 250, description: 'Offers mysterious items and secret cheat sheets.' },
+      { id: 'thief', name: 'Thief', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniThief.png', pack: 'villagers2', tier: 'Gold Exchange', unlockType: 'gold', unlockValue: 300, description: 'Steals focus back from endless social media scrolling.' },
+      { id: 'archer', name: 'Habit Archer', sprite: './src/modules/avatar/assets/characters/humans/MiniArcherMan.png', pack: 'humans', tier: 'Habit Milestone', unlockType: 'habit', unlockValue: 5, description: 'Hits habit goals with precision. Streak level 5 required.' },
+      { id: 'crossbow_man', name: 'Crossbow Marksman', sprite: './src/modules/avatar/assets/characters/humans/MiniCrossBowMan.png', pack: 'humans', tier: 'Habit Milestone', unlockType: 'habit', unlockValue: 12, description: 'Rapid-fires study sessions. Streak level 12 required.' },
+      { id: 'mage', name: 'Study Mage', sprite: './src/modules/avatar/assets/characters/humans/MiniMage.png', pack: 'humans', tier: 'Focus Milestone', unlockType: 'focus', unlockValue: 50, description: 'Manipulates time to maximize focus. 50 Focus Points required.' },
+      { id: 'arch_mage', name: 'Grand Archmage', sprite: './src/modules/avatar/assets/characters/humans/MiniArchMage.png', pack: 'humans', tier: 'Focus Milestone', unlockType: 'focus', unlockValue: 150, description: 'Transcends simple Pomodoros. 150 Focus Points required.' },
+      { id: 'nun', name: 'Wellness Cleric', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniNun.png', pack: 'villagers2', tier: 'StudySync Link', unlockType: 'studysync', unlockValue: 'connected', description: 'Ensures wellness breaks during group study. Active StudySync Room required.' },
+      { id: 'halberd_man', name: 'Halberdier', sprite: './src/modules/avatar/assets/characters/humans/MiniHalberdMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 7, description: 'Guards the entrance to the Focus Arena.' },
+      { id: 'spear_man', name: 'Spear Guardsman', sprite: './src/modules/avatar/assets/characters/humans/MiniSpearMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 6, description: 'Keeps track of daily tasks and minor quests.' },
+      { id: 'horse_man', name: 'Horse Rider', sprite: './src/modules/avatar/assets/characters/humans/MiniHorseMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 11, description: 'Travels between CodeScroll compiler layers.' },
+      { id: 'cavalier_man', name: 'Cavalier Knight', sprite: './src/modules/avatar/assets/characters/humans/MiniCavalierMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 14, description: 'Honored academician who defends standard protocols.' },
+    ];
+
+    // Frame size per sprite pack
+    // villagers: 48x48 frames | humans & villagers2: 64x64 frames
+    const FRAME_SIZE = { villagers: 48, humans: 64, villagers2: 64 };
+
+    // Returns CSS style object to display one frame of a sprite sheet
+    const spriteStyle = (char, displayPx) => ({
+      width: displayPx + 'px',
+      height: displayPx + 'px',
+      backgroundImage: `url(${char.sprite})`,
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: '0 0',
+      backgroundSize: `${displayPx * 4}px auto`,
+      imageRendering: 'pixelated',
+      flexShrink: 0
+    });
+
+    // ── 4 BASE HERO CLASSES (always selectable) ──────────────────────────────
+    const BASE_HEROES = [
+      { id: 'peasant',       heroClass: 'The Scholar',    tagline: 'Diligent & Focused',   sprite: './src/modules/avatar/assets/characters/villagers/MiniPeasant.png',              pack: 'villagers',  description: 'A natural learner who thrives on structure. Perfect for consistent study habits.',       accent: '#f59e0b', glow: 'rgba(245,158,11,0.3)'  },
+      { id: 'villager_woman',heroClass: 'The Apprentice', tagline: 'Creative & Curious',   sprite: './src/modules/avatar/assets/characters/villagers/MiniVillagerWoman.png',        pack: 'villagers',  description: 'Learns best through exploration. Thrives in quizzes and creative problem-solving.',     accent: '#e879f9', glow: 'rgba(232,121,249,0.3)' },
+      { id: 'worker',        heroClass: 'The Builder',    tagline: 'Steady & Reliable',    sprite: './src/modules/avatar/assets/characters/villagers/MiniWorker.png',               pack: 'villagers',  description: 'Builds knowledge brick by brick. Best for habit tracking and daily progress.',           accent: '#34d399', glow: 'rgba(52,211,153,0.3)'  },
+      { id: 'gatherer',      heroClass: 'The Explorer',   tagline: 'Adaptive & Bold',      sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniGatherer.png',   pack: 'villagers2', description: 'Gathers knowledge from all sources. Excels at CodeScroll and focus sessions.',          accent: '#60a5fa', glow: 'rgba(96,165,250,0.3)'  },
+    ];
+
+    // ── UNLOCKABLE SHOP HEROES ────────────────────────────────────────────────
+    const SHOP_HEROES = [
+      { id: 'shield_man',   sprite: './src/modules/avatar/assets/characters/humans/MiniShieldMan.png',                    pack: 'humans',    name: 'Guardian',    unlockType: 'level', unlockValue: 5,   category: '⚔️ Combat' },
+      { id: 'spear_man',    sprite: './src/modules/avatar/assets/characters/humans/MiniSpearMan.png',                     pack: 'humans',    name: 'Spear Guard', unlockType: 'level', unlockValue: 6,   category: '⚔️ Combat' },
+      { id: 'halberd_man',  sprite: './src/modules/avatar/assets/characters/humans/MiniHalberdMan.png',                   pack: 'humans',    name: 'Halberdier',  unlockType: 'level', unlockValue: 7,   category: '⚔️ Combat' },
+      { id: 'sword_man',    sprite: './src/modules/avatar/assets/characters/humans/MiniSwordMan.png',                     pack: 'humans',    name: 'Sword Master',unlockType: 'level', unlockValue: 8,   category: '⚔️ Combat' },
+      { id: 'horse_man',    sprite: './src/modules/avatar/assets/characters/humans/MiniHorseMan.png',                     pack: 'humans',    name: 'Horse Rider', unlockType: 'level', unlockValue: 11,  category: '⚔️ Combat' },
+      { id: 'prince',       sprite: './src/modules/avatar/assets/characters/humans/MiniPrinceMan.png',                    pack: 'humans',    name: 'Prince',      unlockType: 'level', unlockValue: 10,  category: '👑 Royalty' },
+      { id: 'princess',     sprite: './src/modules/avatar/assets/characters/villagers/MiniPrincess.png',                  pack: 'villagers', name: 'Princess',    unlockType: 'level', unlockValue: 10,  category: '👑 Royalty' },
+      { id: 'king',         sprite: './src/modules/avatar/assets/characters/humans/MiniKingMan.png',                      pack: 'humans',    name: 'King',        unlockType: 'level', unlockValue: 20,  category: '👑 Royalty' },
+      { id: 'queen',        sprite: './src/modules/avatar/assets/characters/villagers/MiniQueen.png',                     pack: 'villagers', name: 'Queen',       unlockType: 'level', unlockValue: 20,  category: '👑 Royalty' },
+      { id: 'merchant',     sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniMerchant.png',        pack: 'villagers2',name: 'Merchant',    unlockType: 'gold',  unlockValue: 150, category: '🪙 Gold' },
+      { id: 'blacksmith',   sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniBlacksmith.png',      pack: 'villagers2',name: 'Blacksmith',  unlockType: 'gold',  unlockValue: 200, category: '🪙 Gold' },
+      { id: 'thief',        sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniThief.png',           pack: 'villagers2',name: 'Thief',       unlockType: 'gold',  unlockValue: 300, category: '🪙 Gold' },
+      { id: 'archer',       sprite: './src/modules/avatar/assets/characters/humans/MiniArcherMan.png',                    pack: 'humans',    name: 'Archer',      unlockType: 'habit', unlockValue: 5,   category: '🧱 Habit' },
+      { id: 'crossbow_man', sprite: './src/modules/avatar/assets/characters/humans/MiniCrossBowMan.png',                  pack: 'humans',    name: 'Crossbowman', unlockType: 'habit', unlockValue: 12,  category: '🧱 Habit' },
+      { id: 'mage',         sprite: './src/modules/avatar/assets/characters/humans/MiniMage.png',                         pack: 'humans',    name: 'Mage',        unlockType: 'focus', unlockValue: 50,  category: '🍯 Focus' },
+      { id: 'arch_mage',    sprite: './src/modules/avatar/assets/characters/humans/MiniArchMage.png',                     pack: 'humans',    name: 'Archmage',    unlockType: 'focus', unlockValue: 150, category: '🍯 Focus' },
+      { id: 'nun',          sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniNun.png',             pack: 'villagers2',name: 'Cleric',      unlockType: 'studysync', unlockValue: 'connected', category: '🔗 Sync' },
+    ];
+
+    const checkUnlock = (hero, stats) => {
+      const { level = 1, golds = 0, habitStreakPoints = 0, focusPoints = 0, studySyncStatus = 'disconnected' } = stats;
+      switch (hero.unlockType) {
+        case 'level':     return { unlocked: level >= hero.unlockValue,              reason: `Reach Level ${hero.unlockValue}` };
+        case 'gold':      return { unlocked: golds >= hero.unlockValue,              reason: `${hero.unlockValue} Gold` };
+        case 'habit':     return { unlocked: habitStreakPoints >= hero.unlockValue,   reason: `${hero.unlockValue}-Day Streak` };
+        case 'focus':     return { unlocked: focusPoints >= hero.unlockValue,         reason: `${hero.unlockValue} Focus Mins` };
+        case 'studysync': return { unlocked: studySyncStatus === 'connected' || studySyncStatus === 'active', reason: 'Join StudySync' };
+        default:          return { unlocked: true, reason: '' };
+      }
+    };
+
+    // ── UNLOCKABLE HEROES PANEL (defined BEFORE AvatarSelector) ──────────────
+    const UnlockableHeroesPanel = ({ currentStats, selectedAvatarId, onSelect }) => {
+      const categories = [...new Set(SHOP_HEROES.map(h => h.category))];
+
+      const HeroBtn = ({ hero, unlocked, reason, isActive }) => {
+        const frameSize = FRAME_SIZE[hero.pack];
+        return (
+          <button
+            onClick={() => unlocked && onSelect(hero.id)}
+            title={unlocked ? `Equip ${hero.name}` : `🔒 ${reason}`}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+              padding: '10px 8px', borderRadius: '10px',
+              cursor: unlocked ? 'pointer' : 'not-allowed',
+              border: isActive ? '2px solid #f59e0b' : unlocked ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(63,63,70,0.2)',
+              background: isActive ? 'rgba(120,53,15,0.3)' : unlocked ? 'rgba(15,13,11,0.8)' : 'rgba(9,9,11,0.25)',
+              boxShadow: isActive ? '0 0 14px rgba(245,158,11,0.25)' : 'none',
+              outline: 'none', transition: 'all 0.2s', minWidth: '68px'
+            }}
+          >
+            <div style={{ ...spriteStyle(hero, frameSize * 2), filter: !unlocked ? 'grayscale(100%) brightness(0.2)' : 'none' }} />
+            <span style={{ fontSize: '9px', fontWeight: 600, color: unlocked ? 'rgba(245,232,215,0.7)' : 'rgba(113,113,122,0.45)', textAlign: 'center' }}>
+              {hero.name}
+            </span>
+            {!unlocked && <span style={{ fontSize: '7px', color: 'rgba(245,158,11,0.45)', fontWeight: 700, textAlign: 'center' }}>🔒 {reason}</span>}
+            {isActive  && <span style={{ fontSize: '8px', color: '#f59e0b', fontWeight: 800 }}>✦ ON</span>}
+          </button>
+        );
+      };
+
+      return (
+        <div style={{ borderTop: '1px solid rgba(245,158,11,0.1)', paddingTop: '18px', marginTop: '4px' }}>
+          {/* Section Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(245,232,215,0.35)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Unlock More Heroes</span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(245,158,11,0.08)' }} />
+            <span style={{ fontSize: '9px', color: 'rgba(245,232,215,0.22)', letterSpacing: '0.05em' }}>Complete quests · earn gold · keep streaks</span>
+          </div>
+
+          {/* Split two-column layout per category */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            {categories.map(cat => {
+              const heroes = SHOP_HEROES.filter(h => h.category === cat);
+              const unlockedHeroes = heroes.filter(h => checkUnlock(h, currentStats).unlocked);
+              const lockedHeroes   = heroes.filter(h => !checkUnlock(h, currentStats).unlocked);
+              return (
+                <div key={cat}>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(245,232,215,0.28)', letterSpacing: '0.1em', marginBottom: '10px', textTransform: 'uppercase' }}>{cat}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {/* UNLOCKED column */}
+                    <div>
+                      {unlockedHeroes.length > 0 ? (
+                        <>
+                          <div style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(52,211,153,0.6)', letterSpacing: '0.08em', marginBottom: '8px', textTransform: 'uppercase' }}>✓ Available</div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {unlockedHeroes.map(hero => (
+                              <HeroBtn key={hero.id} hero={hero} unlocked={true} reason="" isActive={selectedAvatarId === hero.id} />
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ fontSize: '10px', color: 'rgba(113,113,122,0.4)', fontStyle: 'italic', paddingTop: '8px' }}>None unlocked yet</div>
+                      )}
+                    </div>
+                    {/* LOCKED column */}
+                    <div>
+                      {lockedHeroes.length > 0 && (
+                        <>
+                          <div style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(245,158,11,0.35)', letterSpacing: '0.08em', marginBottom: '8px', textTransform: 'uppercase' }}>🔒 Locked</div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {lockedHeroes.map(hero => {
+                              const { reason } = checkUnlock(hero, currentStats);
+                              return <HeroBtn key={hero.id} hero={hero} unlocked={false} reason={reason} isActive={false} />;
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    };
+
+
+    // ── MAIN AVATAR SELECTOR (defined AFTER UnlockableHeroesPanel) ────────────
+    const AvatarSelector = ({
+      level = 1, golds = 0, habitStreakPoints = 0, focusPoints = 0,
+      studySyncStatus = 'disconnected', selectedAvatarId = 'peasant', onSelect = () => {}
+    }) => {
+      const currentStats = { level, golds, habitStreakPoints, focusPoints, studySyncStatus };
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', padding: '20px', background: 'rgba(10,8,6,0.7)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: '16px' }}>
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#f59e0b', margin: 0, letterSpacing: '0.05em' }}>🛡️ Choose Your Hero</h2>
+              <p style={{ fontSize: '11px', color: 'rgba(245,232,215,0.4)', marginTop: '3px', margin: '3px 0 0' }}>Pick your class — more heroes unlock as you progress</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '8px', padding: '5px 12px' }}>
+              <span>⭐</span><span style={{ fontSize: '11px', fontWeight: 700, color: '#f59e0b' }}>LV {level}</span>
+              <span style={{ width: '1px', height: '14px', background: 'rgba(245,158,11,0.2)', margin: '0 4px' }} />
+              <span>🪙</span><span style={{ fontSize: '11px', fontWeight: 700, color: '#fbbf24' }}>{golds}</span>
+            </div>
+          </div>
+
+          {/* 4 Base Hero Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px' }}>
+            {BASE_HEROES.map(hero => {
+              const isActive = selectedAvatarId === hero.id;
+              const frameSize = FRAME_SIZE[hero.pack];
+              return (
+                <button
+                  key={hero.id}
+                  onClick={() => onSelect(hero.id)}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+                    padding: '18px 10px 14px', background: isActive ? 'rgba(20,15,5,0.98)' : 'rgba(12,10,7,0.5)',
+                    border: `2px solid ${isActive ? hero.accent : 'rgba(245,158,11,0.1)'}`,
+                    borderRadius: '14px', cursor: 'pointer', outline: 'none', position: 'relative',
+                    boxShadow: isActive ? `0 0 22px ${hero.glow}` : 'none',
+                    transition: 'all 0.22s ease',
+                    transform: isActive ? 'translateY(-3px)' : 'none'
+                  }}
+                  onMouseEnter={e => { if (!isActive) { e.currentTarget.style.borderColor = hero.accent + '80'; e.currentTarget.style.transform = 'translateY(-2px)'; }}}
+                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.1)'; e.currentTarget.style.transform = 'none'; }}}
+                >
+                  {isActive && <div style={{ position: 'absolute', top: '7px', right: '9px', fontSize: '9px', color: hero.accent, fontWeight: 800 }}>✦ ACTIVE</div>}
+
+                  {/* Character sprite — shows first frame only */}
+                  <div style={{ ...spriteStyle(hero, frameSize * 3) }} />
+
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: isActive ? hero.accent : 'rgba(245,232,215,0.85)', letterSpacing: '0.03em' }}>{hero.heroClass}</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(245,232,215,0.35)', marginTop: '2px', fontStyle: 'italic' }}>{hero.tagline}</div>
+                  </div>
+
+                  {isActive && (
+                    <div style={{ fontSize: '10px', color: 'rgba(245,232,215,0.55)', lineHeight: 1.55, textAlign: 'center', borderTop: `1px solid ${hero.accent}28`, paddingTop: '9px', margin: '0' }}>
+                      {hero.description}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Unlockable heroes section */}
+          <UnlockableHeroesPanel currentStats={currentStats} selectedAvatarId={selectedAvatarId} onSelect={onSelect} />
+        </div>
+      );
+    };
+
+    // ── MOUNT ─────────────────────────────────────────────────────────────────
+    let avatarRoot = null;
+    window.onStateUpdate = (state) => {
+      const container = document.getElementById('avatar-selector-root');
+      if (!container) return;
+      const studySyncActive = !document.getElementById('sync-room-panel')?.classList.contains('hidden');
+      if (!avatarRoot) avatarRoot = ReactDOM.createRoot(container);
+      avatarRoot.render(
+        <AvatarSelector
+          level={state.level}
+          golds={state.coins}
+          habitStreakPoints={state.stats.maxHabitStreak}
+          focusPoints={state.stats.focusMinutes}
+          studySyncStatus={studySyncActive ? 'connected' : 'disconnected'}
+          selectedAvatarId={state.avatar ? state.avatar.id || 'peasant' : 'peasant'}
+          onSelect={(avatarId) => {
+            if (!state.avatar) state.avatar = {};
+            state.avatar.id = avatarId;
+            window.saveState && window.saveState();
+            window.syncAvatarDisplay && window.syncAvatarDisplay();
+            window.updateUI && window.updateUI();
+          }}
+        />
+      );
+    };
+
+    if (window.state) window.onStateUpdate(window.state);
+  </script>
+</body>
+</html>

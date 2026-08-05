@@ -355,16 +355,32 @@ export function updateUI() {
   document.getElementById('level-badge').innerText = `LV ${state.level}`;
 
   
-  // Update XP Fill
+  // Update XP Fill & Circular Ring Gauge
   const xpNeeded = getXPForNextLevel(state.level);
-  const xpPct = (state.xp / xpNeeded) * 100;
-  document.getElementById('xp-fill').style.width = `${xpPct}%`;
-  document.getElementById('xp-text').innerText = `${state.xp}/${xpNeeded} XP`;
+  const xpPct = Math.min((state.xp / xpNeeded) * 100, 100);
+  const xpFillEl = document.getElementById('xp-fill');
+  if (xpFillEl) xpFillEl.style.width = `${xpPct}%`;
+  const xpTextEl = document.getElementById('xp-text');
+  if (xpTextEl) xpTextEl.innerText = `${state.xp}/${xpNeeded} XP`;
+
+  // Update Radial Gauge Ring
+  const xpRingEl = document.getElementById('dash-xp-ring');
+  if (xpRingEl) {
+    const circumference = 251.2;
+    const offset = circumference - (circumference * (state.xp / xpNeeded));
+    xpRingEl.style.strokeDashoffset = offset;
+  }
+  const ringLvlEl = document.getElementById('dash-ring-level');
+  if (ringLvlEl) ringLvlEl.innerText = `LV ${state.level}`;
+  const ringXpEl = document.getElementById('dash-ring-xp');
+  if (ringXpEl) ringXpEl.innerText = `${state.xp}/${xpNeeded} XP`;
   
   // Update HP Fill
   const hpPct = (state.hp / state.maxHp) * 100;
-  document.getElementById('hp-fill').style.width = `${hpPct}%`;
-  document.getElementById('hp-text').innerText = `${state.hp}/${state.maxHp} HP`;
+  const hpFillEl = document.getElementById('hp-fill');
+  if (hpFillEl) hpFillEl.style.width = `${hpPct}%`;
+  const hpTextEl = document.getElementById('hp-text');
+  if (hpTextEl) hpTextEl.innerText = `${state.hp}/${state.maxHp} HP`;
   
   // Update rank title on dashboard
   const classTitle = document.getElementById('class-title');
@@ -384,6 +400,13 @@ export function updateUI() {
   
   const sh = document.getElementById('stat-habits-streak');
   if (sh) sh.innerText = state.stats.maxHabitStreak;
+
+  const dqs = document.getElementById('dash-quick-streak');
+  if (dqs) dqs.innerText = state.stats.maxHabitStreak;
+
+  const dqc = document.getElementById('dash-quick-coins');
+  if (dqc) dqc.innerText = state.coins;
+
   
   // Apply visual theme
   if (state.activeTheme) {

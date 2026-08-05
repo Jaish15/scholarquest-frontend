@@ -253,127 +253,169 @@
         <!-- ==================== DASHBOARD VIEW ==================== -->
         <section id="view-dashboard" class="content-view active">
           
-          <!-- PROMINENT HERO SHOWCASE BANNER -->
-          <div class="hero-showcase-banner" id="hero-showcase-banner">
-            <div class="hero-showcase-left">
-              <div class="hero-showcase-sprite-area">
-                <div class="hero-showcase-sprite" id="showcase-sprite"></div>
-                <div class="hero-showcase-level-badge">LV <span id="showcase-level">1</span></div>
-              </div>
-              <div class="hero-showcase-info">
-                <div class="hero-showcase-subtitle">ACTIVE HERO CLASS</div>
-                <div class="hero-showcase-name" id="showcase-name">The Scholar</div>
-                <div class="hero-showcase-tagline" id="showcase-tagline">Diligent & Focused</div>
-                <div class="hero-showcase-stats">
-                  <span class="hero-stat-pill">⭐ LV <span id="showcase-stat-level">1</span></span>
-                  <span class="hero-stat-pill gold-pill">🪙 <span id="showcase-stat-gold">150</span></span>
-                  <span class="hero-stat-pill streak-pill">🔥 <span id="showcase-stat-streak">0</span> Day Streak</span>
-                  <span class="hero-stat-pill focus-pill">🍯 <span id="showcase-stat-focus">0</span>m Focus</span>
+          <!-- TOP ROW: HERO SHOWCASE (LEFT) + QUICK MODULE LAUNCHERS (RIGHT) -->
+          <div class="dash-top-grid">
+            
+            <!-- LEFT 65%: HERO SHOWCASE BANNER -->
+            <div class="hero-showcase-banner" id="hero-showcase-banner">
+              <div class="hero-showcase-left">
+                <div class="hero-showcase-sprite-area">
+                  <div class="hero-showcase-sprite" id="showcase-sprite"></div>
+                  <div class="hero-showcase-level-badge">LV <span id="showcase-level">1</span></div>
                 </div>
+                <div class="hero-showcase-info">
+                  <div class="hero-showcase-subtitle">ACTIVE HERO CLASS</div>
+                  <div class="hero-showcase-name" id="showcase-name">The Scholar</div>
+                  <div class="hero-showcase-tagline" id="showcase-tagline">Diligent & Focused</div>
+                  <div class="hero-showcase-stats">
+                    <span class="hero-stat-pill">⭐ LV <span id="showcase-stat-level">1</span></span>
+                    <span class="hero-stat-pill gold-pill">🪙 <span id="showcase-stat-gold">150</span></span>
+                    <span class="hero-stat-pill streak-pill">🔥 <span id="showcase-stat-streak">0</span> Streak</span>
+                    <span class="hero-stat-pill focus-pill">🍯 <span id="showcase-stat-focus">0</span>m Focus</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Action Launcher Buttons -->
+              <div class="hero-showcase-actions">
+                <button class="hero-action-btn primary-action" data-nav="quizforge">
+                  <i data-lucide="swords"></i>
+                  <span>Battle Quizzes</span>
+                </button>
+                <button class="hero-action-btn secondary-action" data-nav="focusarena">
+                  <i data-lucide="timer"></i>
+                  <span>Focus Arena</span>
+                </button>
               </div>
             </div>
 
-            <!-- Quick Action Launcher Buttons -->
-            <div class="hero-showcase-actions">
-              <button class="hero-action-btn primary-action" data-nav="quizforge">
-                <i data-lucide="swords"></i>
-                <span>Battle Quizzes</span>
-              </button>
-              <button class="hero-action-btn secondary-action" data-nav="focusarena">
-                <i data-lucide="timer"></i>
-                <span>Focus Arena</span>
-              </button>
-              <button class="hero-action-btn outline-action" data-nav="habitdojo">
-                <i data-lucide="shield-check"></i>
-                <span>Habit Dojo</span>
-              </button>
+            <!-- RIGHT 35%: STACKED QUICK LAUNCHERS -->
+            <div class="dash-quick-launchers-col">
+              <div class="glass launcher-mini-card" data-nav="quizforge">
+                <div class="launcher-mini-left">
+                  <span class="mini-icon">⚔️</span>
+                  <div>
+                    <div class="mini-title">QuizForge</div>
+                    <div class="mini-sub"><span id="dash-quick-quizzes">5</span> Battles Ready</div>
+                  </div>
+                </div>
+                <span class="mini-arrow">›</span>
+              </div>
+
+              <div class="glass launcher-mini-card" data-nav="focusarena">
+                <div class="launcher-mini-left">
+                  <span class="mini-icon">⏳</span>
+                  <div>
+                    <div class="mini-title">Focus Arena</div>
+                    <div class="mini-sub"><span id="dash-quick-focus">25m</span> Session</div>
+                  </div>
+                </div>
+                <span class="mini-arrow">›</span>
+              </div>
+
+              <div class="glass launcher-mini-card" data-nav="codescroll">
+                <div class="launcher-mini-left">
+                  <span class="mini-icon">📜</span>
+                  <div>
+                    <div class="mini-title">CodeScroll</div>
+                    <div class="mini-sub">Interactive Lessons</div>
+                  </div>
+                </div>
+                <span class="mini-arrow">›</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- MIDDLE SECTION: FEATURED MODULE CARDS (3-COLUMN GRID) -->
+          <div class="dash-section-header">
+            <h3>Featured Modules</h3>
+          </div>
+          <div class="dash-modules-grid">
+            <div class="glass card dash-mod-card" data-nav="habitdojo">
+              <div class="dash-mod-header">
+                <span class="mod-icon">🛡️</span>
+                <span class="badge streak-badge">Habits</span>
+              </div>
+              <h4>HabitDojo</h4>
+              <p>Build daily streaks & boost XP multipliers</p>
+              <div class="dash-mod-footer">
+                <span>Streak: <strong id="dash-quick-streak">0</strong> days</span>
+                <span class="mod-link">Open Dojo ›</span>
+              </div>
+            </div>
+
+            <div class="glass card dash-mod-card" data-nav="studysync">
+              <div class="dash-mod-header">
+                <span class="mod-icon">🌐</span>
+                <span class="badge live-badge">Multiplayer</span>
+              </div>
+              <h4>StudySync</h4>
+              <p>Join virtual study rooms with fellow scholars</p>
+              <div class="dash-mod-footer">
+                <span>Room: <strong>Scholar Hub</strong></span>
+                <span class="mod-link">Join Sync ›</span>
+              </div>
+            </div>
+
+            <div class="glass card dash-mod-card" data-nav="shop">
+              <div class="dash-mod-header">
+                <span class="mod-icon">🛒</span>
+                <span class="badge gold-badge">Armoury</span>
+              </div>
+              <h4>Shop & Inventory</h4>
+              <p>Unlock new hero classes, gear & accessories</p>
+              <div class="dash-mod-footer">
+                <span>Gold: <strong id="dash-quick-coins">150</strong> 🪙</span>
+                <span class="mod-link">Visit Shop ›</span>
+              </div>
             </div>
           </div>
 
-          <div class="dashboard-grid">
+          <!-- AVATAR HERO SELECTOR (React Mount) -->
+          <div id="avatar-selector-root" class="span-full my-4"></div>
+
+          <!-- BOTTOM ROW: DAILY QUESTS (LEFT) + STATISTICS RING (RIGHT) -->
+          <div class="dash-bottom-grid">
             
-            <!-- AVATAR SELECTOR (React Mount) -->
-            <div id="avatar-selector-root" class="span-full mb-4"></div>
-            
-            <!-- MODULE QUICK LAUNCHERS (4-Card Grid) -->
-            <div class="span-full module-launchers-grid mb-4">
-              
-              <!-- Card 1: QuizForge -->
-              <div class="glass card launcher-card launcher-quiz" data-nav="quizforge">
-                <div class="launcher-icon">⚔️</div>
-                <div class="launcher-body">
-                  <h3>QuizForge</h3>
-                  <p>Forge knowledge & earn XP in quiz battles</p>
-                  <div class="launcher-stat"><span id="dash-quick-quizzes">5</span> Quizzes Available</div>
-                </div>
-                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
-              </div>
-
-              <!-- Card 2: Focus Arena -->
-              <div class="glass card launcher-card launcher-focus" data-nav="focusarena">
-                <div class="launcher-icon">⏳</div>
-                <div class="launcher-body">
-                  <h3>Focus Arena</h3>
-                  <p>Pomodoro deep work sessions with XP boosts</p>
-                  <div class="launcher-stat"><span id="dash-quick-focus">25m</span> Standard Timer</div>
-                </div>
-                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
-              </div>
-
-              <!-- Card 3: HabitDojo -->
-              <div class="glass card launcher-card launcher-habits" data-nav="habitdojo">
-                <div class="launcher-icon">🧱</div>
-                <div class="launcher-body">
-                  <h3>HabitDojo</h3>
-                  <p>Daily streak multiplier for study habits</p>
-                  <div class="launcher-stat"><span id="dash-quick-streak">0</span> Current Streak</div>
-                </div>
-                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
-              </div>
-
-              <!-- Card 4: StudySync -->
-              <div class="glass card launcher-card launcher-sync" data-nav="studysync">
-                <div class="launcher-icon">🌐</div>
-                <div class="launcher-body">
-                  <h3>StudySync</h3>
-                  <p>Collaborate & study with fellow scholars</p>
-                  <div class="launcher-stat">Live Multiplayer</div>
-                </div>
-                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
-              </div>
-
-            </div>
-
             <!-- LEFT: DAILY QUESTS CARD -->
             <div class="glass card quests-card">
               <div class="card-header">
-                <h2><i data-lucide="target" class="text-gold"></i> Daily Quests</h2>
+                <h2><i data-lucide="target" class="text-gold"></i> Active Daily Quests</h2>
                 <span class="text-sub">Refreshes every session</span>
               </div>
               <div class="quests-list" id="dashboard-quests">
                 <!-- Injected dynamically -->
               </div>
             </div>
-            
-            <!-- RIGHT: LIVE LEADERBOARD PREVIEW CARD -->
-            <div class="glass card leaderboard-preview-card">
-              <div class="card-header">
-                <h2>🏆 Realm Leaderboard</h2>
-                <span class="text-sub">Top Scholars</span>
-              </div>
-              <div class="leaderboard-list" id="dashboard-leaderboard">
-                <div class="leaderboard-loading text-sub">Loading live rankings...</div>
-              </div>
-            </div>
 
-            <!-- BOTTOM: STATS SUMMARY CARD -->
-            <div class="glass card stats-summary-card span-full">
-              <h2><i data-lucide="trophy" class="text-gold"></i> My Achievements & Progression</h2>
+            <!-- RIGHT: STATISTICS & XP PROGRESS RING CARD -->
+            <div class="glass card stats-summary-card">
+              <div class="card-header">
+                <h2><i data-lucide="pie-chart" class="text-gold"></i> Progression & Stats</h2>
+                <span class="text-sub">My Performance</span>
+              </div>
+              
+              <div class="stats-overview-ring-box">
+                <!-- Circular Ring Gauge -->
+                <div class="ring-gauge-wrapper">
+                  <svg class="ring-svg" viewBox="0 0 100 100">
+                    <circle class="ring-bg" cx="50" cy="50" r="40" />
+                    <circle class="ring-progress" id="dash-xp-ring" cx="50" cy="50" r="40" />
+                  </svg>
+                  <div class="ring-center-info">
+                    <span class="ring-val" id="dash-ring-level">LV 1</span>
+                    <span class="ring-sub" id="dash-ring-xp">0/100 XP</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4 Summary Stats Grid -->
               <div class="stats-summary-grid">
                 <div class="summary-box">
                   <div class="summary-icon">⚔️</div>
                   <div class="summary-val" id="stat-quizzes-completed">0</div>
-                  <div class="summary-lbl">Quizzes Solved</div>
+                  <div class="summary-lbl">Quizzes</div>
                 </div>
                 <div class="summary-box">
                   <div class="summary-icon">⏱️</div>
@@ -383,17 +425,19 @@
                 <div class="summary-box">
                   <div class="summary-icon">📜</div>
                   <div class="summary-val" id="stat-lessons-completed">0</div>
-                  <div class="summary-lbl">Lessons Mastered</div>
+                  <div class="summary-lbl">Lessons</div>
                 </div>
                 <div class="summary-box">
                   <div class="summary-icon">🔥</div>
                   <div class="summary-val" id="stat-habits-streak">0</div>
-                  <div class="summary-lbl">Max Habit Streak</div>
+                  <div class="summary-lbl">Max Streak</div>
                 </div>
               </div>
+
             </div>
-            
+
           </div>
+
         </section>
         
         <!-- ==================== QUIZFORGE VIEW ==================== -->

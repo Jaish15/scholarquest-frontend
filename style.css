@@ -3238,41 +3238,132 @@ button, .btn {
   display: none !important;
 }
 
-/* Login Page Card */
-.login-page-card {
+/* ============================================================
+   GAME LAUNCHER 2-COLUMN SPLIT LOGIN CARD STYLES
+   ============================================================ */
+
+/* Full-screen Backdrop */
+.login-screen-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, #26190b 0%, #0d0a07 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.login-screen-bg.hidden {
+  display: none !important;
+}
+
+.app-container.hidden {
+  display: none !important;
+}
+
+/* 2-Column Split Game Launcher Container */
+.launcher-login-container {
+  display: flex;
+  flex-direction: row;
   width: 100%;
-  max-width: 440px;
-  background: linear-gradient(145deg, rgba(22, 17, 12, 0.96), rgba(10, 8, 5, 0.99));
+  max-width: 900px;
+  min-height: 520px;
+  background: linear-gradient(145deg, rgba(22, 17, 12, 0.98), rgba(10, 8, 5, 0.99));
   border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: 20px;
-  padding: 32px 28px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(245, 158, 11, 0.2);
-  animation: fadeIn 0.35s ease-out;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 50px rgba(245, 158, 11, 0.2);
+  animation: fadeIn 0.4s ease-out;
 }
 
-.login-page-header {
-  text-align: center;
-  margin-bottom: 22px;
+/* Left Column: Supplied Medieval Artwork Showcase */
+.launcher-art-side {
+  width: 44%;
+  position: relative;
+  overflow: hidden;
+  background: #0d0a07;
+  display: flex;
 }
 
-.login-brand-icon {
-  font-size: 42px;
-  margin-bottom: 6px;
-  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.6));
+.launcher-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  filter: brightness(0.92) contrast(1.05);
+  transition: transform 0.6s ease;
 }
 
-.login-brand-title {
-  font-size: 26px;
+.launcher-art-side:hover .launcher-art-img {
+  transform: scale(1.03);
+}
+
+.launcher-art-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10, 8, 5, 0.95) 0%, rgba(10, 8, 5, 0.3) 50%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 28px;
+}
+
+.launcher-art-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.launcher-art-brand .brand-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.6));
+}
+
+.launcher-art-brand .brand-name {
+  font-size: 22px;
   font-weight: 900;
   color: #f59e0b;
   letter-spacing: 0.05em;
   margin: 0;
+  line-height: 1.1;
 }
 
-.login-brand-subtitle {
+.launcher-art-brand .brand-tagline {
+  font-size: 11px;
+  color: rgba(245, 232, 215, 0.65);
+  margin-top: 2px;
+}
+
+/* Right Column: Form Side */
+.launcher-form-side {
+  width: 56%;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(14, 11, 7, 0.95);
+}
+
+.launcher-header {
+  margin-bottom: 18px;
+}
+
+.launcher-header h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #f59e0b;
+  margin: 0;
+}
+
+.launcher-header p {
   font-size: 12px;
   color: rgba(245, 232, 215, 0.5);
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 /* Tabs */
@@ -3282,17 +3373,17 @@ button, .btn {
   padding: 4px;
   border-radius: 12px;
   border: 1px solid rgba(245, 158, 11, 0.15);
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .login-tab {
   flex: 1;
-  padding: 9px 4px;
+  padding: 8px 4px;
   background: transparent;
   border: none;
   color: rgba(245, 232, 215, 0.5);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 11px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
@@ -3300,7 +3391,7 @@ button, .btn {
 }
 
 .login-tab.active {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35));
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.4));
   color: #f59e0b;
   border: 1px solid rgba(245, 158, 11, 0.35);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
@@ -3318,7 +3409,7 @@ button, .btn {
 
 .page-submit-btn {
   width: 100% !important;
-  padding: 13px !important;
+  padding: 12px !important;
   font-size: 14px !important;
   font-weight: 800 !important;
   border-radius: 10px !important;
@@ -3344,7 +3435,7 @@ button, .btn {
 }
 
 .guest-link {
-  font-size: 12px !important;
+  font-size: 11px !important;
   color: rgba(245, 232, 215, 0.6) !important;
 }
 
@@ -3352,24 +3443,23 @@ button, .btn {
   color: #f59e0b !important;
 }
 
-.login-features-row {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(245, 158, 11, 0.6);
-  letter-spacing: 0.04em;
+/* Responsive breakdown for small screens */
+@media (max-width: 768px) {
+  .launcher-login-container {
+    flex-direction: column;
+    max-width: 440px;
+    min-height: auto;
+  }
+  .launcher-art-side {
+    width: 100%;
+    height: 180px;
+  }
+  .launcher-form-side {
+    width: 100%;
+    padding: 24px 20px;
+  }
 }
 
-.login-features-row span {
-  background: rgba(245, 158, 11, 0.06);
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(245, 158, 11, 0.12);
-}
 
 
 

@@ -18,7 +18,127 @@
 </head>
 <body class="theme-gold dark-mode">
   
-  <div class="app-container">
+  <!-- ==================== DEDICATED FULL-SCREEN LOGIN PAGE ==================== -->
+  <div id="login-screen" class="login-screen-bg">
+    <div class="login-page-card glass glow-gold">
+      
+      <!-- Brand Logo Header -->
+      <div class="login-page-header">
+        <div class="login-brand-icon">⚔️</div>
+        <h1 class="login-brand-title">ScholarQuest</h1>
+        <p class="login-brand-subtitle">Level Up Your Learning • MSc IT Project 2026</p>
+      </div>
+
+      <!-- Auth Tabs -->
+      <div class="login-tabs">
+        <button class="login-tab active" id="pg-tab-login">Login</button>
+        <button class="login-tab" id="pg-tab-register">Register</button>
+        <button class="login-tab" id="pg-tab-forgot">Forgot Password</button>
+      </div>
+
+      <!-- Alert Banner -->
+      <div id="pg-auth-alert" class="auth-alert hidden"></div>
+
+      <!-- FORM 1: LOGIN -->
+      <form id="pg-form-login" class="login-form">
+        <div class="form-group">
+          <label for="pg-login-email"><i data-lucide="mail"></i> Email Address</label>
+          <input type="email" id="pg-login-email" required placeholder="scholar@mscit.edu" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="pg-login-password"><i data-lucide="key-round"></i> Password</label>
+          <input type="password" id="pg-login-password" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="auth-form-footer-link">
+          <button type="button" class="btn-link" id="pg-goto-forgot">Forgot your password?</button>
+        </div>
+        <button type="submit" class="btn primary-btn page-submit-btn" id="pg-btn-login">
+          <span>Authenticate & Enter Realm ⚔️</span>
+        </button>
+      </form>
+
+      <!-- FORM 2: REGISTER -->
+      <form id="pg-form-register" class="login-form hidden">
+        <div class="form-group">
+          <label for="pg-reg-username"><i data-lucide="user"></i> Scholar Name (Username)</label>
+          <input type="text" id="pg-reg-username" required placeholder="KnightCoder" minlength="3">
+        </div>
+        <div class="form-group">
+          <label for="pg-reg-email"><i data-lucide="mail"></i> Email Address</label>
+          <input type="email" id="pg-reg-email" required placeholder="scholar@mscit.edu">
+        </div>
+        <div class="form-group">
+          <label for="pg-reg-password"><i data-lucide="lock"></i> Password</label>
+          <input type="password" id="pg-reg-password" required placeholder="At least 4 characters" minlength="4">
+        </div>
+        <button type="submit" class="btn primary-btn page-submit-btn" id="pg-btn-register">
+          <span>Create Account & Join Quest 🚀</span>
+        </button>
+      </form>
+
+      <!-- FORM 3: FORGOT PASSWORD -->
+      <div id="pg-container-forgot" class="login-form hidden">
+        
+        <!-- Step 1: Request Code -->
+        <form id="pg-form-forgot-step1">
+          <p class="auth-step-desc">Enter your account email to dispatch a 6-digit recovery code.</p>
+          <div class="form-group">
+            <label for="pg-forgot-email"><i data-lucide="mail"></i> Registered Email</label>
+            <input type="email" id="pg-forgot-email" required placeholder="scholar@mscit.edu">
+          </div>
+          <button type="submit" class="btn primary-btn page-submit-btn" id="pg-btn-forgot1">
+            <span>Send Recovery Code ✉️</span>
+          </button>
+        </form>
+
+        <!-- Demo OTP Code Display Box -->
+        <div id="pg-demo-code-box" class="demo-code-box hidden">
+          <div class="demo-code-title">🔑 DEMO RECOVERY CODE</div>
+          <div class="demo-code-val" id="pg-demo-code-val">------</div>
+          <p class="demo-code-sub">Code pre-filled below for instant testing!</p>
+        </div>
+
+        <!-- Step 2: Reset Password -->
+        <form id="pg-form-forgot-step2" class="hidden" style="margin-top: 15px;">
+          <div class="form-group">
+            <label for="pg-reset-code"><i data-lucide="shield-alert"></i> 6-Digit Recovery Code</label>
+            <input type="text" id="pg-reset-code" required placeholder="123456" maxlength="6">
+          </div>
+          <div class="form-group">
+            <label for="pg-reset-new-password"><i data-lucide="key"></i> New Password</label>
+            <input type="password" id="pg-reset-new-password" required placeholder="Enter new password" minlength="4">
+          </div>
+          <button type="submit" class="btn primary-btn page-submit-btn" id="pg-btn-forgot2">
+            <span>Reset Password & Update DB 🔑</span>
+          </button>
+        </form>
+
+        <div class="auth-form-footer-link" style="text-align: center; margin-top: 12px;">
+          <button type="button" class="btn-link" id="pg-goto-login">← Back to Login</button>
+        </div>
+      </div>
+
+      <!-- Guest Demo Option -->
+      <div class="login-guest-footer">
+        <button type="button" class="btn-link guest-link" id="btn-enter-guest">
+          Or continue in Guest Preview Mode 🏹
+        </button>
+      </div>
+
+      <!-- Features Pill Footer -->
+      <div class="login-features-row">
+        <span>⚔️ Quiz Battles</span>
+        <span>⏱️ Focus Arena</span>
+        <span>🧱 Habit Dojo</span>
+        <span>🏆 Leaderboards</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== MAIN SCHOLARQUEST APPLICATION ==================== -->
+  <div class="app-container" id="main-app-container">
+
     
     <!-- LEFT SIDEBAR: Navigation -->
     <aside class="sidebar">

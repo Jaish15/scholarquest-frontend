@@ -505,50 +505,101 @@ window.syncAvatarDisplay = syncAvatarDisplay;
    AUTHENTICATION MODULE CONTROLLER
    ============================================================ */
 function initAuth() {
+  // Main screen containers
+  const loginScreen = document.getElementById('login-screen');
+  const mainAppContainer = document.getElementById('main-app-container');
+
+  // Modal elements
   const modal = document.getElementById('auth-modal');
   const btnOpenAuth = document.getElementById('btn-open-auth');
   const btnCloseAuth = document.getElementById('btn-close-auth');
   const authBtnLabel = document.getElementById('auth-btn-label');
-  const alertEl = document.getElementById('auth-alert');
+  const alertModalEl = document.getElementById('auth-alert');
 
-  // Tabs
+  // Dedicated Full-Screen Login Page elements
+  const pgAlertEl = document.getElementById('pg-auth-alert');
+  const pgTabLogin = document.getElementById('pg-tab-login');
+  const pgTabRegister = document.getElementById('pg-tab-register');
+  const pgTabForgot = document.getElementById('pg-tab-forgot');
+
+  const pgFormLogin = document.getElementById('pg-form-login');
+  const pgFormRegister = document.getElementById('pg-form-register');
+  const pgContainerForgot = document.getElementById('pg-container-forgot');
+  const pgFormForgot1 = document.getElementById('pg-form-forgot-step1');
+  const pgFormForgot2 = document.getElementById('pg-form-forgot-step2');
+  const pgDemoCodeBox = document.getElementById('pg-demo-code-box');
+  const pgDemoCodeVal = document.getElementById('pg-demo-code-val');
+
+  const pgGotoForgot = document.getElementById('pg-goto-forgot');
+  const pgGotoLogin = document.getElementById('pg-goto-login');
+  const btnEnterGuest = document.getElementById('btn-enter-guest');
+
+  // Modal elements
   const tabLogin = document.getElementById('tab-auth-login');
   const tabRegister = document.getElementById('tab-auth-register');
   const tabForgot = document.getElementById('tab-auth-forgot');
-
-  // Forms & Containers
   const formLogin = document.getElementById('form-auth-login');
   const formRegister = document.getElementById('form-auth-register');
   const containerForgot = document.getElementById('auth-forgot-container');
   const containerProfile = document.getElementById('auth-profile-container');
-
-  // Forgot password forms & step elements
   const formForgot1 = document.getElementById('form-auth-forgot-step1');
   const formForgot2 = document.getElementById('form-auth-forgot-step2');
   const demoCodeBox = document.getElementById('demo-code-box');
   const demoCodeVal = document.getElementById('demo-code-val');
-
-  // Links
   const btnGotoForgot = document.getElementById('btn-goto-forgot');
   const btnGotoLogin = document.getElementById('btn-goto-login');
   const btnLogout = document.getElementById('btn-submit-logout');
   const btnSyncState = document.getElementById('btn-sync-state');
 
-  // Helper: Show Alert
-  function showAlert(msg, type = 'error') {
-    if (!alertEl) return;
-    alertEl.className = `auth-alert ${type}`;
-    alertEl.innerText = msg;
-    alertEl.classList.remove('hidden');
+  // Screen Toggles
+  function showAppScreen() {
+    if (loginScreen) loginScreen.classList.add('hidden');
+    if (mainAppContainer) mainAppContainer.classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
   }
 
-  function hideAlert() {
-    if (!alertEl) return;
-    alertEl.classList.add('hidden');
-    alertEl.innerText = '';
+  function showLoginScreen() {
+    if (loginScreen) loginScreen.classList.remove('hidden');
+    if (mainAppContainer) mainAppContainer.classList.add('hidden');
+    if (modal) modal.classList.add('hidden');
+    if (window.lucide) window.lucide.createIcons();
   }
 
-  // Update Auth Header Pill
+  // 🚀 PAGE LOAD AUTHORIZATION CHECK
+  if (auth.isLoggedIn()) {
+    showAppScreen();
+  } else {
+    showLoginScreen();
+  }
+
+  // Helpers: Show Alert
+  function showPgAlert(msg, type = 'error') {
+    if (!pgAlertEl) return;
+    pgAlertEl.className = `auth-alert ${type}`;
+    pgAlertEl.innerText = msg;
+    pgAlertEl.classList.remove('hidden');
+  }
+
+  function hidePgAlert() {
+    if (!pgAlertEl) return;
+    pgAlertEl.classList.add('hidden');
+    pgAlertEl.innerText = '';
+  }
+
+  function showModalAlert(msg, type = 'error') {
+    if (!alertModalEl) return;
+    alertModalEl.className = `auth-alert ${type}`;
+    alertModalEl.innerText = msg;
+    alertModalEl.classList.remove('hidden');
+  }
+
+  function hideModalAlert() {
+    if (!alertModalEl) return;
+    alertModalEl.classList.add('hidden');
+    alertModalEl.innerText = '';
+  }
+
+  // Update Top Header Pill
   function updateAuthHeaderBtn() {
     if (!btnOpenAuth || !authBtnLabel) return;
     if (auth.isLoggedIn()) {
@@ -563,9 +614,185 @@ function initAuth() {
   updateAuthHeaderBtn();
   window.updateAuthHeaderBtn = updateAuthHeaderBtn;
 
-  // Switch Tab View
-  function switchTab(targetTab) {
-    hideAlert();
+  // ── FULL-SCREEN PAGE TAB SWITCHER ─────────────────────────────────
+  function switchPageTab(targetTab) {
+    hidePgAlert();
+    [pgTabLogin, pgTabRegister, pgTabForgot].forEach(tab => tab && tab.classList.remove('active'));
+
+    pgFormLogin.classList.add('hidden');
+    pgFormRegister.classList.add('hidden');
+    pgContainerForgot.classList.add('hidden');
+
+    if (targetTab === 'login') {
+      pgTabLogin.classList.add('active');
+      pgFormLogin.classList.remove('hidden');
+    } else if (targetTab === 'register') {
+      pgTabRegister.classList.add('active');
+      pgFormRegister.classList.remove('hidden');
+    } else if (targetTab === 'forgot') {
+      pgTabForgot.classList.add('active');
+      pgContainerForgot.classList.remove('hidden');
+      pgFormForgot1.classList.remove('hidden');
+      pgFormForgot2.classList.add('hidden');
+      pgDemoCodeBox.classList.add('hidden');
+    }
+  }
+
+  if (pgTabLogin) pgTabLogin.addEventListener('click', () => switchPageTab('login'));
+  if (pgTabRegister) pgTabRegister.addEventListener('click', () => switchPageTab('register'));
+  if (pgTabForgot) pgTabForgot.addEventListener('click', () => switchPageTab('forgot'));
+  if (pgGotoForgot) pgGotoForgot.addEventListener('click', () => switchPageTab('forgot'));
+  if (pgGotoLogin) pgGotoLogin.addEventListener('click', () => switchPageTab('login'));
+
+  if (btnEnterGuest) {
+    btnEnterGuest.addEventListener('click', () => {
+      showAppScreen();
+    });
+  }
+
+  // ── PAGE FORM 1: LOGIN ────────────────────────────────────────────
+  if (pgFormLogin) {
+    pgFormLogin.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hidePgAlert();
+
+      const email = document.getElementById('pg-login-email').value.trim();
+      const password = document.getElementById('pg-login-password').value;
+      const btnSubmit = document.getElementById('pg-btn-login');
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = 'Authenticating... ⚔️';
+
+      const res = await api.login(email, password);
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<span>Authenticate & Enter Realm ⚔️</span>';
+
+      if (res.ok) {
+        showPgAlert(res.data.message || 'Welcome back, Scholar!', 'success');
+        if (res.data.user) {
+          state.username = res.data.user.username;
+          state.email = res.data.user.email;
+          localStorage.setItem('sq_username', res.data.user.username);
+          state = { ...state, ...res.data.user };
+        }
+        updateUI();
+        updateAuthHeaderBtn();
+
+        setTimeout(() => {
+          hidePgAlert();
+          showAppScreen();
+        }, 600);
+      } else {
+        showPgAlert(res.error || 'Login failed. Check your email & password.');
+      }
+    });
+  }
+
+  // ── PAGE FORM 2: REGISTER ─────────────────────────────────────────
+  if (pgFormRegister) {
+    pgFormRegister.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hidePgAlert();
+
+      const username = document.getElementById('pg-reg-username').value.trim();
+      const email = document.getElementById('pg-reg-email').value.trim();
+      const password = document.getElementById('pg-reg-password').value;
+      const btnSubmit = document.getElementById('pg-btn-register');
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = 'Creating Account... 🚀';
+
+      const res = await api.register(username, email, password);
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<span>Create Account & Join Quest 🚀</span>';
+
+      if (res.ok) {
+        showPgAlert(res.data.message || 'Account created!', 'success');
+        if (res.data.user) {
+          state.username = res.data.user.username;
+          state.email = res.data.user.email;
+          localStorage.setItem('sq_username', res.data.user.username);
+          state = { ...state, ...res.data.user };
+        }
+        updateUI();
+        updateAuthHeaderBtn();
+
+        setTimeout(() => {
+          hidePgAlert();
+          showAppScreen();
+        }, 600);
+      } else {
+        showPgAlert(res.error || 'Registration failed.');
+      }
+    });
+  }
+
+  // ── PAGE FORM 3: FORGOT PASSWORD STEP 1 ───────────────────────────
+  if (pgFormForgot1) {
+    pgFormForgot1.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hidePgAlert();
+
+      const email = document.getElementById('pg-forgot-email').value.trim();
+      const btnSubmit = document.getElementById('pg-btn-forgot1');
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = 'Sending Code... ✉️';
+
+      const res = await api.forgotPassword(email);
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<span>Send Recovery Code ✉️</span>';
+
+      if (res.ok) {
+        showPgAlert('Recovery code dispatched! See demo code below.', 'success');
+        if (res.data.resetCode) {
+          pgDemoCodeVal.innerText = res.data.resetCode;
+          pgDemoCodeBox.classList.remove('hidden');
+          document.getElementById('pg-reset-code').value = res.data.resetCode;
+        }
+        pgFormForgot1.classList.add('hidden');
+        pgFormForgot2.classList.remove('hidden');
+      } else {
+        showPgAlert(res.error || 'Failed to dispatch recovery code.');
+      }
+    });
+  }
+
+  // ── PAGE FORM 3: FORGOT PASSWORD STEP 2 ───────────────────────────
+  if (pgFormForgot2) {
+    pgFormForgot2.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hidePgAlert();
+
+      const email = document.getElementById('pg-forgot-email').value.trim();
+      const resetCode = document.getElementById('pg-reset-code').value.trim();
+      const newPassword = document.getElementById('pg-reset-new-password').value;
+      const btnSubmit = document.getElementById('pg-btn-forgot2');
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = 'Updating Password... 🔑';
+
+      const res = await api.resetPassword(email, resetCode, newPassword);
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<span>Reset Password & Update DB 🔑</span>';
+
+      if (res.ok) {
+        showPgAlert(res.data.message || 'Password reset successfully!', 'success');
+        document.getElementById('pg-login-email').value = email;
+
+        setTimeout(() => {
+          switchPageTab('login');
+          showPgAlert('Password updated! Please log in with your new password.', 'success');
+        }, 1200);
+      } else {
+        showPgAlert(res.error || 'Password reset failed.');
+      }
+    });
+  }
+
+  // ── MODAL TAB SWITCHER & HANDLERS ────────────────────────────────
+  function switchModalTab(targetTab) {
+    hideModalAlert();
     [tabLogin, tabRegister, tabForgot].forEach(tab => tab && tab.classList.remove('active'));
 
     formLogin.classList.add('hidden');
@@ -589,13 +816,11 @@ function initAuth() {
       containerProfile.classList.remove('hidden');
       document.querySelector('.auth-tabs').style.display = 'none';
 
-      // Fill profile details
       document.getElementById('profile-username').innerText = state.username || 'Scholar';
       document.getElementById('profile-email').innerText = state.email || 'scholar@mscit.edu';
       document.getElementById('profile-level-badge').innerText = `LV ${state.level}`;
       document.getElementById('profile-coins-badge').innerText = `🪙 ${state.coins}`;
 
-      // Render profile sprite
       const avatarId = state.avatar ? state.avatar.id || 'peasant' : 'peasant';
       const hero = HERO_DISPLAY_DATA[avatarId] || HERO_DISPLAY_DATA['peasant'];
       const profileSprite = document.getElementById('profile-avatar-sprite');
@@ -607,66 +832,52 @@ function initAuth() {
     document.querySelector('.auth-tabs').style.display = 'flex';
   }
 
-  // Open Modal
   if (btnOpenAuth) {
     btnOpenAuth.addEventListener('click', () => {
       if (auth.isLoggedIn()) {
-        switchTab('profile');
+        switchModalTab('profile');
       } else {
-        switchTab('login');
+        switchModalTab('login');
       }
       modal.classList.remove('hidden');
     });
   }
 
-  // Close Modal (Continue as Guest)
   if (btnCloseAuth) {
     btnCloseAuth.addEventListener('click', () => {
       modal.classList.add('hidden');
     });
   }
 
-  // 🚀 Auto-open Login Portal on page load if user is NOT logged in
-  if (!auth.isLoggedIn()) {
-    switchTab('login');
-    modal.classList.remove('hidden');
-  }
+  if (tabLogin) tabLogin.addEventListener('click', () => switchModalTab('login'));
+  if (tabRegister) tabRegister.addEventListener('click', () => switchModalTab('register'));
+  if (tabForgot) tabForgot.addEventListener('click', () => switchModalTab('forgot'));
+  if (btnGotoForgot) btnGotoForgot.addEventListener('click', () => switchModalTab('forgot'));
+  if (btnGotoLogin) btnGotoLogin.addEventListener('click', () => switchModalTab('login'));
 
-
-  // Tab button listeners
-  if (tabLogin) tabLogin.addEventListener('click', () => switchTab('login'));
-  if (tabRegister) tabRegister.addEventListener('click', () => switchTab('register'));
-  if (tabForgot) tabForgot.addEventListener('click', () => switchTab('forgot'));
-
-  if (btnGotoForgot) btnGotoForgot.addEventListener('click', () => switchTab('forgot'));
-  if (btnGotoLogin) btnGotoLogin.addEventListener('click', () => switchTab('login'));
-
-  // ── FORM 1: LOGIN ─────────────────────────────────────────────
+  // Modal Login Form
   if (formLogin) {
     formLogin.addEventListener('submit', async (e) => {
       e.preventDefault();
-      hideAlert();
+      hideModalAlert();
 
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
-
       const btnSubmit = document.getElementById('btn-submit-login');
+
       btnSubmit.disabled = true;
       btnSubmit.innerText = 'Authenticating... ⚔️';
 
       const res = await api.login(email, password);
-
       btnSubmit.disabled = false;
       btnSubmit.innerHTML = '<span>Enter Realm ⚔️</span>';
 
       if (res.ok) {
-        showAlert(res.data.message || 'Welcome back, Scholar!', 'success');
+        showModalAlert(res.data.message || 'Welcome back, Scholar!', 'success');
         if (res.data.user) {
           state.username = res.data.user.username;
           state.email = res.data.user.email;
           localStorage.setItem('sq_username', res.data.user.username);
-          
-          // Deep merge server user data
           state = { ...state, ...res.data.user };
         }
         updateUI();
@@ -674,35 +885,35 @@ function initAuth() {
 
         setTimeout(() => {
           modal.classList.add('hidden');
-          hideAlert();
-        }, 800);
+          hideModalAlert();
+          showAppScreen();
+        }, 600);
       } else {
-        showAlert(res.error || 'Login failed. Please check credentials.');
+        showModalAlert(res.error || 'Login failed.');
       }
     });
   }
 
-  // ── FORM 2: REGISTER ──────────────────────────────────────────
+  // Modal Register Form
   if (formRegister) {
     formRegister.addEventListener('submit', async (e) => {
       e.preventDefault();
-      hideAlert();
+      hideModalAlert();
 
       const username = document.getElementById('reg-username').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
-
       const btnSubmit = document.getElementById('btn-submit-register');
+
       btnSubmit.disabled = true;
       btnSubmit.innerText = 'Creating Account... 🚀';
 
       const res = await api.register(username, email, password);
-
       btnSubmit.disabled = false;
       btnSubmit.innerHTML = '<span>Join the Quest 🚀</span>';
 
       if (res.ok) {
-        showAlert(res.data.message || 'Scholar registered!', 'success');
+        showModalAlert(res.data.message || 'Scholar registered!', 'success');
         if (res.data.user) {
           state.username = res.data.user.username;
           state.email = res.data.user.email;
@@ -714,19 +925,20 @@ function initAuth() {
 
         setTimeout(() => {
           modal.classList.add('hidden');
-          hideAlert();
-        }, 800);
+          hideModalAlert();
+          showAppScreen();
+        }, 600);
       } else {
-        showAlert(res.error || 'Registration failed.');
+        showModalAlert(res.error || 'Registration failed.');
       }
     });
   }
 
-  // ── FORM 3: FORGOT PASSWORD STEP 1 ────────────────────────────
+  // Modal Forgot Password Step 1
   if (formForgot1) {
     formForgot1.addEventListener('submit', async (e) => {
       e.preventDefault();
-      hideAlert();
+      hideModalAlert();
 
       const email = document.getElementById('forgot-email').value.trim();
       const btnSubmit = document.getElementById('btn-submit-forgot1');
@@ -735,63 +947,57 @@ function initAuth() {
       btnSubmit.innerText = 'Sending Code... ✉️';
 
       const res = await api.forgotPassword(email);
-
       btnSubmit.disabled = false;
       btnSubmit.innerHTML = '<span>Send Recovery Code ✉️</span>';
 
       if (res.ok) {
-        showAlert('Recovery code dispatched! Check your code below.', 'success');
-
-        // Show code box for demo
+        showModalAlert('Recovery code dispatched!', 'success');
         if (res.data.resetCode) {
           demoCodeVal.innerText = res.data.resetCode;
           demoCodeBox.classList.remove('hidden');
           document.getElementById('reset-code').value = res.data.resetCode;
         }
-
-        // Show Step 2
         formForgot1.classList.add('hidden');
         formForgot2.classList.remove('hidden');
       } else {
-        showAlert(res.error || 'Failed to dispatch recovery code.');
+        showModalAlert(res.error || 'Failed to dispatch recovery code.');
       }
     });
   }
 
-  // ── FORM 3: FORGOT PASSWORD STEP 2 ────────────────────────────
+  // Modal Forgot Password Step 2
   if (formForgot2) {
     formForgot2.addEventListener('submit', async (e) => {
       e.preventDefault();
-      hideAlert();
+      hideModalAlert();
 
       const email = document.getElementById('forgot-email').value.trim();
       const resetCode = document.getElementById('reset-code').value.trim();
       const newPassword = document.getElementById('reset-new-password').value;
-
       const btnSubmit = document.getElementById('btn-submit-forgot2');
+
       btnSubmit.disabled = true;
       btnSubmit.innerText = 'Updating Password... 🔑';
 
       const res = await api.resetPassword(email, resetCode, newPassword);
-
       btnSubmit.disabled = false;
       btnSubmit.innerHTML = '<span>Update Password 🔑</span>';
 
       if (res.ok) {
-        showAlert(res.data.message || 'Password reset successfully!', 'success');
+        showModalAlert(res.data.message || 'Password reset successfully!', 'success');
         document.getElementById('login-email').value = email;
 
         setTimeout(() => {
-          switchTab('login');
-          showAlert('Password updated! Please log in with your new password.', 'success');
+          switchModalTab('login');
+          showModalAlert('Password updated! Please log in with your new password.', 'success');
         }, 1200);
       } else {
-        showAlert(res.error || 'Password reset failed.');
+        showModalAlert(res.error || 'Password reset failed.');
       }
     });
   }
 
-  // ── LOGOUT & SYNC ─────────────────────────────────────────────
+  // ── LOGOUT & SYNC ─────────────────────────────────────────────────
   if (btnLogout) {
     btnLogout.addEventListener('click', () => {
       api.logout();
@@ -799,8 +1005,7 @@ function initAuth() {
       delete state.email;
       updateAuthHeaderBtn();
       updateUI();
-      switchTab('login');
-      showAlert('Logged out successfully.', 'success');
+      showLoginScreen();
     });
   }
 
@@ -811,9 +1016,10 @@ function initAuth() {
       await api.saveState(state);
       btnSyncState.disabled = false;
       btnSyncState.innerHTML = '<i data-lucide="refresh-cw"></i> Sync Progress with Server';
-      showAlert('Progress synced with backend server!', 'success');
+      showModalAlert('Progress synced with backend server!', 'success');
       if (window.lucide) window.lucide.createIcons();
     });
   }
 }
+
 

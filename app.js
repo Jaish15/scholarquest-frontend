@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initial renders
   updateUI();
   generateDailyQuests();
+  fetchDashboardLeaderboard();
 });
 
 // Load state (from backend API if logged in, with localStorage fallback)
@@ -122,30 +123,78 @@ function initNavigation() {
   const navItems = document.querySelectorAll('.nav-item');
   const views = document.querySelectorAll('.content-view');
   
+  function navigateTo(target) {
+    // Update sidebar nav active state
+    navItems.forEach(nav => {
+      if (nav.getAttribute('data-target') === target) {
+        nav.classList.add('active');
+      } else {
+        nav.classList.remove('active');
+      }
+    });
+
+    // Update central pane views
+    views.forEach(view => {
+      if (view.getAttribute('id') === `view-${target}`) {
+        view.classList.add('active');
+      } else {
+        view.classList.remove('active');
+      }
+    });
+
+    // Specific tab update triggers
+    if (target === 'shop') {
+      updateShopAndInventoryUI();
+    }
+  }
+
   navItems.forEach(item => {
     item.addEventListener('click', () => {
       const target = item.getAttribute('data-target');
-      
-      // Update sidebar nav active state
-      navItems.forEach(nav => nav.classList.remove('active'));
-      item.classList.add('active');
-      
-      // Update central pane views
-      views.forEach(view => {
-        if (view.getAttribute('id') === `view-${target}`) {
-          view.classList.add('active');
-        } else {
-          view.classList.remove('active');
-        }
-      });
-      
-      // Specific tab update triggers
-      if (target === 'shop') {
-        updateShopAndInventoryUI();
-      }
+      navigateTo(target);
+    });
+  });
+
+  // Attach data-nav buttons (Dashboard hero action buttons & module cards)
+  document.querySelectorAll('[data-nav]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-nav');
+      navigateTo(target);
     });
   });
 }
+
+// Fetch Live Leaderboard for Dashboard Preview Card
+async function fetchDashboardLeaderboard() {
+  const container = document.getElementById('dashboard-leaderboard');
+  if (!container) return;
+
+  const res = await api.getLeaderboard();
+  if (res.ok && res.data && res.data.leaderboard) {
+    const list = res.data.leaderboard;
+    if (list.length === 0) {
+      container.innerHTML = `<div class="leaderboard-loading text-sub">No scholars on leaderboard yet. Be the first!</div>`;
+      return;
+    }
+
+    container.innerHTML = list.slice(0, 5).map((item, idx) => {
+      const medalClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : 'normal';
+      const medalIcon  = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+      return `
+        <div class="lb-rank-item">
+          <div class="lb-rank-left">
+            <div class="lb-medal ${medalClass}">${medalIcon}</div>
+            <div class="lb-username">${item.username || 'Scholar'}</div>
+          </div>
+          <div class="lb-badge-lvl">LV ${item.level || 1} • ${item.xp || 0} XP</div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    container.innerHTML = `<div class="leaderboard-loading text-sub">Connect server to view global rank</div>`;
+  }
+}
+
 
 // Core setup (Reset functions etc.)
 function initCore() {

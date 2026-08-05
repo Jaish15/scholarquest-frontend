@@ -122,34 +122,101 @@
         <!-- ==================== DASHBOARD VIEW ==================== -->
         <section id="view-dashboard" class="content-view active">
           
-          <!-- PROMINENT HERO SHOWCASE (top of dashboard) -->
+          <!-- PROMINENT HERO SHOWCASE BANNER -->
           <div class="hero-showcase-banner" id="hero-showcase-banner">
-            <div class="hero-showcase-sprite-area">
-              <div class="hero-showcase-sprite" id="showcase-sprite"></div>
-              <div class="hero-showcase-level-badge">LV <span id="showcase-level">1</span></div>
-            </div>
-            <div class="hero-showcase-info">
-              <div class="hero-showcase-subtitle">YOUR ACTIVE HERO</div>
-              <div class="hero-showcase-name" id="showcase-name">The Scholar</div>
-              <div class="hero-showcase-tagline" id="showcase-tagline">Diligent & Focused</div>
-              <div class="hero-showcase-stats">
-                <span>⭐ <span id="showcase-stat-level">1</span></span>
-                <span>🪙 <span id="showcase-stat-gold">0</span></span>
-                <span>🧱 <span id="showcase-stat-streak">0</span></span>
-                <span>🍯 <span id="showcase-stat-focus">0</span></span>
+            <div class="hero-showcase-left">
+              <div class="hero-showcase-sprite-area">
+                <div class="hero-showcase-sprite" id="showcase-sprite"></div>
+                <div class="hero-showcase-level-badge">LV <span id="showcase-level">1</span></div>
               </div>
+              <div class="hero-showcase-info">
+                <div class="hero-showcase-subtitle">ACTIVE HERO CLASS</div>
+                <div class="hero-showcase-name" id="showcase-name">The Scholar</div>
+                <div class="hero-showcase-tagline" id="showcase-tagline">Diligent & Focused</div>
+                <div class="hero-showcase-stats">
+                  <span class="hero-stat-pill">⭐ LV <span id="showcase-stat-level">1</span></span>
+                  <span class="hero-stat-pill gold-pill">🪙 <span id="showcase-stat-gold">150</span></span>
+                  <span class="hero-stat-pill streak-pill">🔥 <span id="showcase-stat-streak">0</span> Day Streak</span>
+                  <span class="hero-stat-pill focus-pill">🍯 <span id="showcase-stat-focus">0</span>m Focus</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action Launcher Buttons -->
+            <div class="hero-showcase-actions">
+              <button class="hero-action-btn primary-action" data-nav="quizforge">
+                <i data-lucide="swords"></i>
+                <span>Battle Quizzes</span>
+              </button>
+              <button class="hero-action-btn secondary-action" data-nav="focusarena">
+                <i data-lucide="timer"></i>
+                <span>Focus Arena</span>
+              </button>
+              <button class="hero-action-btn outline-action" data-nav="habitdojo">
+                <i data-lucide="shield-check"></i>
+                <span>Habit Dojo</span>
+              </button>
             </div>
           </div>
 
           <div class="dashboard-grid">
             
-            <!-- LEFT: Avatar Selector React Mount -->
+            <!-- AVATAR SELECTOR (React Mount) -->
             <div id="avatar-selector-root" class="span-full mb-4"></div>
             
-            <!-- RIGHT: Quests & Daily Stats -->
+            <!-- MODULE QUICK LAUNCHERS (4-Card Grid) -->
+            <div class="span-full module-launchers-grid mb-4">
+              
+              <!-- Card 1: QuizForge -->
+              <div class="glass card launcher-card launcher-quiz" data-nav="quizforge">
+                <div class="launcher-icon">⚔️</div>
+                <div class="launcher-body">
+                  <h3>QuizForge</h3>
+                  <p>Forge knowledge & earn XP in quiz battles</p>
+                  <div class="launcher-stat"><span id="dash-quick-quizzes">5</span> Quizzes Available</div>
+                </div>
+                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
+              </div>
+
+              <!-- Card 2: Focus Arena -->
+              <div class="glass card launcher-card launcher-focus" data-nav="focusarena">
+                <div class="launcher-icon">⏳</div>
+                <div class="launcher-body">
+                  <h3>Focus Arena</h3>
+                  <p>Pomodoro deep work sessions with XP boosts</p>
+                  <div class="launcher-stat"><span id="dash-quick-focus">25m</span> Standard Timer</div>
+                </div>
+                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
+              </div>
+
+              <!-- Card 3: HabitDojo -->
+              <div class="glass card launcher-card launcher-habits" data-nav="habitdojo">
+                <div class="launcher-icon">🧱</div>
+                <div class="launcher-body">
+                  <h3>HabitDojo</h3>
+                  <p>Daily streak multiplier for study habits</p>
+                  <div class="launcher-stat"><span id="dash-quick-streak">0</span> Current Streak</div>
+                </div>
+                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
+              </div>
+
+              <!-- Card 4: StudySync -->
+              <div class="glass card launcher-card launcher-sync" data-nav="studysync">
+                <div class="launcher-icon">🌐</div>
+                <div class="launcher-body">
+                  <h3>StudySync</h3>
+                  <p>Collaborate & study with fellow scholars</p>
+                  <div class="launcher-stat">Live Multiplayer</div>
+                </div>
+                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
+              </div>
+
+            </div>
+
+            <!-- LEFT: DAILY QUESTS CARD -->
             <div class="glass card quests-card">
               <div class="card-header">
-                <h2>Daily Quests</h2>
+                <h2><i data-lucide="target" class="text-gold"></i> Daily Quests</h2>
                 <span class="text-sub">Refreshes every session</span>
               </div>
               <div class="quests-list" id="dashboard-quests">
@@ -157,23 +224,38 @@
               </div>
             </div>
             
-            <!-- STATS SUMMARY CARD -->
-            <div class="glass card stats-summary-card">
-              <h2>My Achievements & Streaks</h2>
+            <!-- RIGHT: LIVE LEADERBOARD PREVIEW CARD -->
+            <div class="glass card leaderboard-preview-card">
+              <div class="card-header">
+                <h2>🏆 Realm Leaderboard</h2>
+                <span class="text-sub">Top Scholars</span>
+              </div>
+              <div class="leaderboard-list" id="dashboard-leaderboard">
+                <div class="leaderboard-loading text-sub">Loading live rankings...</div>
+              </div>
+            </div>
+
+            <!-- BOTTOM: STATS SUMMARY CARD -->
+            <div class="glass card stats-summary-card span-full">
+              <h2><i data-lucide="trophy" class="text-gold"></i> My Achievements & Progression</h2>
               <div class="stats-summary-grid">
                 <div class="summary-box">
+                  <div class="summary-icon">⚔️</div>
                   <div class="summary-val" id="stat-quizzes-completed">0</div>
                   <div class="summary-lbl">Quizzes Solved</div>
                 </div>
                 <div class="summary-box">
+                  <div class="summary-icon">⏱️</div>
                   <div class="summary-val" id="stat-focus-time">0m</div>
                   <div class="summary-lbl">Focus Time</div>
                 </div>
                 <div class="summary-box">
+                  <div class="summary-icon">📜</div>
                   <div class="summary-val" id="stat-lessons-completed">0</div>
                   <div class="summary-lbl">Lessons Mastered</div>
                 </div>
                 <div class="summary-box">
+                  <div class="summary-icon">🔥</div>
                   <div class="summary-val" id="stat-habits-streak">0</div>
                   <div class="summary-lbl">Max Habit Streak</div>
                 </div>

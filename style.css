@@ -2873,6 +2873,264 @@ body {
   box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
 }
 
+/* ============================================================
+   DASHBOARD REDESIGN STYLES
+   ============================================================ */
+
+/* Hero showcase banner layout update */
+.hero-showcase-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: linear-gradient(135deg, rgba(30, 22, 12, 0.9), rgba(16, 12, 8, 0.95));
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(245, 158, 11, 0.2);
+}
+
+.hero-showcase-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.hero-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+.hero-stat-pill.gold-pill {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.hero-stat-pill.streak-pill {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.3);
+  color: #f97316;
+}
+
+.hero-stat-pill.focus-pill {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+/* Quick action buttons in hero */
+.hero-showcase-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 170px;
+}
+
+.hero-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.hero-action-btn.primary-action {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0b0a08;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+
+.hero-action-btn.primary-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+}
+
+.hero-action-btn.secondary-action {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+.hero-action-btn.secondary-action:hover {
+  background: rgba(59, 130, 246, 0.25);
+  transform: translateY(-2px);
+}
+
+.hero-action-btn.outline-action {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(245, 232, 215, 0.8);
+}
+
+.hero-action-btn.outline-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Module launchers grid */
+.module-launchers-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.launcher-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1px solid rgba(245, 158, 11, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.launcher-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.launcher-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  flex-shrink: 0;
+}
+
+.launcher-body {
+  flex: 1;
+}
+
+.launcher-body h3 {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-color, #f5e8d7);
+  margin: 0 0 2px 0;
+}
+
+.launcher-body p {
+  font-size: 11px;
+  color: rgba(245, 232, 215, 0.45);
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+}
+
+.launcher-stat {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 0.04em;
+}
+
+.launcher-arrow {
+  color: rgba(245, 158, 11, 0.5);
+  transition: transform 0.2s ease;
+}
+
+.launcher-card:hover .launcher-arrow {
+  transform: translateX(4px);
+  color: #f59e0b;
+}
+
+/* Leaderboard preview list */
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+}
+
+.lb-rank-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(245, 158, 11, 0.1);
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.lb-rank-item:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.lb-rank-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lb-medal {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.lb-medal.gold { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid #fbbf24; }
+.lb-medal.silver { background: rgba(203, 213, 225, 0.2); color: #cbd5e1; border: 1px solid #cbd5e1; }
+.lb-medal.bronze { background: rgba(217, 119, 6, 0.2); color: #d97706; border: 1px solid #d97706; }
+.lb-medal.normal { background: rgba(255, 255, 255, 0.05); color: rgba(255,255,255,0.5); }
+
+.lb-username {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.lb-badge-lvl {
+  font-size: 11px;
+  font-weight: 800;
+  color: #f59e0b;
+}
+
+/* Stats summary icon */
+.summary-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 900px) {
+  .module-launchers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hero-showcase-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .hero-showcase-actions {
+    width: 100%;
+    flex-direction: row;
+  }
+  .hero-action-btn {
+    flex: 1;
+  }
+}
+
+
 
 
 

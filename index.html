@@ -132,19 +132,20 @@
           </div>
         </div>
 
-        <!-- Social OAuth Sign-In Row -->
-        <div class="social-auth-divider">
-          <span>or authenticate with</span>
+        <!-- Social OAuth Sign-In Row (Centered Gold Glass Icons) -->
+        <div class="social-auth-divider" style="display: flex; align-items: center; justify-content: center; text-align: center; width: 100%; max-width: 330px; margin: 20px auto 12px; color: rgba(245, 232, 215, 0.5); font-size: 11px; font-weight: 600;">
+          <span style="padding: 0 10px; text-align: center;">or authenticate with</span>
         </div>
-        <div class="social-auth-row">
-          <button type="button" class="social-auth-btn social-google" data-sso="google" title="Authenticate with Google">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12.24 10.285V13.4h6.887c-.58 3.407-3.418 5.617-6.887 5.617-4.14 0-7.5-3.36-7.5-7.5s3.36-7.5 7.5-7.5c1.86 0 3.56.68 4.88 1.8l2.36-2.36C17.5 1.7 15 1 12.24 1 6.03 1 1 6.03 1 12.24S6.03 23.48 12.24 23.48c6.48 0 11.88-4.66 11.88-11.88 0-.79-.08-1.57-.22-2.315H12.24z"/></svg>
+
+        <div class="social-auth-row" style="display: flex; align-items: center; justify-content: center; gap: 18px; width: 100%; max-width: 330px; margin: 0 auto;">
+          <button type="button" class="social-auth-btn social-google" data-sso="google" title="Authenticate with Google" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; border-radius: 50%; background: rgba(38, 25, 11, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); outline: none;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#f59e0b" style="display:block;"><path d="M12.24 10.285V13.4h6.887c-.58 3.407-3.418 5.617-6.887 5.617-4.14 0-7.5-3.36-7.5-7.5s3.36-7.5 7.5-7.5c1.86 0 3.56.68 4.88 1.8l2.36-2.36C17.5 1.7 15 1 12.24 1 6.03 1 1 6.03 1 12.24S6.03 23.48 12.24 23.48c6.48 0 11.88-4.66 11.88-11.88 0-.79-.08-1.57-.22-2.315H12.24z"/></svg>
           </button>
-          <button type="button" class="social-auth-btn social-github" data-sso="github" title="Authenticate with GitHub">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <button type="button" class="social-auth-btn social-github" data-sso="github" title="Authenticate with GitHub" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; border-radius: 50%; background: rgba(38, 25, 11, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); outline: none;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#f59e0b" style="display:block;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           </button>
-          <button type="button" class="social-auth-btn social-leetcode" data-sso="leetcode" title="Authenticate with LeetCode">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          <button type="button" class="social-auth-btn social-leetcode" data-sso="leetcode" title="Authenticate with LeetCode" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; border-radius: 50%; background: rgba(38, 25, 11, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); outline: none;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
           </button>
         </div>
 

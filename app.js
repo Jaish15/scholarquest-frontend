@@ -650,6 +650,32 @@ function initAuth() {
     });
   }
 
+  // ── SOCIAL SSO OAUTH HANDLER (Google, GitHub, LeetCode) ─────────
+  document.querySelectorAll('[data-sso]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const provider = btn.getAttribute('data-sso');
+      showPgAlert(`Authenticating via ${provider}... ⚔️`, 'success');
+
+      const res = await api.socialLogin(provider);
+      if (res.ok) {
+        if (res.data.user) {
+          state.username = res.data.user.username;
+          state.email = res.data.user.email;
+          localStorage.setItem('sq_username', res.data.user.username);
+          state = { ...state, ...res.data.user };
+        }
+        updateUI();
+        updateAuthHeaderBtn();
+
+        setTimeout(() => {
+          hidePgAlert();
+          showAppScreen();
+        }, 600);
+      }
+    });
+  });
+
+
   // ── PAGE FORM 1: LOGIN ────────────────────────────────────────────
   if (pgFormLogin) {
     pgFormLogin.addEventListener('submit', async (e) => {

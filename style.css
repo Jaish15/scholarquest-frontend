@@ -3443,6 +3443,63 @@ button, .btn {
   color: #f59e0b !important;
 }
 
+/* Social SSO OAuth Divider & Buttons */
+.social-auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 16px 0 12px;
+  color: rgba(245, 232, 215, 0.4);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.social-auth-divider::before,
+.social-auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px dashed rgba(245, 158, 11, 0.15);
+}
+
+.social-auth-divider span {
+  padding: 0 10px;
+}
+
+.social-auth-row {
+  display: flex;
+  gap: 10px;
+}
+
+.social-auth-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 8px;
+  background: rgba(20, 16, 11, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 10px;
+  color: #f5e8d7;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.social-auth-btn:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.social-auth-btn svg,
+.social-auth-btn i {
+  flex-shrink: 0;
+}
+
+
 /* Responsive breakdown for small screens */
 @media (max-width: 768px) {
   .launcher-login-container {

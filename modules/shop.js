@@ -8,12 +8,13 @@ import { updateAvatarRender } from './avatar.js';
 
 // Catalog with real medieval asset graphics
 const SHOP_ITEMS = [
-  // Head & Hand Medieval Equipment tailored for our characters
-  { id: 'scroll_quill',    name: 'Scholar Scroll & Quill', category: 'accessories', type: 'hand', price: 60,  img: './assets/items/scroll_quill.png',    desc: 'Medieval leather scroll with gold seal & quill (+15 Quiz Power)' },
-  { id: 'straw_hat',       name: 'Farmer Woven Straw Hat', category: 'accessories', type: 'head', price: 50,  img: './assets/items/straw_hat.png',       desc: 'Protects from study fatigue and maintains focus streaks' },
-  { id: 'explorer_compass',name: 'Explorer Brass Compass', category: 'accessories', type: 'hand', price: 75,  img: './assets/items/explorer_compass.png', desc: 'Antique compass that enhances CodeScroll lesson speed' },
-  { id: 'knight_shield',   name: 'Guardian Lion Shield',  category: 'accessories', type: 'hand', price: 90,  img: './assets/items/knight_shield.png',    desc: 'Wooden shield with gold lion crest. Blocks distraction damage' },
-  { id: 'royal_crown',      name: 'Royal Velvet Crown',    category: 'accessories', type: 'head', price: 150, img: './assets/items/royal_crown.png',      desc: 'Golden royal crown with rubies for prestigious scholars' },
+  // Head, Hand & Pet Accessories tailored for our characters
+  { id: 'hedwig_owl',      name: 'Hedwig Snowy Owl Companion', category: 'accessories', type: 'head', price: 100, img: './assets/items/hedwig_owl.png',     desc: 'Magical white snowy owl companion with Gryffindor scarf (Level 3 Companion)' },
+  { id: 'scroll_quill',    name: 'Scholar Scroll & Quill',     category: 'accessories', type: 'hand', price: 60,  img: './assets/items/scroll_quill.png',    desc: 'Medieval leather scroll with gold seal & quill (+15 Quiz Power)' },
+  { id: 'straw_hat',       name: 'Farmer Woven Straw Hat',     category: 'accessories', type: 'head', price: 50,  img: './assets/items/straw_hat.png',       desc: 'Protects from study fatigue and maintains focus streaks' },
+  { id: 'explorer_compass',name: 'Explorer Brass Compass',     category: 'accessories', type: 'hand', price: 75,  img: './assets/items/explorer_compass.png', desc: 'Antique compass that enhances CodeScroll lesson speed' },
+  { id: 'knight_shield',   name: 'Guardian Lion Shield',      category: 'accessories', type: 'hand', price: 90,  img: './assets/items/knight_shield.png',    desc: 'Wooden shield with gold lion crest. Blocks distraction damage' },
+  { id: 'royal_crown',      name: 'Royal Velvet Crown',        category: 'accessories', type: 'head', price: 150, img: './assets/items/royal_crown.png',      desc: 'Golden royal crown with rubies for prestigious scholars' },
   
   // Custom Themes
   { id: 'theme_gold',  name: 'Golden Legend Theme', category: 'themes', type: 'theme', target: 'gold', price: 80, img: './assets/items/royal_crown.png', desc: 'Unlock royal gold medieval theme' },

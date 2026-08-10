@@ -880,9 +880,9 @@ console.log(greet());
             
             <!-- Right Side: Floating 3D Podium & Equipment Drawer -->
             <div class="glass card inventory-card" style="display: flex; flex-direction: column; gap: 18px; padding: 20px;">
-              <div class="card-header" style="margin-bottom: 0;">
-                <h2>⚔️ Equipment & Podium Stage</h2>
-                <span class="text-sub">View active avatar gear & backpack inventory</span>
+              <div class="card-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 0;">
+                <h2 style="font-size: 15px; font-weight: 800; color: #f59e0b; margin: 0;">⚔️ Equipment & Podium Stage</h2>
+                <span class="text-sub" style="font-size: 11px; color: rgba(245,232,215,0.5);">View active avatar gear & backpack inventory</span>
               </div>
               
               <!-- 3D FLOATING PODIUM STAGE -->
@@ -893,8 +893,8 @@ console.log(greet());
                   <div id="shop-podium-name" style="font-size: 13px; font-weight: 800; color: #f5e8d7; margin-top: 2px;">The Scholar</div>
                 </div>
                 
-                <div class="floating-avatar-stage" style="width: 160px; height: 160px; margin: 4px 0;">
-                  <div class="floating-chibi-hero" id="shop-podium-sprite" style="width: 130px; height: 130px; background-image: url('./assets/heroes/scholar.png');"></div>
+                <div class="floating-avatar-stage" style="width: 160px; height: 160px; margin: 4px 0; position: relative;">
+                  <img id="shop-podium-img" src="./assets/heroes/scholar.png" alt="Active Hero" style="width: 130px; height: 130px; object-fit: contain; filter: drop-shadow(0 10px 18px rgba(0,0,0,0.7)); animation: podFloat 3.5s ease-in-out infinite; z-index: 3; position: relative;" />
                   <div class="podium-base-3d" style="width: 130px; height: 36px; bottom: 4px;"></div>
                   <div class="podium-floor-shadow" style="width: 110px; height: 18px;"></div>
                 </div>
@@ -1007,7 +1007,7 @@ console.log(greet());
       };
     };
 
-    // ── 6 BASE CHIBI HERO CLASSES ─────────────────────────────────────────────
+    // ── 8 BASE CHIBI HERO CLASSES (INCLUDING HARRY POTTER & DRACO MALFOY) ──────
     const BASE_HEROES = [
       { id: 'peasant',        heroClass: 'The Scholar',    tagline: 'Diligent & Focused',   sprite: './assets/heroes/scholar.png',      isChibi: true, outfit: 'Scholar Robe & Scarf',  accessory: 'Round Glasses & Quill', description: 'A natural learner who thrives on structure. Wears medieval scholar robes with scarf and quill.', accent: '#f59e0b', glow: 'rgba(245,158,11,0.35)' },
       { id: 'villager_woman', heroClass: 'The Apprentice', tagline: 'Creative & Curious',   sprite: './assets/heroes/apprentice.png',   isChibi: true, outfit: 'Craftsperson Apron',    accessory: 'Crafting Toolbelt',     description: 'Learns best through building. Equipped with green craft apron and tools.', accent: '#e879f9', glow: 'rgba(232,121,249,0.35)' },
@@ -1015,6 +1015,8 @@ console.log(greet());
       { id: 'gatherer',       heroClass: 'The Explorer',   tagline: 'Adaptive & Bold',      sprite: './assets/heroes/explorer.png',     isChibi: true, outfit: 'Blue Travel Cloak',     accessory: 'Explorer Compass',      description: 'Explores new concepts easily. Equipped with travel cloak and compass satchel.', accent: '#60a5fa', glow: 'rgba(96,165,250,0.35)' },
       { id: 'shield_man',     heroClass: 'Guardian Knight',tagline: 'Defenders of Focus',  sprite: './assets/heroes/knight.png',       isChibi: true, outfit: 'Knight Tunic Tabard',   accessory: 'Wooden Shield & Spear', description: 'Guards study streak from distractions. Armor tunic tabard with wooden shield.', accent: '#38bdf8', glow: 'rgba(56,189,248,0.35)' },
       { id: 'prince',         heroClass: 'Royal Highness', tagline: 'Majestic & Noble',     sprite: './assets/heroes/royal.png',        isChibi: true, outfit: 'Purple Royal Gown',     accessory: 'Royal Golden Crown',    description: 'Crown scholar with royal purple robes, gold embroidery, and scepter.', accent: '#a855f7', glow: 'rgba(168,85,247,0.35)' },
+      { id: 'harry_potter',   heroClass: 'Harry Potter',   tagline: 'Gryffindor Scholar Wizard', sprite: './assets/heroes/harry_potter.png', isChibi: true, outfit: 'Gryffindor Robes & Scarf', accessory: 'Magic Wand & Hedwig Owl', description: 'Brave Gryffindor wizard scholar with round glasses, lightning scar, and scarlet-gold robes.', accent: '#ef4444', glow: 'rgba(239,68,68,0.35)' },
+      { id: 'draco_malfoy',   heroClass: 'Draco Malfoy',   tagline: 'Slytherin Noble Wizard',    sprite: './assets/heroes/draco_malfoy.png', isChibi: true, outfit: 'Slytherin Cloak & Robes', accessory: 'Magic Wand & Serpent',   description: 'Noble Slytherin wizard with platinum blonde hair, green velvet robes, and silver crest.', accent: '#10b981', glow: 'rgba(16,185,129,0.35)' },
     ];
 
     // ── OUTFIT CUSTOMIZATION OPTIONS ─────────────────────────────────────────
@@ -1025,6 +1027,8 @@ console.log(greet());
       { id: 'gatherer',       name: 'Explorer Travel Cloak',heroId: 'gatherer',       icon: '🧭', rarity: 'Rare',      description: 'Blue hooded travel cloak with shoulder satchel.' },
       { id: 'shield_man',     name: 'Guardian Armor Tabard',heroId: 'shield_man',     icon: '🛡️', rarity: 'Rare',      description: 'Silver & gold tunic tabard with wooden shield.' },
       { id: 'prince',         name: 'Royal Purple Robes',   heroId: 'prince',         icon: '👑', rarity: 'Legendary', description: 'Purple velvet royal gown with gold embroidery.' },
+      { id: 'harry_potter',   name: 'Gryffindor Wizard Robes', heroId: 'harry_potter', icon: '⚡', rarity: 'Legendary', description: 'Scarlet & gold Gryffindor wizard robes with lightning crest.' },
+      { id: 'draco_malfoy',   name: 'Slytherin Velvet Cloak', heroId: 'draco_malfoy', icon: '🐍', rarity: 'Legendary', description: 'Emerald & silver Slytherin velvet cloak with silver trim.' },
     ];
 
     // ── MAIN AVATAR SELECTOR (Qbit Avatar Customization Studio) ─────────────

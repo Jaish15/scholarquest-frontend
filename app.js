@@ -439,17 +439,8 @@ const HERO_DISPLAY_DATA = {
   gatherer: { name: 'The Explorer', tagline: 'Adaptive & Bold', sprite: './assets/heroes/explorer.png', isChibi: true },
   shield_man: { name: 'Guardian Knight', tagline: 'Defenders of Focus', sprite: './assets/heroes/knight.png', isChibi: true },
   prince: { name: 'Royal Highness', tagline: 'Majestic & Noble', sprite: './assets/heroes/royal.png', isChibi: true },
-  princess: { name: 'Princess', tagline: 'Level 10 Royalty', sprite: './src/modules/avatar/assets/characters/villagers/MiniPrincess.png', pack: 'villagers' },
-  king: { name: 'King', tagline: 'Level 20 Legend', sprite: './src/modules/avatar/assets/characters/humans/MiniKingMan.png', pack: 'humans' },
-  queen: { name: 'Queen', tagline: 'Level 20 Legend', sprite: './src/modules/avatar/assets/characters/villagers/MiniQueen.png', pack: 'villagers' },
-  merchant: { name: 'Merchant', tagline: 'Gold Exchange', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniMerchant.png', pack: 'villagers2' },
-  blacksmith: { name: 'Blacksmith', tagline: 'Gold Exchange', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniBlacksmith.png', pack: 'villagers2' },
-  thief: { name: 'Thief', tagline: 'Gold Exchange', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniThief.png', pack: 'villagers2' },
-  archer: { name: 'Archer', tagline: 'Habit Milestone', sprite: './src/modules/avatar/assets/characters/humans/MiniArcherMan.png', pack: 'humans' },
-  crossbow_man: { name: 'Crossbowman', tagline: 'Habit Milestone', sprite: './src/modules/avatar/assets/characters/humans/MiniCrossBowMan.png', pack: 'humans' },
-  mage: { name: 'Mage', tagline: 'Focus Milestone', sprite: './src/modules/avatar/assets/characters/humans/MiniMage.png', pack: 'humans' },
-  arch_mage: { name: 'Archmage', tagline: 'Focus Milestone', sprite: './src/modules/avatar/assets/characters/humans/MiniArchMage.png', pack: 'humans' },
-  nun: { name: 'Cleric', tagline: 'StudySync Reward', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniNun.png', pack: 'villagers2' },
+  harry_potter: { name: 'Harry Potter', tagline: 'Gryffindor Scholar Wizard', sprite: './assets/heroes/harry_potter.png', isChibi: true },
+  draco_malfoy: { name: 'Draco Malfoy', tagline: 'Slytherin Noble Wizard', sprite: './assets/heroes/draco_malfoy.png', isChibi: true }
 };
 
 const FRAME_SIZE_JS = { villagers: 48, villagers2: 48, humans: 64 };

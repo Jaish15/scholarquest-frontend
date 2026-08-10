@@ -433,16 +433,12 @@ export function updateUI() {
 // ── AVATAR DISPLAY SYNC ────────────────────────────────────────────────────
 // Sprite data for the 4 base heroes + shop heroes (matching index.html data)
 const HERO_DISPLAY_DATA = {
-  peasant:       { name: 'The Scholar',    tagline: 'Diligent & Focused',   sprite: './src/modules/avatar/assets/characters/villagers/MiniPeasant.png',              pack: 'villagers'  },
-  villager_woman:{ name: 'The Apprentice', tagline: 'Creative & Curious',   sprite: './src/modules/avatar/assets/characters/villagers/MiniVillagerWoman.png',        pack: 'villagers'  },
-  worker:        { name: 'The Builder',    tagline: 'Steady & Reliable',    sprite: './src/modules/avatar/assets/characters/villagers/MiniWorker.png',               pack: 'villagers'  },
-  gatherer:      { name: 'The Explorer',   tagline: 'Adaptive & Bold',      sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniGatherer.png',   pack: 'villagers2' },
-  shield_man:    { name: 'Guardian',       tagline: 'Level 5 Warrior',      sprite: './src/modules/avatar/assets/characters/humans/MiniShieldMan.png',               pack: 'humans'     },
-  spear_man:     { name: 'Spear Guard',    tagline: 'Level 6 Warrior',      sprite: './src/modules/avatar/assets/characters/humans/MiniSpearMan.png',               pack: 'humans'     },
-  halberd_man:   { name: 'Halberdier',     tagline: 'Level 7 Warrior',      sprite: './src/modules/avatar/assets/characters/humans/MiniHalberdMan.png',             pack: 'humans'     },
-  sword_man:     { name: 'Sword Master',   tagline: 'Level 8 Fighter',      sprite: './src/modules/avatar/assets/characters/humans/MiniSwordMan.png',               pack: 'humans'     },
-  horse_man:     { name: 'Horse Rider',    tagline: 'Level 11 Knight',      sprite: './src/modules/avatar/assets/characters/humans/MiniHorseMan.png',               pack: 'humans'     },
-  prince:        { name: 'Prince',         tagline: 'Level 10 Royalty',     sprite: './src/modules/avatar/assets/characters/humans/MiniPrinceMan.png',              pack: 'humans'     },
+  peasant:       { name: 'The Scholar',    tagline: 'Diligent & Focused',   sprite: './assets/heroes/scholar.png',      isChibi: true },
+  villager_woman:{ name: 'The Apprentice', tagline: 'Creative & Curious',   sprite: './assets/heroes/apprentice.png',   isChibi: true },
+  worker:        { name: 'The Peasant',    tagline: 'Steady & Reliable',    sprite: './assets/heroes/peasant.png',      isChibi: true },
+  gatherer:      { name: 'The Explorer',   tagline: 'Adaptive & Bold',      sprite: './assets/heroes/explorer.png',     isChibi: true },
+  shield_man:    { name: 'Guardian Knight',tagline: 'Defenders of Focus',  sprite: './assets/heroes/knight.png',       isChibi: true },
+  prince:        { name: 'Royal Highness', tagline: 'Majestic & Noble',     sprite: './assets/heroes/royal.png',        isChibi: true },
   princess:      { name: 'Princess',       tagline: 'Level 10 Royalty',     sprite: './src/modules/avatar/assets/characters/villagers/MiniPrincess.png',            pack: 'villagers'  },
   king:          { name: 'King',           tagline: 'Level 20 Legend',      sprite: './src/modules/avatar/assets/characters/humans/MiniKingMan.png',                pack: 'humans'     },
   queen:         { name: 'Queen',          tagline: 'Level 20 Legend',      sprite: './src/modules/avatar/assets/characters/villagers/MiniQueen.png',               pack: 'villagers'  },
@@ -459,12 +455,25 @@ const HERO_DISPLAY_DATA = {
 const FRAME_SIZE_JS = { villagers: 48, villagers2: 48, humans: 64 };
 
 function makeSpriteStyle(hero, displayPx) {
+  if (hero.isChibi || (hero.sprite && hero.sprite.includes('/assets/heroes/'))) {
+    return `
+      width: ${displayPx}px;
+      height: ${displayPx}px;
+      background-image: url('${hero.sprite}');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+      flex-shrink: 0;
+      display: inline-block;
+    `;
+  }
   const frameW = FRAME_SIZE_JS[hero.pack] || 48;
   const scale = displayPx / frameW;
   return `
     width: ${displayPx}px;
     height: ${displayPx}px;
-    background-image: url(${hero.sprite});
+    background-image: url('${hero.sprite}');
     background-repeat: no-repeat;
     background-position: 0 0;
     background-size: ${4 * frameW * scale}px auto;

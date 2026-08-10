@@ -951,13 +951,27 @@ console.log(greet());
     // villagers & villagers2: 48x48 frames | humans: 64x64 frames
     const FRAME_SIZE = { villagers: 48, villagers2: 48, humans: 64 };
 
-    // Returns CSS style object to display one single standing frame of a sprite sheet
+    // Returns CSS style object to display one single standing frame of a sprite sheet or full chibi vector
     const spriteStyle = (char, displayPx) => {
+      const size = displayPx || 80;
+      if (char.isChibi || (char.sprite && char.sprite.includes('/assets/heroes/'))) {
+        return {
+          width: size + 'px',
+          height: size + 'px',
+          backgroundImage: `url(${char.sprite})`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          backgroundSize: 'contain',
+          filter: 'drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4))',
+          flexShrink: 0,
+          display: 'inline-block'
+        };
+      }
       const frameW = FRAME_SIZE[char.pack] || 48;
-      const scale = displayPx / frameW;
+      const scale = size / frameW;
       return {
-        width: displayPx + 'px',
-        height: displayPx + 'px',
+        width: size + 'px',
+        height: size + 'px',
         backgroundImage: `url(${char.sprite})`,
         backgroundRepeat: 'no-repeat',
         backgroundPosition: '0 0',
@@ -968,201 +982,227 @@ console.log(greet());
       };
     };
 
-    // ── 4 BASE HERO CLASSES (always selectable) ──────────────────────────────
+    // ── 6 BASE CHIBI HERO CLASSES ─────────────────────────────────────────────
     const BASE_HEROES = [
-      { id: 'peasant',       heroClass: 'The Scholar',    tagline: 'Diligent & Focused',   sprite: './src/modules/avatar/assets/characters/villagers/MiniPeasant.png',              pack: 'villagers',  description: 'A natural learner who thrives on structure. Perfect for consistent study habits.',       accent: '#f59e0b', glow: 'rgba(245,158,11,0.3)'  },
-      { id: 'villager_woman',heroClass: 'The Apprentice', tagline: 'Creative & Curious',   sprite: './src/modules/avatar/assets/characters/villagers/MiniVillagerWoman.png',        pack: 'villagers',  description: 'Learns best through exploration. Thrives in quizzes and creative problem-solving.',     accent: '#e879f9', glow: 'rgba(232,121,249,0.3)' },
-      { id: 'worker',        heroClass: 'The Builder',    tagline: 'Steady & Reliable',    sprite: './src/modules/avatar/assets/characters/villagers/MiniWorker.png',               pack: 'villagers',  description: 'Builds knowledge brick by brick. Best for habit tracking and daily progress.',           accent: '#34d399', glow: 'rgba(52,211,153,0.3)'  },
-      { id: 'gatherer',      heroClass: 'The Explorer',   tagline: 'Adaptive & Bold',      sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniGatherer.png',   pack: 'villagers2', description: 'Gathers knowledge from all sources. Excels at CodeScroll and focus sessions.',          accent: '#60a5fa', glow: 'rgba(96,165,250,0.3)'  },
+      { id: 'peasant',        heroClass: 'The Scholar',    tagline: 'Diligent & Focused',   sprite: './assets/heroes/scholar.png',      isChibi: true, outfit: 'Scholar Robe & Scarf',  accessory: 'Round Glasses & Quill', description: 'A natural learner who thrives on structure. Wears medieval scholar robes with scarf and quill.', accent: '#f59e0b', glow: 'rgba(245,158,11,0.35)' },
+      { id: 'villager_woman', heroClass: 'The Apprentice', tagline: 'Creative & Curious',   sprite: './assets/heroes/apprentice.png',   isChibi: true, outfit: 'Craftsperson Apron',    accessory: 'Crafting Toolbelt',     description: 'Learns best through building. Equipped with green craft apron and tools.', accent: '#e879f9', glow: 'rgba(232,121,249,0.35)' },
+      { id: 'worker',         heroClass: 'The Peasant',    tagline: 'Steady & Reliable',    sprite: './assets/heroes/peasant.png',      isChibi: true, outfit: 'Linen Peasant Tunic',   accessory: 'Farmer Straw Hat',      description: 'Builds knowledge brick by brick. Simple linen tunic with straw hat.', accent: '#34d399', glow: 'rgba(52,211,153,0.35)' },
+      { id: 'gatherer',       heroClass: 'The Explorer',   tagline: 'Adaptive & Bold',      sprite: './assets/heroes/explorer.png',     isChibi: true, outfit: 'Blue Travel Cloak',     accessory: 'Explorer Compass',      description: 'Explores new concepts easily. Equipped with travel cloak and compass satchel.', accent: '#60a5fa', glow: 'rgba(96,165,250,0.35)' },
+      { id: 'shield_man',     heroClass: 'Guardian Knight',tagline: 'Defenders of Focus',  sprite: './assets/heroes/knight.png',       isChibi: true, outfit: 'Knight Tunic Tabard',   accessory: 'Wooden Shield & Spear', description: 'Guards study streak from distractions. Armor tunic tabard with wooden shield.', accent: '#38bdf8', glow: 'rgba(56,189,248,0.35)' },
+      { id: 'prince',         heroClass: 'Royal Highness', tagline: 'Majestic & Noble',     sprite: './assets/heroes/royal.png',        isChibi: true, outfit: 'Purple Royal Gown',     accessory: 'Royal Golden Crown',    description: 'Crown scholar with royal purple robes, gold embroidery, and scepter.', accent: '#a855f7', glow: 'rgba(168,85,247,0.35)' },
     ];
 
-    // ── UNLOCKABLE SHOP HEROES ────────────────────────────────────────────────
-    const SHOP_HEROES = [
-      { id: 'shield_man',   sprite: './src/modules/avatar/assets/characters/humans/MiniShieldMan.png',                    pack: 'humans',    name: 'Guardian',    unlockType: 'level', unlockValue: 5,   category: '⚔️ Combat' },
-      { id: 'spear_man',    sprite: './src/modules/avatar/assets/characters/humans/MiniSpearMan.png',                     pack: 'humans',    name: 'Spear Guard', unlockType: 'level', unlockValue: 6,   category: '⚔️ Combat' },
-      { id: 'halberd_man',  sprite: './src/modules/avatar/assets/characters/humans/MiniHalberdMan.png',                   pack: 'humans',    name: 'Halberdier',  unlockType: 'level', unlockValue: 7,   category: '⚔️ Combat' },
-      { id: 'sword_man',    sprite: './src/modules/avatar/assets/characters/humans/MiniSwordMan.png',                     pack: 'humans',    name: 'Sword Master',unlockType: 'level', unlockValue: 8,   category: '⚔️ Combat' },
-      { id: 'horse_man',    sprite: './src/modules/avatar/assets/characters/humans/MiniHorseMan.png',                     pack: 'humans',    name: 'Horse Rider', unlockType: 'level', unlockValue: 11,  category: '⚔️ Combat' },
-      { id: 'prince',       sprite: './src/modules/avatar/assets/characters/humans/MiniPrinceMan.png',                    pack: 'humans',    name: 'Prince',      unlockType: 'level', unlockValue: 10,  category: '👑 Royalty' },
-      { id: 'princess',     sprite: './src/modules/avatar/assets/characters/villagers/MiniPrincess.png',                  pack: 'villagers', name: 'Princess',    unlockType: 'level', unlockValue: 10,  category: '👑 Royalty' },
-      { id: 'king',         sprite: './src/modules/avatar/assets/characters/humans/MiniKingMan.png',                      pack: 'humans',    name: 'King',        unlockType: 'level', unlockValue: 20,  category: '👑 Royalty' },
-      { id: 'queen',        sprite: './src/modules/avatar/assets/characters/villagers/MiniQueen.png',                     pack: 'villagers', name: 'Queen',       unlockType: 'level', unlockValue: 20,  category: '👑 Royalty' },
-      { id: 'merchant',     sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniMerchant.png',        pack: 'villagers2',name: 'Merchant',    unlockType: 'gold',  unlockValue: 150, category: '🪙 Gold' },
-      { id: 'blacksmith',   sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniBlacksmith.png',      pack: 'villagers2',name: 'Blacksmith',  unlockType: 'gold',  unlockValue: 200, category: '🪙 Gold' },
-      { id: 'thief',        sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniThief.png',           pack: 'villagers2',name: 'Thief',       unlockType: 'gold',  unlockValue: 300, category: '🪙 Gold' },
-      { id: 'archer',       sprite: './src/modules/avatar/assets/characters/humans/MiniArcherMan.png',                    pack: 'humans',    name: 'Archer',      unlockType: 'habit', unlockValue: 5,   category: '🧱 Habit' },
-      { id: 'crossbow_man', sprite: './src/modules/avatar/assets/characters/humans/MiniCrossBowMan.png',                  pack: 'humans',    name: 'Crossbowman', unlockType: 'habit', unlockValue: 12,  category: '🧱 Habit' },
-      { id: 'mage',         sprite: './src/modules/avatar/assets/characters/humans/MiniMage.png',                         pack: 'humans',    name: 'Mage',        unlockType: 'focus', unlockValue: 50,  category: '🍯 Focus' },
-      { id: 'arch_mage',    sprite: './src/modules/avatar/assets/characters/humans/MiniArchMage.png',                     pack: 'humans',    name: 'Archmage',    unlockType: 'focus', unlockValue: 150, category: '🍯 Focus' },
-      { id: 'nun',          sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniNun.png',             pack: 'villagers2',name: 'Cleric',      unlockType: 'studysync', unlockValue: 'connected', category: '🔗 Sync' },
+    // ── OUTFIT CUSTOMIZATION OPTIONS ─────────────────────────────────────────
+    const OUTFITS_DATA = [
+      { id: 'peasant',        name: 'Scholar Robe & Scarf', heroId: 'peasant',        icon: '📜', rarity: 'Common',    description: 'Pink & brown medieval scholar tunic with scarf and pouch.' },
+      { id: 'villager_woman', name: 'Apprentice Apron',    heroId: 'villager_woman', icon: '🛠️', rarity: 'Common',    description: 'Green craftsperson apron with leather belt and tools.' },
+      { id: 'worker',         name: 'Peasant Farmer Tunic', heroId: 'worker',         icon: '🌾', rarity: 'Common',    description: 'Rustic brown farmer tunic built for hard daily work.' },
+      { id: 'gatherer',       name: 'Explorer Travel Cloak',heroId: 'gatherer',       icon: '🧭', rarity: 'Rare',      description: 'Blue hooded travel cloak with shoulder satchel.' },
+      { id: 'shield_man',     name: 'Guardian Armor Tabard',heroId: 'shield_man',     icon: '🛡️', rarity: 'Rare',      description: 'Silver & gold tunic tabard with wooden shield.' },
+      { id: 'prince',         name: 'Royal Purple Robes',   heroId: 'prince',         icon: '👑', rarity: 'Legendary', description: 'Purple velvet royal gown with gold embroidery.' },
     ];
 
-    const checkUnlock = (hero, stats) => {
-      const { level = 1, golds = 0, habitStreakPoints = 0, focusPoints = 0, studySyncStatus = 'disconnected' } = stats;
-      switch (hero.unlockType) {
-        case 'level':     return { unlocked: level >= hero.unlockValue,              reason: `Reach Level ${hero.unlockValue}` };
-        case 'gold':      return { unlocked: golds >= hero.unlockValue,              reason: `${hero.unlockValue} Gold` };
-        case 'habit':     return { unlocked: habitStreakPoints >= hero.unlockValue,   reason: `${hero.unlockValue}-Day Streak` };
-        case 'focus':     return { unlocked: focusPoints >= hero.unlockValue,         reason: `${hero.unlockValue} Focus Mins` };
-        case 'studysync': return { unlocked: studySyncStatus === 'connected' || studySyncStatus === 'active', reason: 'Join StudySync' };
-        default:          return { unlocked: true, reason: '' };
-      }
-    };
-
-    // ── UNLOCKABLE HEROES PANEL (defined BEFORE AvatarSelector) ──────────────
-    const UnlockableHeroesPanel = ({ currentStats, selectedAvatarId, onSelect }) => {
-      const categories = [...new Set(SHOP_HEROES.map(h => h.category))];
-
-      const HeroBtn = ({ hero, unlocked, reason, isActive }) => {
-        const frameSize = FRAME_SIZE[hero.pack];
-        return (
-          <button
-            onClick={() => unlocked && onSelect(hero.id)}
-            title={unlocked ? `Equip ${hero.name}` : `🔒 ${reason}`}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
-              padding: '10px 8px', borderRadius: '10px',
-              cursor: unlocked ? 'pointer' : 'not-allowed',
-              border: isActive ? '2px solid #f59e0b' : unlocked ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(63,63,70,0.2)',
-              background: isActive ? 'rgba(120,53,15,0.3)' : unlocked ? 'rgba(15,13,11,0.8)' : 'rgba(9,9,11,0.25)',
-              boxShadow: isActive ? '0 0 14px rgba(245,158,11,0.25)' : 'none',
-              outline: 'none', transition: 'all 0.2s', minWidth: '68px'
-            }}
-          >
-            <div style={{ ...spriteStyle(hero, frameSize * 2), filter: !unlocked ? 'grayscale(100%) brightness(0.2)' : 'none' }} />
-            <span style={{ fontSize: '9px', fontWeight: 600, color: unlocked ? 'rgba(245,232,215,0.7)' : 'rgba(113,113,122,0.45)', textAlign: 'center' }}>
-              {hero.name}
-            </span>
-            {!unlocked && <span style={{ fontSize: '7px', color: 'rgba(245,158,11,0.45)', fontWeight: 700, textAlign: 'center' }}>🔒 {reason}</span>}
-            {isActive  && <span style={{ fontSize: '8px', color: '#f59e0b', fontWeight: 800 }}>✦ ON</span>}
-          </button>
-        );
-      };
-
-      return (
-        <div style={{ borderTop: '1px solid rgba(245,158,11,0.1)', paddingTop: '18px', marginTop: '4px' }}>
-          {/* Section Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(245,232,215,0.35)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Unlock More Heroes</span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(245,158,11,0.08)' }} />
-            <span style={{ fontSize: '9px', color: 'rgba(245,232,215,0.22)', letterSpacing: '0.05em' }}>Complete quests · earn gold · keep streaks</span>
-          </div>
-
-          {/* Split two-column layout per category */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            {categories.map(cat => {
-              const heroes = SHOP_HEROES.filter(h => h.category === cat);
-              const unlockedHeroes = heroes.filter(h => checkUnlock(h, currentStats).unlocked);
-              const lockedHeroes   = heroes.filter(h => !checkUnlock(h, currentStats).unlocked);
-              return (
-                <div key={cat}>
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(245,232,215,0.28)', letterSpacing: '0.1em', marginBottom: '10px', textTransform: 'uppercase' }}>{cat}</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    {/* UNLOCKED column */}
-                    <div>
-                      {unlockedHeroes.length > 0 ? (
-                        <>
-                          <div style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(52,211,153,0.6)', letterSpacing: '0.08em', marginBottom: '8px', textTransform: 'uppercase' }}>✓ Available</div>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {unlockedHeroes.map(hero => (
-                              <HeroBtn key={hero.id} hero={hero} unlocked={true} reason="" isActive={selectedAvatarId === hero.id} />
-                            ))}
-                          </div>
-                        </>
-                      ) : (
-                        <div style={{ fontSize: '10px', color: 'rgba(113,113,122,0.4)', fontStyle: 'italic', paddingTop: '8px' }}>None unlocked yet</div>
-                      )}
-                    </div>
-                    {/* LOCKED column */}
-                    <div>
-                      {lockedHeroes.length > 0 && (
-                        <>
-                          <div style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(245,158,11,0.35)', letterSpacing: '0.08em', marginBottom: '8px', textTransform: 'uppercase' }}>🔒 Locked</div>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {lockedHeroes.map(hero => {
-                              const { reason } = checkUnlock(hero, currentStats);
-                              return <HeroBtn key={hero.id} hero={hero} unlocked={false} reason={reason} isActive={false} />;
-                            })}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    };
-
-
-    // ── MAIN AVATAR SELECTOR (defined AFTER UnlockableHeroesPanel) ────────────
+    // ── MAIN AVATAR SELECTOR (Qbit Avatar Customization Studio) ─────────────
     const AvatarSelector = ({
       level = 1, golds = 0, habitStreakPoints = 0, focusPoints = 0,
       studySyncStatus = 'disconnected', selectedAvatarId = 'peasant', onSelect = () => {}
     }) => {
+      const [activeTab, setActiveTab] = React.useState('outfits'); // 'outfits' | 'heroes' | 'shop'
+      const [savedAlert, setSavedAlert] = React.useState(false);
       const currentStats = { level, golds, habitStreakPoints, focusPoints, studySyncStatus };
 
+      const activeHero = BASE_HEROES.find(h => h.id === selectedAvatarId) || BASE_HEROES[0];
+
+      const handleSave = () => {
+        if (!state.avatar) state.avatar = {};
+        state.avatar.id = activeHero.id;
+        window.saveState && window.saveState();
+        window.syncAvatarDisplay && window.syncAvatarDisplay();
+        window.updateUI && window.updateUI();
+        setSavedAlert(true);
+        setTimeout(() => setSavedAlert(false), 2000);
+      };
+
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', padding: '20px', background: 'rgba(10,8,6,0.7)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', padding: '24px', background: 'linear-gradient(145deg, rgba(14,11,8,0.92), rgba(24,18,12,0.95))', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '20px', boxShadow: '0 12px 36px rgba(0,0,0,0.6)' }}>
 
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Top Header & Stats */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid rgba(245,158,11,0.12)', paddingBottom: '16px' }}>
             <div>
-              <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#f59e0b', margin: 0, letterSpacing: '0.05em' }}>🛡️ Choose Your Hero</h2>
-              <p style={{ fontSize: '11px', color: 'rgba(245,232,215,0.4)', marginTop: '3px', margin: '3px 0 0' }}>Pick your class — more heroes unlock as you progress</p>
+              <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#f59e0b', margin: 0, letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                ✨ Scholar Customization Studio
+              </h2>
+              <p style={{ fontSize: '12px', color: 'rgba(245,232,215,0.5)', margin: '4px 0 0' }}>
+                Customize your medieval hero avatar, outfits & accessories
+              </p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '8px', padding: '5px 12px' }}>
-              <span>⭐</span><span style={{ fontSize: '11px', fontWeight: 700, color: '#f59e0b' }}>LV {level}</span>
-              <span style={{ width: '1px', height: '14px', background: 'rgba(245,158,11,0.2)', margin: '0 4px' }} />
-              <span>🪙</span><span style={{ fontSize: '11px', fontWeight: 700, color: '#fbbf24' }}>{golds}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '10px', padding: '6px 14px' }}>
+                <span>⭐</span><span style={{ fontSize: '12px', fontWeight: 800, color: '#f59e0b' }}>LV {level}</span>
+                <span style={{ width: '1px', height: '14px', background: 'rgba(245,158,11,0.2)', margin: '0 4px' }} />
+                <span>🪙</span><span style={{ fontSize: '12px', fontWeight: 800, color: '#fbbf24' }}>{golds} Coins</span>
+              </div>
             </div>
           </div>
 
-          {/* 4 Base Hero Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px' }}>
-            {BASE_HEROES.map(hero => {
-              const isActive = selectedAvatarId === hero.id;
-              const frameSize = FRAME_SIZE[hero.pack];
-              return (
+          {/* TWO-COLUMN STUDIO LAYOUT */}
+          <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px', alignItems: 'start' }}>
+
+            {/* LEFT COLUMN: 3D SPOTLIGHT PODIUM STAGE */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'radial-gradient(circle at 50% 30%, rgba(245,158,11,0.15) 0%, rgba(10,8,6,0.85) 75%)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '18px', padding: '24px 16px 20px', position: 'relative', overflow: 'hidden' }}>
+
+              {/* Spotlight Ambient Beam */}
+              <div style={{ position: 'absolute', top: '-40px', width: '140px', height: '140px', background: 'radial-gradient(circle, rgba(245,158,11,0.3) 0%, transparent 70%)', filter: 'blur(20px)', pointerEvents: 'none' }} />
+
+              {/* Character Title & Tagline */}
+              <div style={{ textAlign: 'center', marginBottom: '14px', zIndex: 2 }}>
+                <span style={{ fontSize: '10px', fontWeight: 800, color: activeHero.accent, letterSpacing: '0.15em', textTransform: 'uppercase' }}>{activeHero.heroClass}</span>
+                <div style={{ fontSize: '11px', color: 'rgba(245,232,215,0.45)', fontStyle: 'italic', marginTop: '2px' }}>{activeHero.tagline}</div>
+              </div>
+
+              {/* 3D PODIUM STAGE & AVATAR DISPLAY */}
+              <div style={{ position: 'relative', width: '200px', height: '210px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '10px 0' }}>
+
+                {/* Hero Chibi Character */}
+                <div style={{ width: '160px', height: '160px', backgroundImage: `url(${activeHero.sprite})`, backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundSize: 'contain', filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.6))', transition: 'transform 0.3s ease, filter 0.3s ease', zIndex: 3 }} />
+
+                {/* 3D Oval Stage Base */}
+                <div style={{ width: '160px', height: '42px', borderRadius: '50%', background: `radial-gradient(ellipse at center, ${activeHero.accent}33 0%, rgba(20,15,8,0.9) 70%)`, border: `2px solid ${activeHero.accent}`, boxShadow: `0 0 25px ${activeHero.glow}, inset 0 0 15px ${activeHero.accent}40`, position: 'absolute', bottom: '10px', zIndex: 1 }} />
+              </div>
+
+              {/* Equipped Badges */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', marginBottom: '18px', zIndex: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(20,16,11,0.6)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: '8px', padding: '6px 10px', fontSize: '10.5px' }}>
+                  <span style={{ color: 'rgba(245,232,215,0.5)' }}>👕 Outfit:</span>
+                  <span style={{ fontWeight: 700, color: activeHero.accent }}>{activeHero.outfit}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(20,16,11,0.6)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: '8px', padding: '6px 10px', fontSize: '10.5px' }}>
+                  <span style={{ color: 'rgba(245,232,215,0.5)' }}>👒 Accessory:</span>
+                  <span style={{ fontWeight: 700, color: '#f5e8d7' }}>{activeHero.accessory}</span>
+                </div>
+              </div>
+
+              {/* SAVE MY AVATAR BUTTON */}
+              <button
+                onClick={handleSave}
+                style={{
+                  width: '100%', padding: '12px 16px', background: savedAlert ? 'linear-gradient(135deg, #059669, #10b981)' : `linear-gradient(135deg, #b45309, #f59e0b)`,
+                  border: 'none', borderRadius: '12px', color: '#ffffff', fontWeight: 800, fontSize: '13px', letterSpacing: '0.04em', cursor: 'pointer',
+                  boxShadow: savedAlert ? '0 0 20px rgba(16,185,129,0.4)' : '0 4px 18px rgba(245,158,11,0.4)', transition: 'all 0.2s ease', outline: 'none'
+                }}
+              >
+                {savedAlert ? '✓ Avatar Saved!' : 'Save My Avatar ✨'}
+              </button>
+            </div>
+
+            {/* RIGHT COLUMN: CUSTOMIZATION CATEGORIES & SELECTION GRID */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* Category Tab Bar */}
+              <div style={{ display: 'flex', gap: '8px', background: 'rgba(10,8,6,0.6)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(245,158,11,0.1)' }}>
                 <button
-                  key={hero.id}
-                  onClick={() => onSelect(hero.id)}
+                  onClick={() => setActiveTab('outfits')}
                   style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
-                    padding: '18px 10px 14px', background: isActive ? 'rgba(20,15,5,0.98)' : 'rgba(12,10,7,0.5)',
-                    border: `2px solid ${isActive ? hero.accent : 'rgba(245,158,11,0.1)'}`,
-                    borderRadius: '14px', cursor: 'pointer', outline: 'none', position: 'relative',
-                    boxShadow: isActive ? `0 0 22px ${hero.glow}` : 'none',
-                    transition: 'all 0.22s ease',
-                    transform: isActive ? 'translateY(-3px)' : 'none'
+                    flex: 1, padding: '10px 14px', borderRadius: '9px', border: 'none', cursor: 'pointer',
+                    background: activeTab === 'outfits' ? 'rgba(245,158,11,0.2)' : 'transparent',
+                    color: activeTab === 'outfits' ? '#f59e0b' : 'rgba(245,232,215,0.5)',
+                    fontWeight: 800, fontSize: '12px', transition: 'all 0.2s', outline: 'none'
                   }}
-                  onMouseEnter={e => { if (!isActive) { e.currentTarget.style.borderColor = hero.accent + '80'; e.currentTarget.style.transform = 'translateY(-2px)'; }}}
-                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.1)'; e.currentTarget.style.transform = 'none'; }}}
                 >
-                  {isActive && <div style={{ position: 'absolute', top: '7px', right: '9px', fontSize: '9px', color: hero.accent, fontWeight: 800 }}>✦ ACTIVE</div>}
-
-                  {/* Character sprite — shows first frame only */}
-                  <div style={{ ...spriteStyle(hero, frameSize * 3) }} />
-
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 800, color: isActive ? hero.accent : 'rgba(245,232,215,0.85)', letterSpacing: '0.03em' }}>{hero.heroClass}</div>
-                    <div style={{ fontSize: '10px', color: 'rgba(245,232,215,0.35)', marginTop: '2px', fontStyle: 'italic' }}>{hero.tagline}</div>
-                  </div>
-
-                  {isActive && (
-                    <div style={{ fontSize: '10px', color: 'rgba(245,232,215,0.55)', lineHeight: 1.55, textAlign: 'center', borderTop: `1px solid ${hero.accent}28`, paddingTop: '9px', margin: '0' }}>
-                      {hero.description}
-                    </div>
-                  )}
+                  👕 Outfits & Tunics
                 </button>
-              );
-            })}
-          </div>
+                <button
+                  onClick={() => setActiveTab('heroes')}
+                  style={{
+                    flex: 1, padding: '10px 14px', borderRadius: '9px', border: 'none', cursor: 'pointer',
+                    background: activeTab === 'heroes' ? 'rgba(245,158,11,0.2)' : 'transparent',
+                    color: activeTab === 'heroes' ? '#f59e0b' : 'rgba(245,232,215,0.5)',
+                    fontWeight: 800, fontSize: '12px', transition: 'all 0.2s', outline: 'none'
+                  }}
+                >
+                  🎭 Hero Classes
+                </button>
+                <button
+                  onClick={() => setActiveTab('shop')}
+                  style={{
+                    flex: 1, padding: '10px 14px', borderRadius: '9px', border: 'none', cursor: 'pointer',
+                    background: activeTab === 'shop' ? 'rgba(245,158,11,0.2)' : 'transparent',
+                    color: activeTab === 'shop' ? '#f59e0b' : 'rgba(245,232,215,0.5)',
+                    fontWeight: 800, fontSize: '12px', transition: 'all 0.2s', outline: 'none'
+                  }}
+                >
+                  🔓 Unlockable Rewards
+                </button>
+              </div>
 
-          {/* Unlockable heroes section */}
-          <UnlockableHeroesPanel currentStats={currentStats} selectedAvatarId={selectedAvatarId} onSelect={onSelect} />
+              {/* TAB 1: OUTFITS GRID */}
+              {activeTab === 'outfits' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  {OUTFITS_DATA.map(outfit => {
+                    const hero = BASE_HEROES.find(h => h.id === outfit.heroId) || BASE_HEROES[0];
+                    const isSelected = selectedAvatarId === outfit.heroId;
+                    return (
+                      <button
+                        key={outfit.id}
+                        onClick={() => onSelect(outfit.heroId)}
+                        style={{
+                          display: 'flex', gap: '14px', alignItems: 'center', padding: '14px',
+                          background: isSelected ? 'rgba(28,20,11,0.95)' : 'rgba(12,10,7,0.5)',
+                          border: `2px solid ${isSelected ? hero.accent : 'rgba(245,158,11,0.1)'}`,
+                          borderRadius: '14px', cursor: 'pointer', outline: 'none', textAlign: 'left',
+                          boxShadow: isSelected ? `0 0 18px ${hero.glow}` : 'none', transition: 'all 0.2s'
+                        }}
+                      >
+                        <div style={{ width: '56px', height: '56px', backgroundImage: `url(${hero.sprite})`, backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundSize: 'contain', flexShrink: 0, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))' }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 800, color: isSelected ? hero.accent : '#f5e8d7' }}>{outfit.name}</span>
+                            {isSelected && <span style={{ fontSize: '9px', fontWeight: 800, color: hero.accent, background: `${hero.accent}20`, padding: '2px 6px', borderRadius: '4px' }}>EQUIPPED</span>}
+                          </div>
+                          <div style={{ fontSize: '10.5px', color: 'rgba(245,232,215,0.45)', lineHeight: 1.4 }}>{outfit.description}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* TAB 2: HERO CLASSES GRID */}
+              {activeTab === 'heroes' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  {BASE_HEROES.map(hero => {
+                    const isSelected = selectedAvatarId === hero.id;
+                    return (
+                      <button
+                        key={hero.id}
+                        onClick={() => onSelect(hero.id)}
+                        style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', padding: '16px 10px',
+                          background: isSelected ? 'rgba(28,20,11,0.95)' : 'rgba(12,10,7,0.5)',
+                          border: `2px solid ${isSelected ? hero.accent : 'rgba(245,158,11,0.1)'}`,
+                          borderRadius: '14px', cursor: 'pointer', outline: 'none', textAlign: 'center',
+                          boxShadow: isSelected ? `0 0 20px ${hero.glow}` : 'none', transition: 'all 0.2s'
+                        }}
+                      >
+                        <div style={{ width: '72px', height: '72px', backgroundImage: `url(${hero.sprite})`, backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundSize: 'contain', flexShrink: 0, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))' }} />
+                        <div>
+                          <div style={{ fontSize: '12px', fontWeight: 800, color: isSelected ? hero.accent : '#f5e8d7' }}>{hero.heroClass}</div>
+                          <div style={{ fontSize: '10px', color: 'rgba(245,232,215,0.4)', fontStyle: 'italic', marginTop: '2px' }}>{hero.tagline}</div>
+                        </div>
+                        {isSelected && <span style={{ fontSize: '8.5px', fontWeight: 800, color: hero.accent, background: `${hero.accent}20`, padding: '2px 8px', borderRadius: '4px' }}>✓ ACTIVE HERO</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* TAB 3: UNLOCKABLE REWARDS PANEL */}
+              {activeTab === 'shop' && (
+                <UnlockableHeroesPanel currentStats={currentStats} selectedAvatarId={selectedAvatarId} onSelect={onSelect} />
+              )}
+
+            </div>
+          </div>
         </div>
       );
     };

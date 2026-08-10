@@ -8,8 +8,13 @@ import { updateAvatarRender } from './avatar.js';
 
 // Catalog with real medieval asset graphics
 const SHOP_ITEMS = [
-  // Head, Hand & Pet Accessories tailored for our characters
-  { id: 'hedwig_owl',      name: 'Hedwig Snowy Owl Companion', category: 'accessories', type: 'head', price: 100, img: './assets/items/hedwig_owl.png',     desc: 'Magical white snowy owl companion with Gryffindor scarf (Level 3 Companion)' },
+  // 🐾 Magical Pets & Companions
+  { id: 'hedwig_owl',      name: 'Hedwig Snowy Owl',     category: 'pets', type: 'pet', price: 100, img: './assets/items/hedwig_owl.png',     desc: 'Faithful snowy owl companion with Gryffindor scarf (Level 3 Companion)' },
+  { id: 'baby_dragon',    name: 'Golden Baby Dragon',   category: 'pets', type: 'pet', price: 120, img: './assets/items/baby_dragon.png',    desc: 'Sparkling golden baby dragon companion with wings (Level 5 Companion)' },
+  { id: 'magic_cat',      name: 'Wizard Black Cat',     category: 'pets', type: 'pet', price: 80,  img: './assets/items/magic_cat.png',      desc: 'Mystical black wizard cat wearing a pointed witch hat' },
+  { id: 'silver_serpent', name: 'Slytherin Silver Serpent', category: 'pets', type: 'pet', price: 110, img: './assets/items/silver_serpent.png', desc: 'Noble green & silver winged serpent familiar with gold crown' },
+
+  // Head & Hand Medieval Accessories
   { id: 'scroll_quill',    name: 'Scholar Scroll & Quill',     category: 'accessories', type: 'hand', price: 60,  img: './assets/items/scroll_quill.png',    desc: 'Medieval leather scroll with gold seal & quill (+15 Quiz Power)' },
   { id: 'straw_hat',       name: 'Farmer Woven Straw Hat',     category: 'accessories', type: 'head', price: 50,  img: './assets/items/straw_hat.png',       desc: 'Protects from study fatigue and maintains focus streaks' },
   { id: 'explorer_compass',name: 'Explorer Brass Compass',     category: 'accessories', type: 'hand', price: 75,  img: './assets/items/explorer_compass.png', desc: 'Antique compass that enhances CodeScroll lesson speed' },
@@ -197,11 +202,24 @@ function equipOrActivateItem(item) {
   if (item.category === 'accessories') {
     state.equipped[item.type] = item.id;
     alert(`🛡️ Equipped ${item.name} in your ${item.type} slot!`);
+  } else if (item.category === 'pets') {
+    state.equipped.pet = item.id;
+    alert(`🐾 ${item.name} is now accompanying your hero on the Spotlight Podium!`);
   } else if (item.category === 'themes') {
     changeTheme(item.target);
     alert(`🎨 Interface visual theme changed to ${item.name}!`);
   }
   
+  // Sync live pet companion image on the Spotlight Podium
+  const petImgEl = document.getElementById('shop-podium-pet');
+  if (petImgEl && state.equipped.pet) {
+    const petObj = SHOP_ITEMS.find(i => i.id === state.equipped.pet);
+    if (petObj) {
+      petImgEl.src = petObj.img;
+      petImgEl.style.display = 'block';
+    }
+  }
+
   saveState();
   updateUI();
   renderInventory();

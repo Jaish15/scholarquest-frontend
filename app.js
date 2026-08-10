@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNavigation();
   initCore();
   initAuth();
-  
+
   // Initialize Subsystems
   initAvatar();
   initQuizzes();
@@ -64,12 +64,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   initStudySync();
   initCodeScroll();
   initShop();
-  
+
   // Run Lucide Icons replacement
   if (window.lucide) {
     window.lucide.createIcons();
   }
-  
+
   // Initial renders
   updateUI();
   generateDailyQuests();
@@ -122,7 +122,7 @@ export function saveState() {
 function initNavigation() {
   const navItems = document.querySelectorAll('.nav-item');
   const views = document.querySelectorAll('.content-view');
-  
+
   function navigateTo(target) {
     // Update sidebar nav active state
     navItems.forEach(nav => {
@@ -179,7 +179,7 @@ async function fetchDashboardLeaderboard() {
 
     container.innerHTML = list.slice(0, 5).map((item, idx) => {
       const medalClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : 'normal';
-      const medalIcon  = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+      const medalIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
       return `
         <div class="lb-rank-item">
           <div class="lb-rank-left">
@@ -213,13 +213,13 @@ export function getXPForNextLevel(lvl) {
 export function addXP(amount) {
   state.xp += amount;
   const xpNeeded = getXPForNextLevel(state.level);
-  
+
   if (state.xp >= xpNeeded) {
     state.xp -= xpNeeded;
     state.level += 1;
     triggerLevelUpEffects();
   }
-  
+
   saveState();
   updateUI();
 }
@@ -261,11 +261,11 @@ export function changeTheme(themeName) {
 function randomizeAvatarColors() {
   const colors = ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#f472b6', '#fca5a5', '#93c5fd', '#c084fc', '#fb7185'];
   const eyesStyles = ['happy', 'cool', 'focus', 'nerd', 'sparkle'];
-  
+
   state.avatar.skin = colors[Math.floor(Math.random() * colors.length)];
   state.avatar.clothes = colors[Math.floor(Math.random() * colors.length)];
   state.avatar.eyes = eyesStyles[Math.floor(Math.random() * eyesStyles.length)];
-  
+
   saveState();
   updateAvatarRender();
 }
@@ -276,15 +276,15 @@ function triggerLevelUpEffects() {
   const originalGreeting = document.getElementById('greeting').innerText;
   const greetingEl = document.getElementById('greeting');
   const subGreetingEl = document.getElementById('sub-greeting');
-  
+
   greetingEl.innerHTML = `🎉 LEVEL UP! Level ${state.level}! 🎉`;
   subGreetingEl.innerHTML = `You have advanced to rank: <strong>${getRankTitle(state.level)}</strong>!`;
   greetingEl.classList.add('text-gold');
-  
+
   // Fire animation classes
   const badge = document.getElementById('level-badge');
   badge.classList.add('animate-bounce');
-  
+
   setTimeout(() => {
     greetingEl.innerText = `Welcome, Scholar!`;
     greetingEl.classList.remove('text-gold');
@@ -320,11 +320,11 @@ function generateDailyQuests() {
     { name: 'Solve a CodeScroll challenge', reward: 50, coins: 25, completed: state.stats.lessonsCompleted > 0 },
     { name: 'Check off a HabitDojo habit', reward: 25, coins: 10, completed: false } // custom checked via habits
   ];
-  
+
   const container = document.getElementById('dashboard-quests');
   if (!container) return;
   container.innerHTML = '';
-  
+
   quests.forEach(q => {
     const el = document.createElement('div');
     el.className = 'quest-item';
@@ -354,7 +354,7 @@ export function updateUI() {
   document.getElementById('coin-count').innerText = state.coins;
   document.getElementById('level-badge').innerText = `LV ${state.level}`;
 
-  
+
   // Update XP Fill & Circular Ring Gauge
   const xpNeeded = getXPForNextLevel(state.level);
   const xpPct = Math.min((state.xp / xpNeeded) * 100, 100);
@@ -374,30 +374,30 @@ export function updateUI() {
   if (ringLvlEl) ringLvlEl.innerText = `LV ${state.level}`;
   const ringXpEl = document.getElementById('dash-ring-xp');
   if (ringXpEl) ringXpEl.innerText = `${state.xp}/${xpNeeded} XP`;
-  
+
   // Update HP Fill
   const hpPct = (state.hp / state.maxHp) * 100;
   const hpFillEl = document.getElementById('hp-fill');
   if (hpFillEl) hpFillEl.style.width = `${hpPct}%`;
   const hpTextEl = document.getElementById('hp-text');
   if (hpTextEl) hpTextEl.innerText = `${state.hp}/${state.maxHp} HP`;
-  
+
   // Update rank title on dashboard
   const classTitle = document.getElementById('class-title');
   if (classTitle) {
     classTitle.innerText = getRankTitle(state.level);
   }
-  
+
   // Update Stats Box
   const sq = document.getElementById('stat-quizzes-completed');
   if (sq) sq.innerText = state.stats.quizzesCompleted;
-  
+
   const sf = document.getElementById('stat-focus-time');
   if (sf) sf.innerText = `${state.stats.focusMinutes}m`;
-  
+
   const sl = document.getElementById('stat-lessons-completed');
   if (sl) sl.innerText = state.stats.lessonsCompleted;
-  
+
   const sh = document.getElementById('stat-habits-streak');
   if (sh) sh.innerText = state.stats.maxHabitStreak;
 
@@ -407,16 +407,16 @@ export function updateUI() {
   const dqc = document.getElementById('dash-quick-coins');
   if (dqc) dqc.innerText = state.coins;
 
-  
+
   // Apply visual theme
   if (state.activeTheme) {
     document.body.className = `theme-${state.activeTheme} dark-mode`;
   }
-  
+
   // Update Shop Display values
   const sc = document.getElementById('shop-coin-count');
   if (sc) sc.innerText = state.coins;
-  
+
   // Redraw avatar
   updateAvatarRender();
 
@@ -433,23 +433,23 @@ export function updateUI() {
 // ── AVATAR DISPLAY SYNC ────────────────────────────────────────────────────
 // Sprite data for the 4 base heroes + shop heroes (matching index.html data)
 const HERO_DISPLAY_DATA = {
-  peasant:       { name: 'The Scholar',    tagline: 'Diligent & Focused',   sprite: './assets/heroes/scholar.png',      isChibi: true },
-  villager_woman:{ name: 'The Apprentice', tagline: 'Creative & Curious',   sprite: './assets/heroes/apprentice.png',   isChibi: true },
-  worker:        { name: 'The Peasant',    tagline: 'Steady & Reliable',    sprite: './assets/heroes/peasant.png',      isChibi: true },
-  gatherer:      { name: 'The Explorer',   tagline: 'Adaptive & Bold',      sprite: './assets/heroes/explorer.png',     isChibi: true },
-  shield_man:    { name: 'Guardian Knight',tagline: 'Defenders of Focus',  sprite: './assets/heroes/knight.png',       isChibi: true },
-  prince:        { name: 'Royal Highness', tagline: 'Majestic & Noble',     sprite: './assets/heroes/royal.png',        isChibi: true },
-  princess:      { name: 'Princess',       tagline: 'Level 10 Royalty',     sprite: './src/modules/avatar/assets/characters/villagers/MiniPrincess.png',            pack: 'villagers'  },
-  king:          { name: 'King',           tagline: 'Level 20 Legend',      sprite: './src/modules/avatar/assets/characters/humans/MiniKingMan.png',                pack: 'humans'     },
-  queen:         { name: 'Queen',          tagline: 'Level 20 Legend',      sprite: './src/modules/avatar/assets/characters/villagers/MiniQueen.png',               pack: 'villagers'  },
-  merchant:      { name: 'Merchant',       tagline: 'Gold Exchange',        sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniMerchant.png',  pack: 'villagers2' },
-  blacksmith:    { name: 'Blacksmith',     tagline: 'Gold Exchange',        sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniBlacksmith.png',pack: 'villagers2' },
-  thief:         { name: 'Thief',          tagline: 'Gold Exchange',        sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniThief.png',     pack: 'villagers2' },
-  archer:        { name: 'Archer',         tagline: 'Habit Milestone',      sprite: './src/modules/avatar/assets/characters/humans/MiniArcherMan.png',              pack: 'humans'     },
-  crossbow_man:  { name: 'Crossbowman',    tagline: 'Habit Milestone',      sprite: './src/modules/avatar/assets/characters/humans/MiniCrossBowMan.png',           pack: 'humans'     },
-  mage:          { name: 'Mage',           tagline: 'Focus Milestone',      sprite: './src/modules/avatar/assets/characters/humans/MiniMage.png',                   pack: 'humans'     },
-  arch_mage:     { name: 'Archmage',       tagline: 'Focus Milestone',      sprite: './src/modules/avatar/assets/characters/humans/MiniArchMage.png',              pack: 'humans'     },
-  nun:           { name: 'Cleric',         tagline: 'StudySync Reward',     sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniNun.png',       pack: 'villagers2' },
+  peasant: { name: 'The Scholar', tagline: 'Diligent & Focused', sprite: './assets/heroes/scholar.png', isChibi: true },
+  villager_woman: { name: 'The Apprentice', tagline: 'Creative & Curious', sprite: './assets/heroes/apprentice.png', isChibi: true },
+  worker: { name: 'The Peasant', tagline: 'Steady & Reliable', sprite: './assets/heroes/peasant.png', isChibi: true },
+  gatherer: { name: 'The Explorer', tagline: 'Adaptive & Bold', sprite: './assets/heroes/explorer.png', isChibi: true },
+  shield_man: { name: 'Guardian Knight', tagline: 'Defenders of Focus', sprite: './assets/heroes/knight.png', isChibi: true },
+  prince: { name: 'Royal Highness', tagline: 'Majestic & Noble', sprite: './assets/heroes/royal.png', isChibi: true },
+  princess: { name: 'Princess', tagline: 'Level 10 Royalty', sprite: './src/modules/avatar/assets/characters/villagers/MiniPrincess.png', pack: 'villagers' },
+  king: { name: 'King', tagline: 'Level 20 Legend', sprite: './src/modules/avatar/assets/characters/humans/MiniKingMan.png', pack: 'humans' },
+  queen: { name: 'Queen', tagline: 'Level 20 Legend', sprite: './src/modules/avatar/assets/characters/villagers/MiniQueen.png', pack: 'villagers' },
+  merchant: { name: 'Merchant', tagline: 'Gold Exchange', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniMerchant.png', pack: 'villagers2' },
+  blacksmith: { name: 'Blacksmith', tagline: 'Gold Exchange', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniBlacksmith.png', pack: 'villagers2' },
+  thief: { name: 'Thief', tagline: 'Gold Exchange', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniThief.png', pack: 'villagers2' },
+  archer: { name: 'Archer', tagline: 'Habit Milestone', sprite: './src/modules/avatar/assets/characters/humans/MiniArcherMan.png', pack: 'humans' },
+  crossbow_man: { name: 'Crossbowman', tagline: 'Habit Milestone', sprite: './src/modules/avatar/assets/characters/humans/MiniCrossBowMan.png', pack: 'humans' },
+  mage: { name: 'Mage', tagline: 'Focus Milestone', sprite: './src/modules/avatar/assets/characters/humans/MiniMage.png', pack: 'humans' },
+  arch_mage: { name: 'Archmage', tagline: 'Focus Milestone', sprite: './src/modules/avatar/assets/characters/humans/MiniArchMage.png', pack: 'humans' },
+  nun: { name: 'Cleric', tagline: 'StudySync Reward', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniNun.png', pack: 'villagers2' },
 };
 
 const FRAME_SIZE_JS = { villagers: 48, villagers2: 48, humans: 64 };
@@ -491,8 +491,8 @@ function syncAvatarDisplay() {
 
   // ── 1. SIDEBAR WIDGET ──────────────────────────────────────────
   const sidebarSprite = document.getElementById('sidebar-avatar-sprite');
-  const sidebarName   = document.getElementById('sidebar-avatar-name');
-  const sidebarLevel  = document.getElementById('sidebar-level-num');
+  const sidebarName = document.getElementById('sidebar-avatar-name');
+  const sidebarLevel = document.getElementById('sidebar-level-num');
   if (sidebarSprite) {
     sidebarSprite.style.cssText = makeSpriteStyle(hero, 32);
   }
@@ -500,14 +500,14 @@ function syncAvatarDisplay() {
   if (sidebarLevel) sidebarLevel.textContent = level;
 
   // ── 2. DASHBOARD SHOWCASE BANNER ──────────────────────────────
-  const showcaseSprite  = document.getElementById('showcase-sprite');
-  const showcaseName    = document.getElementById('showcase-name');
+  const showcaseSprite = document.getElementById('showcase-sprite');
+  const showcaseName = document.getElementById('showcase-name');
   const showcaseTagline = document.getElementById('showcase-tagline');
-  const showcaseLevel   = document.getElementById('showcase-level');
+  const showcaseLevel = document.getElementById('showcase-level');
   const showcaseLevelStat = document.getElementById('showcase-stat-level');
-  const showcaseGold    = document.getElementById('showcase-stat-gold');
-  const showcaseStreak  = document.getElementById('showcase-stat-streak');
-  const showcaseFocus   = document.getElementById('showcase-stat-focus');
+  const showcaseGold = document.getElementById('showcase-stat-gold');
+  const showcaseStreak = document.getElementById('showcase-stat-streak');
+  const showcaseFocus = document.getElementById('showcase-stat-focus');
 
   if (showcaseSprite) {
     showcaseSprite.style.cssText = makeSpriteStyle(hero, 96);
@@ -516,12 +516,12 @@ function syncAvatarDisplay() {
   if (showcaseTagline) showcaseTagline.textContent = hero.tagline;
   if (showcaseLevel) showcaseLevel.textContent = level;
   if (showcaseLevelStat) showcaseLevelStat.textContent = level;
-  if (showcaseGold)   showcaseGold.textContent   = state.coins || 0;
+  if (showcaseGold) showcaseGold.textContent = state.coins || 0;
   if (showcaseStreak) showcaseStreak.textContent = state.stats ? state.stats.maxHabitStreak : 0;
-  if (showcaseFocus)  showcaseFocus.textContent  = state.stats ? state.stats.focusMinutes : 0;
+  if (showcaseFocus) showcaseFocus.textContent = state.stats ? state.stats.focusMinutes : 0;
 
   // ── 3. MODULE HERO CHIPS ──────────────────────────────────────
-  const modules = ['quizforge','focusarena','habitdojo','studysync','codescroll','shop'];
+  const modules = ['quizforge', 'focusarena', 'habitdojo', 'studysync', 'codescroll', 'shop'];
   modules.forEach(mod => {
     const chipSprite = document.getElementById(`chip-sprite-${mod}`);
     const chipLevels = document.querySelectorAll(`#chip-${mod} .chip-level`);
@@ -530,6 +530,16 @@ function syncAvatarDisplay() {
     }
     chipLevels.forEach(el => { el.textContent = level; });
   });
+
+  // ── 4. SHOP VIEW FLOATING PODIUM STAGE ─────────────────────────
+  const shopPodiumSprite = document.getElementById('shop-podium-sprite');
+  const shopPodiumName   = document.getElementById('shop-podium-name');
+  const shopPodiumClass  = document.getElementById('shop-podium-class');
+  if (shopPodiumSprite) {
+    shopPodiumSprite.style.backgroundImage = `url('${hero.sprite}')`;
+  }
+  if (shopPodiumName)  shopPodiumName.textContent  = hero.name;
+  if (shopPodiumClass) shopPodiumClass.textContent = `Active ${hero.name}`;
 }
 
 // Export so it can be called externally

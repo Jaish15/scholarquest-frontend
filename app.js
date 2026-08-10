@@ -532,10 +532,13 @@ function syncAvatarDisplay() {
   });
 
   // ── 4. SHOP VIEW FLOATING PODIUM STAGE ─────────────────────────
+  const shopPodiumImg   = document.getElementById('shop-podium-img');
   const shopPodiumSprite = document.getElementById('shop-podium-sprite');
   const shopPodiumName   = document.getElementById('shop-podium-name');
   const shopPodiumClass  = document.getElementById('shop-podium-class');
-  if (shopPodiumSprite) {
+  if (shopPodiumImg) {
+    shopPodiumImg.src = hero.sprite;
+  } else if (shopPodiumSprite) {
     shopPodiumSprite.style.backgroundImage = `url('${hero.sprite}')`;
   }
   if (shopPodiumName)  shopPodiumName.textContent  = hero.name;

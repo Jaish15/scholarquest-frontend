@@ -6,26 +6,22 @@
 import { state, saveState, updateUI, changeTheme, heal } from '../app.js';
 import { updateAvatarRender } from './avatar.js';
 
-// Catalog
+// Catalog with real medieval asset graphics
 const SHOP_ITEMS = [
-  // Head accessories
-  { id: 'wizard_hat', name: 'Wizard Hat', category: 'accessories', type: 'head', price: 60, icon: '🧙', desc: 'Adds +15 Focus power' },
-  { id: 'knight_helmet', name: 'Knight Helmet', category: 'accessories', type: 'head', price: 80, icon: '🪖', desc: 'Increases streak protection' },
-  { id: 'headphones', name: 'Coder Headphones', category: 'accessories', type: 'head', price: 50, icon: '🎧', desc: 'Enhances logic compilation speed' },
-  
-  // Hand weapons/shields
-  { id: 'light_sword', name: 'Light Sword', category: 'accessories', type: 'hand', price: 100, icon: '⚔️', desc: 'Slashes through difficult code challenges' },
-  { id: 'wizard_staff', name: 'Wizard Staff', category: 'accessories', type: 'hand', price: 90, icon: '🪄', desc: 'Cast focus spells during Pomodoro' },
-  { id: 'focus_shield', name: 'Focus Shield', category: 'accessories', type: 'hand', price: 75, icon: '🛡️', desc: 'Blocks distractions and maintains streaks' },
+  // Head & Hand Medieval Equipment tailored for our characters
+  { id: 'scroll_quill',    name: 'Scholar Scroll & Quill', category: 'accessories', type: 'hand', price: 60,  img: './assets/items/scroll_quill.png',    desc: 'Medieval leather scroll with gold seal & quill (+15 Quiz Power)' },
+  { id: 'straw_hat',       name: 'Farmer Woven Straw Hat', category: 'accessories', type: 'head', price: 50,  img: './assets/items/straw_hat.png',       desc: 'Protects from study fatigue and maintains focus streaks' },
+  { id: 'explorer_compass',name: 'Explorer Brass Compass', category: 'accessories', type: 'hand', price: 75,  img: './assets/items/explorer_compass.png', desc: 'Antique compass that enhances CodeScroll lesson speed' },
+  { id: 'knight_shield',   name: 'Guardian Lion Shield',  category: 'accessories', type: 'hand', price: 90,  img: './assets/items/knight_shield.png',    desc: 'Wooden shield with gold lion crest. Blocks distraction damage' },
+  { id: 'royal_crown',      name: 'Royal Velvet Crown',    category: 'accessories', type: 'head', price: 150, img: './assets/items/royal_crown.png',      desc: 'Golden royal crown with rubies for prestigious scholars' },
   
   // Custom Themes
-  { id: 'theme_cyan', name: 'Cyberpunk Cyan Theme', category: 'themes', type: 'theme', target: 'cyan', price: 40, icon: '🎨', desc: 'Unlock glowing cyan theme' },
-  { id: 'theme_gold', name: 'Golden Legend Theme', category: 'themes', type: 'theme', target: 'gold', price: 80, icon: '👑', desc: 'Unlock royal gold theme' },
-  { id: 'theme_red', name: 'Berserk Red Theme', category: 'themes', type: 'theme', target: 'red', price: 50, icon: '🩸', desc: 'Unlock fire-red combat theme' },
-  { id: 'theme_green', name: 'Emerald Forest Theme', category: 'themes', type: 'theme', target: 'green', price: 40, icon: '🌲', desc: 'Unlock peaceful forest theme' },
+  { id: 'theme_gold',  name: 'Golden Legend Theme', category: 'themes', type: 'theme', target: 'gold', price: 80, img: './assets/items/royal_crown.png', desc: 'Unlock royal gold medieval theme' },
+  { id: 'theme_green', name: 'Emerald Guild Theme', category: 'themes', type: 'theme', target: 'green', price: 40, img: './assets/items/straw_hat.png', desc: 'Unlock peaceful emerald guild theme' },
+  { id: 'theme_cyan',  name: 'Cyber Scholar Theme', category: 'themes', type: 'theme', target: 'cyan', price: 50, img: './assets/items/explorer_compass.png', desc: 'Unlock glowing cyan theme' },
   
   // Consumable Boosters
-  { id: 'booster_potion', name: 'Elixir of Life', category: 'boosters', type: 'consumable', price: 30, icon: '🧪', desc: 'Drink to restore 40 HP instantly' }
+  { id: 'booster_potion', name: 'Elixir of Life Potion', category: 'boosters', type: 'consumable', price: 30, img: './assets/items/scroll_quill.png', desc: 'Drink to restore 40 HP instantly' }
 ];
 
 let activeCategory = 'accessories';
@@ -65,20 +61,22 @@ function renderShopCatalog() {
     
     const card = document.createElement('div');
     card.className = 'shop-item-card';
+    card.style.cssText = 'display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 14px; background: rgba(14,11,8,0.7); border: 1px solid rgba(245,158,11,0.2); border-radius: 16px; transition: transform 0.2s;';
     card.innerHTML = `
-      <span class="item-icon">${item.icon}</span>
-      <h3 class="item-title">${item.name}</h3>
-      <p class="item-desc">${item.desc}</p>
+      <img src="${item.img}" class="item-img" alt="${item.name}" style="width: 72px; height: 72px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6)); margin-bottom: 10px;">
+      <h3 class="item-title" style="font-size: 13px; font-weight: 800; color: #f5e8d7; margin: 0 0 4px 0;">${item.name}</h3>
+      <p class="item-desc" style="font-size: 11px; color: rgba(245,232,215,0.45); margin: 0 0 12px 0; line-height: 1.4; min-height: 30px;">${item.desc}</p>
       
-      <div class="item-price-row">
-        <i data-lucide="coins" style="width: 12px; height: 12px;"></i>
+      <div class="item-price-row" style="display: flex; align-items: center; gap: 4px; font-weight: 800; color: #f59e0b; margin-bottom: 12px; font-size: 12px;">
+        <i data-lucide="coins" style="width: 14px; height: 14px;"></i>
         <span>${item.price} Coins</span>
       </div>
       
       <button class="btn ${isOwned ? 'secondary-btn' : 'primary-btn'} buy-btn" 
               data-id="${item.id}" 
+              style="width: 100%; border-radius: 10px; font-size: 11px; font-weight: 800;"
               ${isOwned && item.type !== 'consumable' ? 'disabled' : ''}>
-        ${isOwned && item.type !== 'consumable' ? 'Owned' : 'Purchase'}
+        ${isOwned && item.type !== 'consumable' ? '✓ Owned' : 'Purchase'}
       </button>
     `;
     
@@ -140,16 +138,20 @@ function renderInventory() {
   const headItem = SHOP_ITEMS.find(item => item.id === headEquip);
   const handItem = SHOP_ITEMS.find(item => item.id === handEquip);
   
+  // Sync slot name labels on top of 3D Podium stage
+  const slotHeadName = document.getElementById('slot-head-name');
+  const slotHandName = document.getElementById('slot-hand-name');
+  if (slotHeadName) slotHeadName.textContent = headItem ? headItem.name : 'None';
+  if (slotHandName) slotHandName.textContent = handItem ? handItem.name : 'None';
+
   equippedContainer.innerHTML = `
-    <div class="equip-box">
-      ${headItem ? headItem.icon : ''}
-      <span class="equip-label">Head</span>
-      ${headItem ? `<button class="btn btn-sm secondary-btn unequip-btn" data-slot="head" style="position: absolute; top: -10px; right: -10px; font-size: 8px; padding: 2px 4px;">x</button>` : ''}
+    <div class="equip-box" style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(18,14,9,0.8); border: 1px dashed rgba(245,158,11,0.3); border-radius: 12px; padding: 6px;">
+      ${headItem ? `<img src="${headItem.img}" style="width: 36px; height: 36px; object-fit: contain;">` : '<span style="font-size: 10px; color: rgba(245,232,215,0.3);">Head</span>'}
+      ${headItem ? `<button class="btn btn-sm secondary-btn unequip-btn" data-slot="head" style="position: absolute; top: -8px; right: -8px; font-size: 9px; padding: 2px 6px; border-radius: 50%; background: #ef4444; color: white; border: none;">✕</button>` : ''}
     </div>
-    <div class="equip-box">
-      ${handItem ? handItem.icon : ''}
-      <span class="equip-label">Hand</span>
-      ${handItem ? `<button class="btn btn-sm secondary-btn unequip-btn" data-slot="hand" style="position: absolute; top: -10px; right: -10px; font-size: 8px; padding: 2px 4px;">x</button>` : ''}
+    <div class="equip-box" style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(18,14,9,0.8); border: 1px dashed rgba(245,158,11,0.3); border-radius: 12px; padding: 6px;">
+      ${handItem ? `<img src="${handItem.img}" style="width: 36px; height: 36px; object-fit: contain;">` : '<span style="font-size: 10px; color: rgba(245,232,215,0.3);">Hand</span>'}
+      ${handItem ? `<button class="btn btn-sm secondary-btn unequip-btn" data-slot="hand" style="position: absolute; top: -8px; right: -8px; font-size: 9px; padding: 2px 6px; border-radius: 50%; background: #ef4444; color: white; border: none;">✕</button>` : ''}
     </div>
   `;
   
@@ -165,11 +167,10 @@ function renderInventory() {
   });
   
   // 2. Render backpack slots (owned items that are not equipped)
-  // Only accessories and themes can reside in backpack
   const backpackItems = state.inventory.filter(itemId => itemId !== headEquip && itemId !== handEquip);
   
   if (backpackItems.length === 0) {
-    backpackContainer.innerHTML = '<span class="text-muted text-sm">Your backpack is empty.</span>';
+    backpackContainer.innerHTML = '<span class="text-muted text-sm" style="font-size: 11px; color: rgba(245,232,215,0.4); font-style: italic;">Backpack is empty. Purchase gear to equip!</span>';
     return;
   }
   
@@ -179,8 +180,9 @@ function renderInventory() {
     
     const slot = document.createElement('div');
     slot.className = 'inventory-slot tooltip';
+    slot.style.cssText = 'width: 54px; height: 54px; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;';
     slot.setAttribute('data-tooltip', `${itemObj.name} (${itemObj.desc}) - Click to Equip/Activate`);
-    slot.innerText = itemObj.icon;
+    slot.innerHTML = `<img src="${itemObj.img}" alt="${itemObj.name}" style="width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));">`;
     
     slot.addEventListener('click', () => {
       equipOrActivateItem(itemObj);

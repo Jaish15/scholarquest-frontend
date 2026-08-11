@@ -880,42 +880,47 @@ console.log(greet());
               </div>
             </div>
             
-            <!-- Right Side: Floating 3D Podium & Equipment Drawer -->
+            <!-- Right Side: 3D Holographic Projection Stage & Equipment Drawer -->
             <div class="glass card inventory-card" style="display: flex; flex-direction: column; gap: 18px; padding: 20px;">
               <div class="card-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 0;">
-                <h2 style="font-size: 16px; font-weight: 800; color: #f59e0b; margin: 0;">⚔️ Equipment & Podium Stage</h2>
-                <span class="text-sub" style="font-size: 11px; color: rgba(245,232,215,0.5);">View active avatar gear & backpack inventory</span>
+                <h2 style="font-size: 16px; font-weight: 800; color: #f59e0b; margin: 0;">✨ 3D Projection Stage & Equipment</h2>
+                <span class="text-sub" style="font-size: 11px; color: rgba(245,232,215,0.5);">Live 3D floating character preview & active gear</span>
               </div>
               
-              <!-- ENLARGED 3D FLOATING PODIUM STAGE (WAYGROUND QBIT STYLE) -->
-              <div class="floating-podium-container" style="min-height: 380px; padding: 24px 16px 20px; background: radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.25) 0%, rgba(12,9,6,0.96) 75%); border: 1px solid rgba(245,158,11,0.35); border-radius: 22px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: space-between;">
-                <!-- Dramatic Spotlight Beam -->
-                <div class="spotlight-beam" style="height: 340px; width: 240px; background: linear-gradient(180deg, rgba(245, 158, 11, 0.4) 0%, rgba(245, 158, 11, 0.05) 75%, transparent 100%); clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);"></div>
+              <!-- 3D HOLOGRAPHIC PROJECTION STAGE -->
+              <div class="projection-3d-stage">
+                <!-- Top Light Emitter Dome -->
+                <div class="holo-projector-emitter"></div>
+                <!-- Semi-transparent 3D Projection Beam -->
+                <div class="holo-beam-3d"></div>
                 
-                <div style="text-align: center; z-index: 2;">
+                <div style="text-align: center; z-index: 5; margin-top: 10px;">
                   <span id="shop-podium-class" style="font-size: 11px; font-weight: 800; color: #f59e0b; letter-spacing: 0.15em; text-transform: uppercase;">Active Hero</span>
-                  <div id="shop-podium-name" style="font-size: 15px; font-weight: 800; color: #f5e8d7; margin-top: 2px;">The Scholar</div>
+                  <div id="shop-podium-name" style="font-size: 16px; font-weight: 800; color: #f5e8d7; margin-top: 2px;">The Scholar</div>
                 </div>
                 
-                <!-- ENLARGED FLOATING CHARACTER STAGE -->
-                <div class="floating-avatar-stage" style="width: 220px; height: 230px; margin: 8px 0; position: relative; display: flex; align-items: center; justify-content: center; background: transparent;">
-                  <!-- Main Hero Character (Enlarged to 190px!) -->
-                  <img id="shop-podium-img" src="./assets/heroes/scholar.png" alt="Active Hero" style="width: 190px; height: 190px; object-fit: contain; filter: drop-shadow(0 14px 24px rgba(0,0,0,0.85)); animation: podFloat 3.5s ease-in-out infinite; z-index: 3; position: relative; background: transparent !important;" />
+                <!-- 200px ENLARGED FLOATING CHARACTER STAGE -->
+                <div class="holo-avatar-container">
+                  <!-- Main Hero Character (Enlarged to 200px floating inside the beam!) -->
+                  <img id="shop-podium-img" class="holo-character-img" src="./assets/heroes/scholar.png" alt="Active Hero" />
                   
                   <!-- Active Pet Companion floating beside Hero -->
-                  <img id="shop-podium-pet" src="./assets/items/hedwig_owl.png" alt="Pet Companion" style="width: 65px; height: 65px; object-fit: contain; position: absolute; right: -5px; bottom: 35px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.75)); animation: podFloat 3.5s ease-in-out infinite 0.5s; z-index: 4; display: block;" />
+                  <img id="shop-podium-pet" src="./assets/items/hedwig_owl.png" alt="Pet Companion" style="width: 70px; height: 70px; object-fit: contain; position: absolute; right: -10px; bottom: 40px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.8)); animation: float3D 3.5s ease-in-out infinite 0.5s; z-index: 5; display: block;" />
 
-                  <!-- 3D Glowing Oval Podium Stage Pedestal -->
-                  <div class="podium-base-3d" style="width: 180px; height: 48px; bottom: 6px; border: 2px solid #f59e0b; box-shadow: 0 0 32px rgba(245, 158, 11, 0.5), inset 0 0 20px rgba(245, 158, 11, 0.5); z-index: 1;"></div>
-                  <div class="podium-floor-shadow" style="width: 140px; height: 22px; bottom: -4px;"></div>
+                  <!-- 3D Glowing Podium Base Ring -->
+                  <div class="podium-stage-base-3d"></div>
                 </div>
 
-                <div style="display: flex; gap: 8px; width: 100%; z-index: 2;">
-                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.6); border: 1px solid rgba(245,158,11,0.15); border-radius: 8px; padding: 6px; font-size: 10px;">
-                    <span style="color: rgba(245,232,215,0.4);">Head:</span> <strong id="slot-head-name" style="color: #f59e0b;">None</strong>
+                <!-- Slot Status Badges -->
+                <div style="display: flex; gap: 6px; width: 100%; z-index: 5;">
+                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 6px; font-size: 10px;">
+                    <span style="color: rgba(245,232,215,0.45);">Head:</span> <strong id="slot-head-name" style="color: #f59e0b;">None</strong>
                   </div>
-                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.6); border: 1px solid rgba(245,158,11,0.15); border-radius: 8px; padding: 6px; font-size: 10px;">
-                    <span style="color: rgba(245,232,215,0.4);">Hand:</span> <strong id="slot-hand-name" style="color: #f59e0b;">None</strong>
+                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 6px; font-size: 10px;">
+                    <span style="color: rgba(245,232,215,0.45);">Hand:</span> <strong id="slot-hand-name" style="color: #f59e0b;">None</strong>
+                  </div>
+                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 6px; font-size: 10px;">
+                    <span style="color: rgba(245,232,215,0.45);">Outfit:</span> <strong id="slot-outfit-name" style="color: #34d399;">Default</strong>
                   </div>
                 </div>
               </div>

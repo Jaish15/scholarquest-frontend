@@ -14,15 +14,14 @@ const SHOP_ITEMS = [
   { id: 'magic_cat',      name: 'Wizard Black Cat',     category: 'pets', type: 'pet', price: 80,  img: './assets/items/magic_cat.png',      desc: 'Mystical black wizard cat wearing a pointed witch hat' },
   { id: 'silver_serpent', name: 'Slytherin Silver Serpent', category: 'pets', type: 'pet', price: 110, img: './assets/items/silver_serpent.png', desc: 'Noble green & silver winged serpent familiar with gold crown' },
 
-  // 👕 Outfits & Tunics
-  { id: 'outfit_scholar',   name: 'Scholar Tunic & Scarf',     category: 'outfits', type: 'outfit', heroId: 'peasant',        price: 50,  img: './assets/heroes/scholar.png',      desc: 'Pink & brown medieval scholar tunic with scarf and pouch' },
-  { id: 'outfit_apprentice',name: 'Apprentice Craft Apron',    category: 'outfits', type: 'outfit', heroId: 'villager_woman', price: 50,  img: './assets/heroes/apprentice.png',   desc: 'Green craftsperson apron with leather belt and tools' },
-  { id: 'outfit_farmer',    name: 'Peasant Farmer Linen Tunic',category: 'outfits', type: 'outfit', heroId: 'worker',         price: 50,  img: './assets/heroes/peasant.png',      desc: 'Rustic brown farmer tunic built for hard daily work' },
-  { id: 'outfit_explorer',  name: 'Explorer Blue Travel Cloak',category: 'outfits', type: 'outfit', heroId: 'gatherer',       price: 80,  img: './assets/heroes/explorer.png',     desc: 'Blue hooded travel cloak with shoulder satchel' },
-  { id: 'outfit_knight',    name: 'Guardian Armor Tabard',     category: 'outfits', type: 'outfit', heroId: 'shield_man',     price: 100, img: './assets/heroes/knight.png',       desc: 'Silver & gold tunic tabard with wooden shield' },
-  { id: 'outfit_royal',     name: 'Royal Velvet Gown',         category: 'outfits', type: 'outfit', heroId: 'prince',         price: 150, img: './assets/heroes/royal.png',        desc: 'Purple velvet royal gown with gold embroidery' },
-  { id: 'outfit_gryffindor',name: 'Gryffindor Wizard Robes',   category: 'outfits', type: 'outfit', heroId: 'harry_potter',   price: 150, img: './assets/heroes/harry_potter.png', desc: 'Scarlet & gold Gryffindor wizard robes with lightning crest' },
-  { id: 'outfit_slytherin', name: 'Slytherin Velvet Cloak',    category: 'outfits', type: 'outfit', heroId: 'draco_malfoy',   price: 150, img: './assets/heroes/draco_malfoy.png',  desc: 'Emerald & silver Slytherin velvet cloak with silver trim' },
+  // 👕 Outfits, Cloaks & Apparel Pieces
+  { id: 'gryffindor_cape',   name: 'Gryffindor Velvet Cape',     category: 'outfits', type: 'outfit', price: 60,  img: './assets/items/gryffindor_cape.png', desc: 'Scarlet & gold Gryffindor wizard cloak with gold clasp' },
+  { id: 'slytherin_robe',    name: 'Slytherin Emerald Robe',    category: 'outfits', type: 'outfit', price: 60,  img: './assets/heroes/draco_malfoy.png',   desc: 'Emerald & silver Slytherin wizard robes with silver crest' },
+  { id: 'scholar_vest',      name: 'Scholar Tweed Vest & Shirt',category: 'outfits', type: 'outfit', price: 40,  img: './assets/heroes/scholar.png',        desc: 'Pink & brown scholar vest and shirt with brass buttons' },
+  { id: 'apprentice_apron',  name: 'Apprentice Leather Apron',  category: 'outfits', type: 'outfit', price: 40,  img: './assets/heroes/apprentice.png',     desc: 'Green craftsperson leather apron with tool loops' },
+  { id: 'farmer_tunic',      name: 'Farmer Rustic Linen Tunic', category: 'outfits', type: 'outfit', price: 30,  img: './assets/heroes/peasant.png',        desc: 'Rustic brown linen farmer tunic for daily hard work' },
+  { id: 'knight_tabard',     name: 'Guardian Armor Tabard',     category: 'outfits', type: 'outfit', price: 80,  img: './assets/heroes/knight.png',         desc: 'Silver & gold steel knight chest tabard armor' },
+  { id: 'royal_gown',        name: 'Royal Purple Velvet Gown',  category: 'outfits', type: 'outfit', price: 120, img: './assets/heroes/royal.png',          desc: 'Royal purple velvet gown with gold embroidery' },
 
   // Head & Hand Medieval Accessories
   { id: 'scroll_quill',    name: 'Scholar Scroll & Quill',     category: 'accessories', type: 'hand', price: 60,  img: './assets/items/scroll_quill.png',    desc: 'Medieval leather scroll with gold seal & quill (+15 Quiz Power)' },
@@ -213,9 +212,9 @@ function equipOrActivateItem(item) {
     state.equipped[item.type] = item.id;
     alert(`🛡️ Equipped ${item.name} in your ${item.type} slot!`);
   } else if (item.category === 'outfits') {
-    if (!state.avatar) state.avatar = {};
-    state.avatar.id = item.heroId;
-    alert(`👕 Equipped ${item.name}! Your hero is now customized on the Spotlight Podium!`);
+  } else if (item.category === 'outfits') {
+    state.equipped.outfit = item.id;
+    alert(`👕 Equipped ${item.name}! Your hero is wearing ${item.name} on the 3D Projection Stage!`);
   } else if (item.category === 'pets') {
     state.equipped.pet = item.id;
     alert(`🐾 ${item.name} is now accompanying your hero on the Spotlight Podium!`);

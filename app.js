@@ -448,15 +448,16 @@ const FRAME_SIZE_JS = { villagers: 48, villagers2: 48, humans: 64 };
 function makeSpriteStyle(hero, displayPx) {
   if (hero.isChibi || (hero.sprite && hero.sprite.includes('/assets/heroes/'))) {
     return `
-      width: ${displayPx}px;
-      height: ${displayPx}px;
-      background-image: url('${hero.sprite}');
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: contain;
-      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
-      flex-shrink: 0;
-      display: inline-block;
+      width: ${displayPx}px !important;
+      height: ${displayPx}px !important;
+      background-image: url('${hero.sprite}') !important;
+      background-repeat: no-repeat !important;
+      background-position: center center !important;
+      background-size: contain !important;
+      image-rendering: auto !important;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4)) !important;
+      flex-shrink: 0 !important;
+      display: inline-block !important;
     `;
   }
   const frameW = FRAME_SIZE_JS[hero.pack] || 48;
@@ -527,6 +528,7 @@ function syncAvatarDisplay() {
   const shopPodiumSprite = document.getElementById('shop-podium-sprite');
   const shopPodiumName   = document.getElementById('shop-podium-name');
   const shopPodiumClass  = document.getElementById('shop-podium-class');
+  const slotOutfitName   = document.getElementById('slot-outfit-name');
   if (shopPodiumImg) {
     shopPodiumImg.src = hero.sprite;
   } else if (shopPodiumSprite) {
@@ -534,6 +536,7 @@ function syncAvatarDisplay() {
   }
   if (shopPodiumName)  shopPodiumName.textContent  = hero.name;
   if (shopPodiumClass) shopPodiumClass.textContent = `Active ${hero.name}`;
+  if (slotOutfitName)  slotOutfitName.textContent  = state.equipped && state.equipped.outfit ? state.equipped.outfit : 'Default';
 }
 
 // Export so it can be called externally

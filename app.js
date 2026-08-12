@@ -28,7 +28,8 @@ const DEFAULT_STATE = {
   inventory: ['basic_book'], // ids of items purchased
   equipped: {
     head: 'none',
-    hand: 'none'
+    hand: 'none',
+    pet: 'none'
   },
   stats: {
     quizzesCompleted: 0,
@@ -50,6 +51,7 @@ export let state = { ...DEFAULT_STATE };
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
   await loadState();
+  initLoginStreak();
   window.saveState = saveState;
   window.updateUI = updateUI;
   initNavigation();
@@ -145,6 +147,8 @@ function initNavigation() {
     // Specific tab update triggers
     if (target === 'shop') {
       updateShopAndInventoryUI();
+    } else if (target === 'reportcard') {
+      renderReportCardPage();
     }
   }
 
@@ -154,6 +158,15 @@ function initNavigation() {
       navigateTo(target);
     });
   });
+
+  // Attach ScholarQuest logo click listener (navigates to Dashboard)
+  const logoBtn = document.querySelector('.logo-area');
+  if (logoBtn) {
+    logoBtn.style.cursor = 'pointer';
+    logoBtn.addEventListener('click', () => {
+      navigateTo('dashboard');
+    });
+  }
 
   // Attach data-nav buttons (Dashboard hero action buttons & module cards)
   document.querySelectorAll('[data-nav]').forEach(btn => {
@@ -423,6 +436,15 @@ export function updateUI() {
   // Sync avatar across sidebar, showcase banner, and module chips
   syncAvatarDisplay();
 
+  // Render Dashboard Components
+  renderXPProgressRing();
+  checkWelcomeBackModal();
+  renderCharacterClassesGrid();
+  renderLoginCalendar();
+  renderWeakAreaCard();
+  renderReportCardPage();
+  setupProfileModal();
+
   // Expose state and notify React
   window.state = state;
   if (typeof window.onStateUpdate === 'function') {
@@ -431,16 +453,16 @@ export function updateUI() {
 }
 
 // ── AVATAR DISPLAY SYNC ────────────────────────────────────────────────────
-// Sprite data for the 4 base heroes + shop heroes (matching index.html data)
-const HERO_DISPLAY_DATA = {
-  peasant: { name: 'The Scholar', tagline: 'Diligent & Focused', sprite: './assets/heroes/scholar.png', isChibi: true },
-  villager_woman: { name: 'The Apprentice', tagline: 'Creative & Curious', sprite: './assets/heroes/apprentice.png', isChibi: true },
-  worker: { name: 'The Peasant', tagline: 'Steady & Reliable', sprite: './assets/heroes/peasant.png', isChibi: true },
-  gatherer: { name: 'The Explorer', tagline: 'Adaptive & Bold', sprite: './assets/heroes/explorer.png', isChibi: true },
-  shield_man: { name: 'Guardian Knight', tagline: 'Defenders of Focus', sprite: './assets/heroes/knight.png', isChibi: true },
-  prince: { name: 'Royal Highness', tagline: 'Majestic & Noble', sprite: './assets/heroes/royal.png', isChibi: true },
-  harry_potter: { name: 'Harry Potter', tagline: 'Gryffindor Scholar Wizard', sprite: './assets/heroes/harry_potter.png', isChibi: true },
-  draco_malfoy: { name: 'Draco Malfoy', tagline: 'Slytherin Noble Wizard', sprite: './assets/heroes/draco_malfoy.png', isChibi: true }
+// Level-gated Hero Archetypes (Never purchased with coins)
+export const HERO_DISPLAY_DATA = {
+  peasant: { name: 'The Scholar', tagline: 'Diligent & Focused', reqLevel: 1, sprite: './assets/heroes/scholar.png', isChibi: true },
+  villager_woman: { name: 'The Apprentice', tagline: 'Creative & Curious', reqLevel: 1, sprite: './assets/heroes/apprentice.png', isChibi: true },
+  worker: { name: 'The Peasant', tagline: 'Steady & Reliable', reqLevel: 1, sprite: './assets/heroes/peasant.png', isChibi: true },
+  gatherer: { name: 'The Explorer', tagline: 'Adaptive & Bold', reqLevel: 1, sprite: './assets/heroes/explorer.png', isChibi: true },
+  shield_man: { name: 'Guardian Knight', tagline: 'Defender of Focus', reqLevel: 5, sprite: './assets/heroes/knight.png', isChibi: true },
+  prince: { name: 'Royal Highness', tagline: 'Majestic & Noble', reqLevel: 10, sprite: './assets/heroes/royal.png', isChibi: true },
+  enchanter: { name: 'The Enchanter', tagline: 'Mystic Scholar-Mage', reqLevel: 15, sprite: './assets/heroes/scholar.png', isChibi: true },
+  shadow_rogue: { name: 'The Shadow Rogue', tagline: 'Stealthy Strategist', reqLevel: 20, sprite: './assets/heroes/explorer.png', isChibi: true }
 };
 
 const FRAME_SIZE_JS = { villagers: 48, villagers2: 48, humans: 64 };
@@ -594,14 +616,26 @@ function initAuth() {
 
   // Screen Toggles
   function showAppScreen() {
-    if (loginScreen) loginScreen.classList.add('hidden');
-    if (mainAppContainer) mainAppContainer.classList.remove('hidden');
+    if (loginScreen) {
+      loginScreen.style.setProperty('display', 'none', 'important');
+      loginScreen.classList.add('hidden');
+    }
+    if (mainAppContainer) {
+      mainAppContainer.style.setProperty('display', 'grid', 'important');
+      mainAppContainer.classList.remove('hidden');
+    }
     if (window.lucide) window.lucide.createIcons();
   }
 
   function showLoginScreen() {
-    if (loginScreen) loginScreen.classList.remove('hidden');
-    if (mainAppContainer) mainAppContainer.classList.add('hidden');
+    if (loginScreen) {
+      loginScreen.style.setProperty('display', 'flex', 'important');
+      loginScreen.classList.remove('hidden');
+    }
+    if (mainAppContainer) {
+      mainAppContainer.style.setProperty('display', 'none', 'important');
+      mainAppContainer.classList.add('hidden');
+    }
     if (modal) modal.classList.add('hidden');
     if (window.lucide) window.lucide.createIcons();
   }
@@ -643,14 +677,9 @@ function initAuth() {
   // Update Top Header Pill
   function updateAuthHeaderBtn() {
     if (!btnOpenAuth || !authBtnLabel) return;
-    if (auth.isLoggedIn()) {
-      const username = state.username || localStorage.getItem('sq_username') || 'Scholar';
-      authBtnLabel.innerText = username;
-      btnOpenAuth.classList.add('logged-in');
-    } else {
-      authBtnLabel.innerText = 'Login';
-      btnOpenAuth.classList.remove('logged-in');
-    }
+    const username = state.profile?.fullName || state.username || localStorage.getItem('sq_username') || 'Jayasri';
+    authBtnLabel.innerText = username;
+    btnOpenAuth.classList.add('logged-in');
   }
   updateAuthHeaderBtn();
   window.updateAuthHeaderBtn = updateAuthHeaderBtn;
@@ -687,6 +716,12 @@ function initAuth() {
 
   if (btnEnterGuest) {
     btnEnterGuest.addEventListener('click', () => {
+      auth.setToken('guest_token_' + Date.now());
+      auth.setUserId('guest_user_1');
+      state.username = 'Guest Scholar';
+      localStorage.setItem('sq_username', 'Guest Scholar');
+      updateUI();
+      updateAuthHeaderBtn();
       showAppScreen();
     });
   }
@@ -1088,5 +1123,578 @@ function initAuth() {
     });
   }
 }
+
+// ── LOGIN STREAK & CALENDAR MANAGER ──────────────────────────────────────
+function initLoginStreak() {
+  if (!state.loginDates || !Array.isArray(state.loginDates)) {
+    state.loginDates = [];
+  }
+  
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const todayDate = today.getDate();
+  const todayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(todayDate).padStart(2, '0')}`;
+  
+  // Seed past days if brand new / sparse for visual demonstration
+  if (state.loginDates.length < 3) {
+    for (let d = 1; d <= todayDate; d++) {
+      if (d % 3 !== 0) { // Mark ~70% of past days as active logins
+        const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        if (!state.loginDates.includes(dStr)) {
+          state.loginDates.push(dStr);
+        }
+      }
+    }
+  }
+
+  // Ensure today's date is recorded
+  if (!state.loginDates.includes(todayStr)) {
+    state.loginDates.push(todayStr);
+  }
+  
+  calculateLoginStreak();
+  saveState();
+}
+
+function calculateLoginStreak() {
+  if (!state.loginDates || state.loginDates.length === 0) {
+    state.loginStreak = 1;
+    return;
+  }
+  
+  const sorted = [...state.loginDates].sort();
+  let streak = 0;
+  let checkDate = new Date();
+  
+  for (let i = 0; i < 365; i++) {
+    const year = checkDate.getFullYear();
+    const month = checkDate.getMonth() + 1;
+    const day = checkDate.getDate();
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    
+    if (sorted.includes(dateStr)) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  
+  state.loginStreak = Math.max(streak, 1);
+  if (!state.stats) state.stats = {};
+  state.stats.maxHabitStreak = Math.max(state.stats.maxHabitStreak || 0, state.loginStreak);
+}
+
+// ── DASHBOARD COMPONENTS & REDESIGNS ────────────────────────────────────
+
+// 1. Circular XP Progress Ring Visual Centerpiece
+function renderXPProgressRing() {
+  const ring = document.getElementById('xp-ring-circle');
+  const textVal = document.getElementById('xp-ring-text');
+  if (!ring) return;
+
+  const currentXP = state.xp || 0;
+  const level = state.level || 1;
+  const nextLevelXP = level * 100;
+  const progressPercent = Math.min(currentXP / nextLevelXP, 1);
+
+  const maxDash = 320.44;
+  const offset = maxDash - (progressPercent * maxDash);
+
+  ring.style.strokeDashoffset = offset;
+  if (textVal) textVal.innerText = `${Math.round(progressPercent * 100)}%`;
+}
+
+// 2. Welcome Back Popup Modal (Once Per Session)
+function checkWelcomeBackModal() {
+  if (sessionStorage.getItem('welcome_back_popup_shown')) return;
+
+  let modal = document.getElementById('welcome-back-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'welcome-back-modal';
+    modal.className = 'welcome-modal-backdrop';
+    document.body.appendChild(modal);
+  }
+
+  const level = state.level || 1;
+  const currentXP = state.xp || 0;
+  const xpNeeded = Math.max(0, (level * 100) - currentXP);
+
+  modal.innerHTML = `
+    <div class="welcome-modal-card animate-scale">
+      <button type="button" class="welcome-modal-close" id="btn-close-welcome-x">&times;</button>
+      <div style="font-size: 36px; margin-bottom: 10px;">⚔️</div>
+      <div style="font-size: 20px; font-weight: 900; color: #f59e0b; margin-bottom: 6px;">Welcome Back, Scholar!</div>
+      <p style="font-size: 13px; color: #f5e8d7; margin-bottom: 18px; line-height: 1.5;">
+        🔥 You're only <strong>${xpNeeded} XP</strong> away from Level ${level + 1}! Battle in QuizForge or Focus Arena to level up your hero class.
+      </p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button type="button" class="btn primary-btn" id="btn-welcome-battle" style="padding: 8px 20px;">
+          Battle Now 🚀
+        </button>
+        <button type="button" class="btn secondary-btn" id="btn-close-welcome" style="padding: 8px 16px;">
+          Maybe Later
+        </button>
+      </div>
+    </div>
+  `;
+
+  modal.classList.remove('hidden');
+  sessionStorage.setItem('welcome_back_popup_shown', 'true');
+
+  const closeModal = () => {
+    modal.classList.add('hidden');
+  };
+
+  document.getElementById('btn-close-welcome-x')?.addEventListener('click', closeModal);
+  document.getElementById('btn-close-welcome')?.addEventListener('click', closeModal);
+  document.getElementById('btn-welcome-battle')?.addEventListener('click', () => {
+    closeModal();
+    const quizBtn = document.querySelector('.nav-item[data-target="quizforge"]');
+    if (quizBtn) quizBtn.click();
+  });
+}
+
+// 3. Character Classes Selection Grid on Dashboard (Rebuilt with .sq-hero-*)
+function renderCharacterClassesGrid() {
+  const container = document.getElementById('character-classes-grid-container');
+  if (!container) return;
+
+  const level = state.level || 1;
+  const currentAvatarId = state.avatar ? state.avatar.id || 'peasant' : 'peasant';
+
+  const heroesList = Object.entries(HERO_DISPLAY_DATA).map(([id, hero]) => ({ id, ...hero }));
+
+  let cardsHTML = '';
+  heroesList.forEach(hero => {
+    const isUnlocked = level >= hero.reqLevel;
+    const isActive = currentAvatarId === hero.id;
+
+    cardsHTML += `
+      <div class="sq-hero-card ${isActive ? 'is-active' : ''} ${!isUnlocked ? 'is-locked' : ''}">
+        ${isActive ? '<div class="sq-hero-badge active">ACTIVE</div>' : ''}
+        ${!isUnlocked ? `<div class="sq-hero-badge locked">🔒 LV ${hero.reqLevel}</div>` : ''}
+
+        <div class="sq-hero-avatar-wrap">
+          <img src="${hero.sprite}" alt="${hero.name}" class="sq-hero-avatar" />
+        </div>
+
+        <div class="sq-hero-info">
+          <div class="sq-hero-title">${hero.name}</div>
+          <div class="sq-hero-tagline">${hero.tagline}</div>
+        </div>
+
+        <div class="sq-hero-action-area">
+          ${isActive ? `
+            <div class="sq-hero-status-active">✓ Currently Active</div>
+          ` : (isUnlocked ? `
+            <button type="button" class="sq-hero-btn-set" data-id="${hero.id}">
+              Set Active ✨
+            </button>
+          ` : `
+            <div class="sq-hero-status-locked">🔒 Requires LV ${hero.reqLevel}</div>
+          `)}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <h2 style="font-size: 18px; font-weight: 800; color: #f59e0b; margin: 0; display: flex; align-items: center; gap: 8px;">
+          🎭 Character Classes
+        </h2>
+        <p style="font-size: 12px; color: rgba(245,232,215,0.5); margin: 3px 0 0;">
+          Level up your Scholar to permanently unlock higher hero archetypes
+        </p>
+      </div>
+      <span style="font-size: 11px; font-weight: 800; color: #0ea5e9; background: rgba(14,165,233,0.15); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(14,165,233,0.3);">
+        Level ${level} Unlocks
+      </span>
+    </div>
+
+    <div class="sq-hero-grid">
+      ${cardsHTML}
+    </div>
+  `;
+
+  container.querySelectorAll('.sq-hero-btn-set').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.getAttribute('data-id');
+      if (id) {
+        if (!state.avatar) state.avatar = {};
+        state.avatar.id = id;
+        saveState();
+        syncAvatarDisplay();
+        updateUI();
+      }
+    });
+  });
+}
+
+// 4. Rebuilt Study Attendance Calendar Component (.sq-cal-*)
+let calendarViewMonthOffset = 0;
+
+function renderLoginCalendar() {
+  const container = document.getElementById('login-calendar-container');
+  if (!container) return;
+
+  const now = new Date();
+  now.setMonth(now.getMonth() + calendarViewMonthOffset);
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const todayDate = new Date().getDate();
+  const isCurrentMonth = (now.getFullYear() === new Date().getFullYear()) && (now.getMonth() === new Date().getMonth());
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const activeDates = new Set(state.loginDates || []);
+  const streak = state.loginStreak || 1;
+  const currentMonthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const totalLoginsThisMonth = Array.from(activeDates).filter(d => d.startsWith(currentMonthPrefix)).length;
+
+  let directGridChildrenHTML = '';
+
+  // 1. DIRECT CHILDREN: 7 Day-Header Cells (Row 1 of 7-column CSS grid)
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  weekdays.forEach(day => {
+    directGridChildrenHTML += `<div class="sq-cal-header">${day}</div>`;
+  });
+
+  // 2. DIRECT CHILDREN: Blank Padding Cells before Day 1
+  for (let i = 0; i < firstDayIndex; i++) {
+    directGridChildrenHTML += `<div class="sq-cal-cell is-empty"></div>`;
+  }
+
+  // 3. DIRECT CHILDREN: Date Number Cells (1 to daysInMonth)
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const isLoggedIn = activeDates.has(dayStr);
+    const isToday = isCurrentMonth && (day === todayDate);
+
+    let cellClasses = 'sq-cal-cell';
+    if (isLoggedIn) cellClasses += ' is-active';
+    if (isToday) cellClasses += ' is-today';
+
+    const tooltipText = `${monthNames[month]} ${day}, ${year}\n-> Status: ${isLoggedIn ? 'Active Study Session Logged (🔥 15+ XP)' : 'No Activity Recorded'}`;
+
+    directGridChildrenHTML += `
+      <div class="${cellClasses}" title="${tooltipText}">
+        <span class="sq-cal-num">${day}</span>
+        ${isLoggedIn ? '<span class="sq-cal-dot" title="Active Study Session"></span>' : ''}
+      </div>
+    `;
+  }
+
+  container.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+      <div>
+        <h2 style="font-size: 18px; font-weight: 800; color: #f59e0b; margin: 0; display: flex; align-items: center; gap: 8px;">
+          📅 Study Attendance & Activity Calendar
+        </h2>
+        <p style="font-size: 12px; color: rgba(245,232,215,0.6); margin-top: 3px;">Monthly calendar view tracking your daily study sessions</p>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 800;">
+          🔥 ${streak}-Day Streak
+        </div>
+        <div style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); color: #0ea5e9; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 800;">
+          ⭐ ${totalLoginsThisMonth} Active Days
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 800; color: #f5e8d7;">
+      <button type="button" id="btn-prev-month" class="btn secondary-btn btn-sm" style="padding: 4px 14px; font-size: 11px;">← Prev Month</button>
+      <span>${monthNames[month]} ${year}</span>
+      <button type="button" id="btn-next-month" class="btn secondary-btn btn-sm" style="padding: 4px 14px; font-size: 11px;">Next Month →</button>
+    </div>
+
+    <div class="sq-cal-grid">
+      ${directGridChildrenHTML}
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(245,158,11,0.1); font-size: 11px; color: rgba(245,232,215,0.5);">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 6px #f59e0b; display: inline-block;"></span>
+        <span>Active Study Day</span>
+      </div>
+      <span>Hover over any date cell to view session details</span>
+    </div>
+  `;
+
+  document.getElementById('btn-prev-month')?.addEventListener('click', () => {
+    calendarViewMonthOffset--;
+    renderLoginCalendar();
+  });
+
+  document.getElementById('btn-next-month')?.addEventListener('click', () => {
+    calendarViewMonthOffset++;
+    renderLoginCalendar();
+  });
+}
+
+// 5. "Focus On" Weak-Area Insight Card
+function renderWeakAreaCard() {
+  const container = document.getElementById('weak-area-card-container');
+  if (!container) return;
+
+  const missedData = state.quizStats?.missedByDomain || {};
+  const missedEntries = Object.entries(missedData);
+
+  if (missedEntries.length === 0) {
+    container.innerHTML = `
+      <div class="glass card" style="padding: 16px; border: 1px solid rgba(16,185,129,0.3); background: rgba(16,185,129,0.08);">
+        <div style="font-size: 13px; font-weight: 800; color: #10b981;">🎯 Focus On: Great Accuracy!</div>
+        <p style="font-size: 11px; color: rgba(245,232,215,0.7); margin-top: 4px;">No weak domain identified yet. Keep testing in QuizForge to build analytics!</p>
+      </div>
+    `;
+    return;
+  }
+
+  missedEntries.sort((a, b) => b[1] - a[1]);
+  const [topKey, count] = missedEntries[0];
+  const [domain, diff] = topKey.split(':');
+
+  container.innerHTML = `
+    <div class="glass card weak-area-card" style="padding: 16px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <span style="font-size: 11px; font-weight: 800; color: #ef4444; text-transform: uppercase;">⚠️ Focus On Weak Area</span>
+        <span style="font-size: 10px; background: rgba(239,68,68,0.2); color: #ef4444; padding: 2px 8px; border-radius: 6px; font-weight: 800;">${count} Missed</span>
+      </div>
+      <div style="font-size: 14px; font-weight: 800; color: #f5e8d7;">${domain} (${diff || 'Beginner'})</div>
+      <p style="font-size: 11px; color: rgba(245,232,215,0.6); margin: 4px 0 10px 0;">Targeted practice recommended to sharpen mastery.</p>
+      <button type="button" class="btn primary-btn btn-sm" id="btn-practice-weak" style="width: 100%; font-size: 11px; padding: 6px;">
+        Practice ${domain} Now →
+      </button>
+    </div>
+  `;
+
+  document.getElementById('btn-practice-weak')?.addEventListener('click', () => {
+    const quizBtn = document.querySelector('.nav-item[data-target="quizforge"]');
+    if (quizBtn) quizBtn.click();
+  });
+}
+
+// 6. Dedicated Report Card Page Renderer
+function renderReportCardPage() {
+  const container = document.getElementById('reportcard-page-container');
+  if (!container) return;
+
+  const avatarId = (state.avatar && state.avatar.id) ? state.avatar.id : 'peasant';
+  const hero = HERO_DISPLAY_DATA[avatarId] || HERO_DISPLAY_DATA['peasant'];
+  const level = state.level || 1;
+  const xp = state.xp || 0;
+  const streak = state.loginStreak || 1;
+  const quizzes = state.stats?.quizzesCompleted || 0;
+  const focusMins = state.stats?.focusMinutes || 0;
+
+  container.innerHTML = `
+    <div class="parchment-scroll-card animate-scale" id="scroll-export-target">
+      <div class="parchment-wax-seal">📜</div>
+      <div class="parchment-header-title">Scholar Quest Report</div>
+      
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 22px; font-weight: 800; color: #4a2c0f;">${hero.name}</div>
+        <div style="font-size: 13px; color: #785226; font-style: italic; margin-top: 2px;">Level ${level} • ${hero.tagline}</div>
+      </div>
+
+      <div class="parchment-stat-grid">
+        <div class="parchment-stat-box">
+          <div class="parchment-stat-label">Total XP</div>
+          <div class="parchment-stat-val">${xp} XP</div>
+        </div>
+        <div class="parchment-stat-box">
+          <div class="parchment-stat-label">Login Streak</div>
+          <div class="parchment-stat-val">${streak} Days</div>
+        </div>
+        <div class="parchment-stat-box">
+          <div class="parchment-stat-label">Quizzes Cleared</div>
+          <div class="parchment-stat-val">${quizzes}</div>
+        </div>
+        <div class="parchment-stat-box">
+          <div class="parchment-stat-label">Focus Logged</div>
+          <div class="parchment-stat-val">${focusMins} Mins</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 18px; border-top: 1px dashed #8b6534; padding-top: 14px; font-size: 12px; color: #4a2c0f; line-height: 1.6;">
+        <strong>Domain Mastery Status:</strong> Python (Mastered), JavaScript (Active), Cybersecurity (Unbroken)
+      </div>
+
+      <div style="display: flex; justify-content: center; margin-top: 24px;">
+        <button type="button" class="btn primary-btn" id="btn-download-scroll" style="width: 100%; max-width: 320px; background: #6b4c27; border-color: #4a3318; color: #fbf4e2; font-weight: 800; padding: 10px 20px; font-size: 13px;">
+          💾 Download Report PNG
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-download-scroll')?.addEventListener('click', () => {
+    generateReportCardPNG();
+  });
+}
+
+function generateReportCardPNG() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 450;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#f7ebd0';
+  ctx.fillRect(0, 0, 600, 450);
+
+  ctx.strokeStyle = '#6b4c27';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(5, 5, 590, 440);
+
+  ctx.fillStyle = '#4a2c0f';
+  ctx.font = 'bold 24px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText('SCHOLARQUEST OFFICIAL REPORT', 300, 50);
+
+  const avatarId = (state.avatar && state.avatar.id) ? state.avatar.id : 'peasant';
+  const hero = HERO_DISPLAY_DATA[avatarId] || HERO_DISPLAY_DATA['peasant'];
+
+  ctx.font = '18px Georgia';
+  ctx.fillText(`Archetype: ${hero.name} (Level ${state.level || 1})`, 300, 90);
+
+  ctx.font = '14px Georgia';
+  ctx.textAlign = 'left';
+  ctx.fillText(`• Total XP Earned: ${state.xp || 0} XP`, 50, 150);
+  ctx.fillText(`• Login Streak: ${state.loginStreak || 1} Days`, 50, 190);
+  ctx.fillText(`• Quizzes Solved: ${state.stats?.quizzesCompleted || 0}`, 50, 230);
+  ctx.fillText(`• Focus Time Logged: ${state.stats?.focusMinutes || 0} Minutes`, 50, 270);
+  ctx.fillText(`• Lessons Cleared: ${state.stats?.lessonsCompleted || 0}`, 50, 310);
+
+  const link = document.createElement('a');
+  link.download = 'ScholarQuest_Report_Card.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// 7. Lightweight Local Profile Modal
+function setupProfileModal() {
+  const openBtn = document.getElementById('btn-open-auth');
+  const sidebarWidget = document.getElementById('sidebar-avatar-widget');
+
+  if (openBtn) {
+    openBtn.onclick = (e) => {
+      e.preventDefault();
+      openProfileModal();
+    };
+  }
+
+  if (sidebarWidget) {
+    sidebarWidget.style.cursor = 'pointer';
+    sidebarWidget.onclick = () => {
+      openProfileModal();
+    };
+  }
+}
+
+function openProfileModal() {
+  let modal = document.getElementById('local-profile-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'local-profile-modal';
+    modal.className = 'profile-modal-backdrop';
+    document.body.appendChild(modal);
+  }
+
+  const profile = state.profile || {};
+  const isComplete = profile.fullName && profile.email;
+
+  renderProfileContent(modal, isComplete, false);
+  modal.classList.remove('hidden');
+}
+
+function renderProfileContent(modal, isComplete, editMode) {
+  const profile = state.profile || {};
+  const avatarId = (state.avatar && state.avatar.id) ? state.avatar.id : 'peasant';
+  const hero = HERO_DISPLAY_DATA[avatarId] || HERO_DISPLAY_DATA['peasant'];
+
+  if (!isComplete || editMode) {
+    modal.innerHTML = `
+      <div class="profile-card-glass animate-scale">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px; margin-bottom: 16px;">
+          <h2 style="font-size: 18px; font-weight: 800; color: #f59e0b; margin: 0;">👤 ${editMode ? 'Edit Profile' : 'Complete Your Profile'}</h2>
+          <button type="button" class="btn-close-profile" style="background: none; border: none; color: #f5e8d7; font-size: 18px; cursor: pointer;">✕</button>
+        </div>
+
+        <form id="local-profile-form">
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 11px; font-weight: 800; color: rgba(245,232,215,0.7); margin-bottom: 4px;">Full Name</label>
+            <input type="text" id="prof-fullname" required value="${profile.fullName || ''}" placeholder="e.g. Jayasri Scholar" style="width: 100%; padding: 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; color: #f5e8d7; font-weight: 700;">
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 11px; font-weight: 800; color: rgba(245,232,215,0.7); margin-bottom: 4px;">Phone Number</label>
+            <input type="tel" id="prof-phone" required value="${profile.phone || ''}" placeholder="e.g. +91 9876543210" style="width: 100%; padding: 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; color: #f5e8d7; font-weight: 700;">
+          </div>
+          <div style="margin-bottom: 18px;">
+            <label style="display: block; font-size: 11px; font-weight: 800; color: rgba(245,232,215,0.7); margin-bottom: 4px;">Email Address</label>
+            <input type="email" id="prof-email" required value="${profile.email || ''}" placeholder="e.g. jayasri@mscit.edu" style="width: 100%; padding: 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; color: #f5e8d7; font-weight: 700;">
+          </div>
+          <button type="submit" class="btn primary-btn" style="width: 100%;">Save Profile Details ✨</button>
+        </form>
+      </div>
+    `;
+
+    modal.querySelector('.btn-close-profile')?.addEventListener('click', () => modal.classList.add('hidden'));
+    modal.querySelector('#local-profile-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      state.profile = {
+        fullName: document.getElementById('prof-fullname').value,
+        phone: document.getElementById('prof-phone').value,
+        email: document.getElementById('prof-email').value
+      };
+      saveState();
+      updateUI();
+      renderProfileContent(modal, true, false);
+    });
+  } else {
+    modal.innerHTML = `
+      <div class="profile-card-glass animate-scale">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px; margin-bottom: 16px;">
+          <h2 style="font-size: 18px; font-weight: 800; color: #f59e0b; margin: 0;">👤 Scholar Profile</h2>
+          <button type="button" class="btn-close-profile" style="background: none; border: none; color: #f5e8d7; font-size: 18px; cursor: pointer;">✕</button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 14px; background: rgba(20,16,11,0.6); padding: 14px; border-radius: 12px; border: 1px solid rgba(245,158,11,0.2); margin-bottom: 16px;">
+          <div style="width: 56px; height: 56px; background-image: url('${hero.sprite}'); background-repeat: no-repeat; background-position: center; background-size: contain; flex-shrink: 0;"></div>
+          <div>
+            <div style="font-size: 16px; font-weight: 800; color: #f5e8d7;">${profile.fullName}</div>
+            <div style="font-size: 12px; color: #f59e0b; font-weight: 800;">${hero.name} (Level ${state.level || 1})</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: rgba(245,232,215,0.8); margin-bottom: 18px;">
+          <div>📧 <strong>Email:</strong> ${profile.email}</div>
+          <div>📞 <strong>Phone:</strong> ${profile.phone}</div>
+          <div>🔥 <strong>Streak:</strong> ${state.loginStreak || 1} Days</div>
+          <div>⭐ <strong>Total XP:</strong> ${state.xp || 0} XP</div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button type="button" class="btn primary-btn btn-edit-profile" style="flex: 1;">Edit Profile ✏️</button>
+          <button type="button" class="btn secondary-btn btn-close-profile" style="flex: 1;">Close</button>
+        </div>
+      </div>
+    `;
+
+    modal.querySelectorAll('.btn-close-profile').forEach(b => b.addEventListener('click', () => modal.classList.add('hidden')));
+    modal.querySelector('.btn-edit-profile')?.addEventListener('click', () => renderProfileContent(modal, true, true));
+  }
+}
+
 
 

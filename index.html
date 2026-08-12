@@ -10,11 +10,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   
+  <!-- Socket.io Client Engine -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body class="theme-gold dark-mode">
   
@@ -198,6 +201,10 @@
           <i data-lucide="terminal"></i>
           <span>CodeScroll</span>
         </button>
+        <button class="nav-item" data-target="reportcard">
+          <i data-lucide="scroll"></i>
+          <span>Report Card</span>
+        </button>
         <button class="nav-item" data-target="shop">
           <i data-lucide="shopping-cart"></i>
           <span>Shop & Inv</span>
@@ -263,12 +270,22 @@
         <!-- ==================== DASHBOARD VIEW ==================== -->
         <section id="view-dashboard" class="content-view active">
           
-          <!-- PROMINENT HERO SHOWCASE BANNER -->
+
+          <!-- PROMINENT HERO SHOWCASE BANNER WITH XP PROGRESS RING -->
           <div class="hero-showcase-banner" id="hero-showcase-banner">
             <div class="hero-showcase-left">
               <div class="hero-showcase-sprite-area">
-                <div class="hero-showcase-sprite" id="showcase-sprite"></div>
-                <div class="hero-showcase-level-badge">LV <span id="showcase-level">1</span></div>
+                <!-- Circular XP Progress Ring -->
+                <div class="xp-ring-container">
+                  <svg class="xp-ring-svg" viewBox="0 0 115 115">
+                    <circle class="xp-ring-bg" cx="57.5" cy="57.5" r="51" stroke-width="7" fill="transparent" />
+                    <circle id="xp-ring-circle" class="xp-ring-fill" cx="57.5" cy="57.5" r="51" stroke-width="7" fill="transparent" />
+                  </svg>
+                  <div class="xp-ring-avatar">
+                    <div class="hero-showcase-sprite" id="showcase-sprite"></div>
+                  </div>
+                </div>
+                <div class="hero-showcase-level-badge">LV <span id="showcase-level">1</span> (<span id="xp-ring-text">0%</span>)</div>
               </div>
               <div class="hero-showcase-info">
                 <div class="hero-showcase-subtitle">ACTIVE HERO CLASS</div>
@@ -302,56 +319,19 @@
 
           <div class="dashboard-grid">
             
-            <!-- AVATAR SELECTOR (React Mount) -->
-            <div id="avatar-selector-root" class="span-full mb-4"></div>
-            
-            <!-- MODULE QUICK LAUNCHERS (4-Card Grid) -->
-            <div class="span-full module-launchers-grid mb-4">
-              
-              <!-- Card 1: QuizForge -->
-              <div class="glass card launcher-card launcher-quiz" data-nav="quizforge">
-                <div class="launcher-icon">⚔️</div>
-                <div class="launcher-body">
-                  <h3>QuizForge</h3>
-                  <p>Forge knowledge & earn XP in quiz battles</p>
-                  <div class="launcher-stat"><span id="dash-quick-quizzes">5</span> Quizzes Available</div>
-                </div>
-                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
-              </div>
+            <!-- WEAK-AREA INSIGHT CARD -->
+            <div class="span-full mb-2" id="weak-area-card-container">
+              <!-- Dynamically populated by app.js renderWeakAreaCard() -->
+            </div>
 
-              <!-- Card 2: Focus Arena -->
-              <div class="glass card launcher-card launcher-focus" data-nav="focusarena">
-                <div class="launcher-icon">⏳</div>
-                <div class="launcher-body">
-                  <h3>Focus Arena</h3>
-                  <p>Pomodoro deep work sessions with XP boosts</p>
-                  <div class="launcher-stat"><span id="dash-quick-focus">25m</span> Standard Timer</div>
-                </div>
-                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
-              </div>
+            <!-- UNIFIED CHARACTER CLASSES SELECTION GRID -->
+            <div class="span-full glass card mb-4" id="character-classes-grid-container" style="padding: 20px;">
+              <!-- Dynamically populated by app.js renderCharacterClassesGrid() -->
+            </div>
 
-              <!-- Card 3: HabitDojo -->
-              <div class="glass card launcher-card launcher-habits" data-nav="habitdojo">
-                <div class="launcher-icon">🧱</div>
-                <div class="launcher-body">
-                  <h3>HabitDojo</h3>
-                  <p>Daily streak multiplier for study habits</p>
-                  <div class="launcher-stat"><span id="dash-quick-streak">0</span> Current Streak</div>
-                </div>
-                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
-              </div>
-
-              <!-- Card 4: StudySync -->
-              <div class="glass card launcher-card launcher-sync" data-nav="studysync">
-                <div class="launcher-icon">🌐</div>
-                <div class="launcher-body">
-                  <h3>StudySync</h3>
-                  <p>Collaborate & study with fellow scholars</p>
-                  <div class="launcher-stat">Live Multiplayer</div>
-                </div>
-                <div class="launcher-arrow"><i data-lucide="chevron-right"></i></div>
-              </div>
-
+            <!-- LOGIN STREAK CALENDAR WIDGET -->
+            <div class="span-full login-calendar-card glass mb-4" id="login-calendar-container">
+              <!-- Dynamically populated by app.js renderMonthCalendar() -->
             </div>
 
             <!-- LEFT: DAILY QUESTS CARD -->
@@ -417,9 +397,25 @@
             <!-- Quiz List Section -->
             <div class="glass card quiz-list-card" id="quiz-selection-panel">
               <div class="card-header">
-                <h2>Available Quizzes</h2>
+                <h2>Domain Quizzes</h2>
                 <button class="btn primary-btn" id="btn-custom-quiz">Create Quiz</button>
               </div>
+
+              <!-- 9 Domain Filter Bar -->
+              <div id="quiz-domain-filters" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                <!-- Populated dynamically by quiz.js -->
+              </div>
+
+              <!-- Difficulty Tier Selector (Beginner, Intermediate, Advanced) -->
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                <span style="font-size: 11px; font-weight: 800; color: rgba(245,232,215,0.6); text-transform: uppercase;">Difficulty Tier:</span>
+                <div id="quiz-difficulty-filters" style="display: flex; gap: 6px;">
+                  <button class="diff-chip active" data-diff="Beginner" style="padding: 6px 14px; background: rgba(16,185,129,0.2); border: 1px solid #10b981; color: #10b981; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer;">🟢 Beginner</button>
+                  <button class="diff-chip" data-diff="Intermediate" style="padding: 6px 14px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer;">🟡 Intermediate</button>
+                  <button class="diff-chip" data-diff="Advanced" style="padding: 6px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer;">🔴 Advanced</button>
+                </div>
+              </div>
+
               <div class="quizzes-grid" id="quizzes-container">
                 <!-- Dynamically populated -->
               </div>
@@ -430,7 +426,7 @@
               <div class="quiz-active-header">
                 <h2 id="active-quiz-title">Quiz Name</h2>
                 <div class="quiz-timer" id="quiz-timer-box">
-                  <i data-lucide="clock"></i> <span id="quiz-time-left">30</span>s
+                  <i data-lucide="clock"></i> <span id="quiz-time-left">25</span>s
                 </div>
               </div>
               <div class="quiz-progress-bar">
@@ -442,7 +438,16 @@
                   <!-- Options injected here -->
                 </div>
               </div>
-              <div class="quiz-footer">
+
+              <!-- Adaptive Explanation Feedback Box -->
+              <div id="quiz-adaptive-explanation" class="hidden" style="margin-top: 14px; padding: 14px 16px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 12px; display: none;">
+                <div style="font-size: 12px; font-weight: 800; color: #f59e0b; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span>💡 Adaptive Explanation & Learning Feedback</span>
+                </div>
+                <p id="adaptive-explanation-text" style="font-size: 13px; color: #f5e8d7; margin: 0; line-height: 1.5;"></p>
+              </div>
+
+              <div class="quiz-footer" style="margin-top: 16px;">
                 <button class="btn secondary-btn" id="btn-quit-quiz">Quit Battle</button>
                 <button class="btn primary-btn" id="btn-next-question" disabled>Next Question</button>
               </div>
@@ -564,21 +569,41 @@
               
               <!-- Ambient Sounds -->
               <div class="glass card sound-card">
-                <h2>Ambient Sound Generator</h2>
-                <p class="text-sub">Boost focus with synthetic soundscapes</p>
-                <div class="sound-controls">
-                  <div class="sound-row">
-                    <span>🌧️ Rain Storm</span>
-                    <button class="sound-toggle-btn" data-sound="rain"><i data-lucide="play"></i> Play</button>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                  <div>
+                    <h2 style="font-size: 16px; color: #f59e0b; font-weight: 800; margin: 0;">🎵 Ambient Sound Generator</h2>
+                    <p class="text-sub" style="font-size: 11px; margin-top: 2px;">Looping soundscapes synced to your timer (Auto-stops at 00:00)</p>
                   </div>
-                  <div class="sound-row">
-                    <span>🔥 Cozy Campfire</span>
-                    <button class="sound-toggle-btn" data-sound="fire"><i data-lucide="play"></i> Play</button>
+                  <button type="button" class="btn secondary-btn btn-sm" id="btn-mute-sound" style="padding: 4px 10px; font-size: 11px;">
+                    <i data-lucide="volume-2"></i> Mute
+                  </button>
+                </div>
+
+                <!-- Sound Selection Grid -->
+                <div class="sound-select-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px;">
+                  <button type="button" class="sound-select-card active" data-sound="rain" style="padding: 10px; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; color: #f5e8d7; font-size: 12px; font-weight: 800; cursor: pointer; text-align: center;">
+                    🌧️ Rain
+                  </button>
+                  <button type="button" class="sound-select-card" data-sound="nature" style="padding: 10px; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.15); border-radius: 10px; color: #f5e8d7; font-size: 12px; font-weight: 800; cursor: pointer; text-align: center;">
+                    🌿 Nature
+                  </button>
+                  <button type="button" class="sound-select-card" data-sound="thunder" style="padding: 10px; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.15); border-radius: 10px; color: #f5e8d7; font-size: 12px; font-weight: 800; cursor: pointer; text-align: center;">
+                    ⚡ Thunder
+                  </button>
+                  <button type="button" class="sound-select-card" data-sound="calmfocus" style="padding: 10px; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.15); border-radius: 10px; color: #f5e8d7; font-size: 12px; font-weight: 800; cursor: pointer; text-align: center;">
+                    🎵 Calm Focus
+                  </button>
+                </div>
+
+                <!-- Volume Control & Stop Button -->
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(245,158,11,0.12); padding-top: 12px;">
+                  <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                    <span style="font-size: 11px; color: rgba(245,232,215,0.6); font-weight: 700;">Volume</span>
+                    <input type="range" id="ambient-volume-slider" min="0" max="1" step="0.05" value="0.5" style="flex: 1; accent-color: #f59e0b;">
                   </div>
-                  <div class="sound-row">
-                    <span>🎹 Lo-Fi Beats</span>
-                    <button class="sound-toggle-btn" data-sound="lofi"><i data-lucide="play"></i> Play</button>
-                  </div>
+                  <button type="button" class="btn secondary-btn btn-sm" id="btn-stop-ambient" style="padding: 4px 10px; font-size: 11px;">
+                    ⏹ Stop Audio
+                  </button>
                 </div>
               </div>
               
@@ -671,6 +696,11 @@
             <div class="module-hero-chip-sprite" id="chip-sprite-studysync"></div>
             <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; StudySync</span>
           </div>
+
+          <!-- Error Alert Banner -->
+          <div id="sync-error-banner" class="glass card hidden" style="background: rgba(220,38,38,0.25); border: 1px solid #ef4444; color: #fecaca; padding: 12px 18px; margin-bottom: 16px; border-radius: 12px; font-size: 13px; font-weight: 700; display: none;">
+          </div>
+
           <div class="studysync-grid">
             
             <!-- Lobby Entry / Creation Board -->
@@ -678,12 +708,12 @@
               <div class="lobby-welcome">
                 <div class="lobby-icon">📡</div>
                 <h2>StudySync Multiplayer Rooms</h2>
-                <p class="text-sub">Join forces with peers in real-time Pomodoro sessions and Quiz Battles.</p>
+                <p class="text-sub">Join forces with peers in real-time Pomodoro sessions and Quiz Battles (Max 15 Members per Room).</p>
               </div>
               
               <div class="lobby-actions">
                 <div class="join-action">
-                  <input type="text" id="room-code-input" placeholder="e.g. SCQ-4829" class="glass-input">
+                  <input type="text" id="room-code-input" placeholder="6-Char Join Code (e.g. X7K2QP)" maxlength="6" class="glass-input" style="text-transform: uppercase; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.1em;">
                   <button class="btn primary-btn" id="btn-join-room">Join Room</button>
                 </div>
                 <div class="divider"><span>OR</span></div>
@@ -693,83 +723,87 @@
             
             <!-- Active Room Arena (Hidden initially) -->
             <div class="glass card sync-room-card hidden" id="sync-room-panel">
-              <div class="room-header">
-                <div class="room-title-info">
-                  <h2 id="room-id-display">Room: SCQ-4829</h2>
-                  <span class="active-badge"><span class="pulse-dot"></span> <span id="room-occupant-count">4</span> Online</span>
+              <div class="room-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 14px; margin-bottom: 16px;">
+                <div class="room-title-info" style="display: flex; align-items: center; gap: 12px;">
+                  <h2 id="room-id-display" style="font-size: 18px; font-weight: 800; color: #f59e0b; margin: 0; font-family: 'JetBrains Mono', monospace;">Room Code: ------</h2>
+                  <button type="button" class="btn secondary-btn btn-sm" id="btn-copy-code" style="padding: 4px 10px; font-size: 11px;">📋 Copy Code</button>
+                  <span class="active-badge" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #10b981; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 800;"><span class="pulse-dot"></span> <span id="room-occupant-count">1/15 Members</span></span>
                 </div>
                 <button class="btn secondary-btn btn-sm" id="btn-leave-room">Leave Room</button>
               </div>
               
               <div class="room-main-layout">
-                <!-- Group Timer & Lobby Partners -->
+                <!-- Group Timer & Connected Members -->
                 <div class="room-workspace-side">
-                  <!-- Team Focus Timer -->
-                  <div class="group-timer-box">
-                    <h3>Group Pomodoro</h3>
-                    <div id="room-timer-display" class="timer-countdown">25:00</div>
-                    <p class="text-sub text-center" id="room-timer-status">Sync timer active</p>
-                  </div>
-                  
-                  <!-- Squad Members -->
+                  <!-- Squad Members Grid (Up to 15) -->
                   <div class="squad-box">
-                    <h3>Squad Members</h3>
+                    <h3 style="font-size: 14px; color: #f59e0b; font-weight: 800; margin-bottom: 10px;">👥 Connected Squad Members</h3>
                     <div class="squad-list" id="squad-members-container">
                       <!-- Dynamically populated -->
                     </div>
                   </div>
                 </div>
                 
-                <!-- Chat and Live Battle Box -->
+                <!-- Interaction & Live Battle Box -->
                 <div class="room-interaction-side">
-                  <!-- Tab toggles for Chat and Quiz Battles -->
+                  <!-- Tab toggles for Chat and Shared Activity -->
                   <div class="room-tabs">
                     <button class="room-tab active" data-tab="chat">Room Chat</button>
-                    <button class="room-tab" data-tab="battle">Quiz Battle</button>
+                    <button class="room-tab" data-tab="battle">Shared Activity</button>
                   </div>
                   
                   <!-- Chat Tab -->
                   <div class="room-tab-content active" id="room-chat-tab">
-                    <div class="chat-messages-container" id="chat-messages">
+                    <div class="chat-messages-container" id="chat-messages" style="height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 6px;">
                       <!-- Chat messages -->
                     </div>
-                    <div class="chat-input-row">
-                      <input type="text" id="chat-input-field" placeholder="Send a message to your squad...">
+                    <div class="chat-input-row" style="margin-top: 12px; display: flex; gap: 8px;">
+                      <input type="text" id="chat-input-field" placeholder="Send a message to your squad..." class="glass-input" style="flex: 1;">
                       <button class="btn primary-btn" id="btn-send-chat"><i data-lucide="send"></i></button>
                     </div>
                   </div>
                   
-                  <!-- Battle Tab -->
+                  <!-- Shared Activity Tab -->
                   <div class="room-tab-content" id="room-battle-tab">
                     <div class="battle-lobby" id="battle-lobby-pane">
-                      <h3>Multiplayer Quiz Battle</h3>
-                      <p class="text-sub">Compete in a timed battle. Speed gives bonus points.</p>
-                      <button class="btn primary-btn btn-lg" id="btn-start-quiz-battle">Start Live Battle</button>
+                      <h3>Multiplayer Shared Activity</h3>
+                      <p class="text-sub">Host can launch a synchronized QuizForge or CodeScroll challenge for all room members.</p>
+                      
+                      <!-- Host Controls Bar -->
+                      <div id="host-controls-bar" style="margin: 16px 0; display: flex; align-items: center; gap: 10px;">
+                        <select id="activity-module-select" class="glass-input" style="flex: 1; padding: 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); color: #f5e8d7; font-weight: 700; border-radius: 10px;">
+                          <option value="quizforge">⚡ QuizForge Challenge</option>
+                          <option value="codescroll">💻 CodeScroll Challenge</option>
+                        </select>
+                      </div>
+
+                      <button class="btn primary-btn btn-lg" id="btn-start-quiz-battle" style="width: 100%;">Start Shared Activity 🚀</button>
                     </div>
                     
                     <div class="battle-active hidden" id="battle-active-pane">
-                      <div class="battle-question">
-                        <h4 id="battle-question-title">Loading question...</h4>
-                        <div class="options-grid" id="battle-options-container">
+                      <div class="battle-question" style="background: rgba(12,10,7,0.6); padding: 16px; border-radius: 12px; border: 1px solid rgba(245,158,11,0.2); margin-bottom: 16px;">
+                        <h4 id="battle-question-title" style="font-size: 15px; color: #f5e8d7; font-weight: 800; margin-bottom: 14px;">Loading question...</h4>
+                        <div class="options-grid" id="battle-options-container" style="display: flex; flex-direction: column; gap: 8px;">
                           <!-- Injected options -->
                         </div>
                       </div>
+                      
                       <div class="battle-leaderboard-box">
-                        <h5>Live Battle Standing</h5>
+                        <h5 style="font-size: 13px; font-weight: 800; color: #f59e0b; margin-bottom: 8px;">🏆 Live Room Leaderboard</h5>
                         <div class="battle-leaderboard-list" id="battle-standing-list">
-                          <!-- Standings -->
+                          <!-- Real-time room standings -->
                         </div>
                       </div>
                     </div>
                     
                     <div class="battle-finished hidden" id="battle-finished-pane">
-                      <h4>Battle Completed!</h4>
-                      <div class="winner-announcement" id="battle-winner-text">You took 1st Place!</div>
-                      <div class="rewards-display">
-                        <span class="reward-pill xp-reward">+40 XP</span>
-                        <span class="reward-pill coin-reward">+15 Coins</span>
+                      <h4>Activity Completed!</h4>
+                      <div class="winner-announcement" id="battle-winner-text" style="font-size: 16px; font-weight: 800; color: #f59e0b; margin: 12px 0;">Final Leaderboard Updated!</div>
+                      <div class="rewards-display" style="display: flex; gap: 10px; margin-bottom: 16px;">
+                        <span class="reward-pill xp-reward" style="background: rgba(245,158,11,0.2); border: 1px solid #f59e0b; color: #f59e0b; padding: 4px 12px; border-radius: 8px; font-weight: 800;">+40 XP</span>
+                        <span class="reward-pill coin-reward" style="background: rgba(16,185,129,0.2); border: 1px solid #10b981; color: #10b981; padding: 4px 12px; border-radius: 8px; font-weight: 800;">+15 Coins</span>
                       </div>
-                      <button class="btn secondary-btn" id="btn-reset-battle">Return to Lobby</button>
+                      <button class="btn secondary-btn" id="btn-reset-battle">Return to Activity Lobby</button>
                     </div>
                   </div>
                 </div>
@@ -790,7 +824,20 @@
             <!-- Left Side: Lessons List -->
             <div class="glass card lessons-list-card">
               <h2>CodeScroll Scrolls</h2>
-              <p class="text-sub">Unlock levels by programming interactively</p>
+              <p class="text-sub" style="margin-bottom: 12px;">Master interactive coding across 9 technical subjects</p>
+              
+              <!-- Domain & Difficulty Filter Selects -->
+              <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <select id="codescroll-domain-select" class="glass-input" style="flex: 1; padding: 8px 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); color: #f5e8d7; font-weight: 700; border-radius: 8px;">
+                  <!-- Populated dynamically by codescroll.js -->
+                </select>
+                <select id="codescroll-difficulty-select" class="glass-input" style="width: 140px; padding: 8px 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; font-weight: 800; border-radius: 8px;">
+                  <option value="Beginner">🟢 Beginner</option>
+                  <option value="Intermediate">🟡 Intermediate</option>
+                  <option value="Advanced">🔴 Advanced</option>
+                </select>
+              </div>
+
               <div class="lessons-container" id="lessons-list">
                 <!-- Dynamically populated -->
               </div>
@@ -806,8 +853,11 @@
               <div class="workspace-body">
                 <!-- Description Panel -->
                 <div class="lesson-desc-panel" id="lesson-desc">
-                  <p>Choose a scroll from the list on the left to load its coding quest. You will write Javascript code to solve problems and execute it inside the browser console.</p>
+                  <p>Choose a scroll from the list on the left to load its coding quest. Write code to solve the challenge and execute assertions.</p>
                 </div>
+                
+                <!-- Toggleable Hint & Explanation Drawer -->
+                <div id="codescroll-hint-drawer"></div>
                 
                 <!-- Editor Panel (Stylized Mock Editor) -->
                 <div class="editor-pane">
@@ -849,6 +899,29 @@ console.log(greet());
           </div>
         </section>
         
+        <!-- ==================== REPORT CARD VIEW ==================== -->
+        <section id="view-reportcard" class="content-view">
+          <div class="module-hero-chip" id="chip-reportcard">
+            <div class="module-hero-chip-sprite" id="chip-sprite-reportcard"></div>
+            <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; Scholar Quest Report</span>
+          </div>
+
+          <div style="max-width: 800px; margin: 0 auto; padding: 20px 0;">
+            <div class="page-header" style="margin-bottom: 24px; text-align: center;">
+              <h1 style="font-size: 26px; font-weight: 900; color: #f59e0b; margin: 0; display: inline-flex; align-items: center; gap: 10px;">
+                📜 Official Scholar Quest Report Card
+              </h1>
+              <p style="font-size: 13px; color: rgba(245,232,215,0.6); margin-top: 6px;">
+                Your official academic scroll, experience tally, and domain mastery record
+              </p>
+            </div>
+
+            <div id="reportcard-page-container" style="display: flex; justify-content: center; align-items: center; margin-top: 20px;">
+              <!-- Rendered parchment report card -->
+            </div>
+          </div>
+        </section>
+
         <!-- ==================== SHOP & INVENTORY VIEW ==================== -->
         <section id="view-shop" class="content-view">
           <div class="module-hero-chip" id="chip-shop">
@@ -871,8 +944,10 @@ console.log(greet());
                 <button class="shop-tab active" data-category="accessories">Avatar Upgrades</button>
                 <button class="shop-tab" data-category="outfits">👕 Outfits & Tunics</button>
                 <button class="shop-tab" data-category="pets">🐾 Magical Pets</button>
+                <button class="shop-tab" data-category="bundles" style="color: #a855f7; font-weight: 800;">📦 Bundles</button>
                 <button class="shop-tab" data-category="themes">UI Themes</button>
                 <button class="shop-tab" data-category="boosters">Boosters</button>
+                <button class="shop-tab" data-category="owned" style="color: #f59e0b; font-weight: 800;">🏆 My Collection (<span id="owned-count">0</span>)</button>
               </div>
               
               <div class="shop-items-grid" id="shop-items-container">
@@ -887,16 +962,16 @@ console.log(greet());
                 <span class="text-sub" style="font-size: 11px; color: rgba(245,232,215,0.5);">Live 3D floating character preview & active gear</span>
               </div>
               
-              <!-- 3D HOLOGRAPHIC PROJECTION STAGE -->
-              <div class="projection-3d-stage" style="min-height: 340px; max-height: 380px;">
-                <!-- Top Light Emitter Dome -->
-                <div class="holo-projector-emitter"></div>
-                <!-- Semi-transparent 3D Projection Beam -->
-                <div class="holo-beam-3d" style="width: 220px; height: 300px;"></div>
-                
-                <div style="text-align: center; z-index: 5; margin-top: 8px;">
-                  <span id="shop-podium-class" style="font-size: 10px; font-weight: 800; color: #f59e0b; letter-spacing: 0.15em; text-transform: uppercase;">Active Hero</span>
-                  <div id="shop-podium-name" style="font-size: 14px; font-weight: 800; color: #f5e8d7; margin-top: 2px;">The Scholar</div>
+              <!-- 3D FLOATING PODIUM STAGE -->
+              <div class="floating-podium-container" style="min-height: 280px; padding: 18px 12px 14px; background: radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.22) 0%, rgba(12,9,6,0.95) 75%); border: 1px solid rgba(245,158,11,0.3); border-radius: 20px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: space-between;">
+                <div id="preview-active-badge" style="display: none; position: absolute; top: 12px; right: 12px; background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #f59e0b; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; z-index: 10; backdrop-filter: blur(6px); box-shadow: 0 0 14px rgba(245,158,11,0.35);">
+                  ⚡ PREVIEW MODE
+                </div>
+
+                <div class="spotlight-beam" style="height: 250px; width: 180px; background: linear-gradient(180deg, rgba(245, 158, 11, 0.35) 0%, rgba(245, 158, 11, 0.05) 70%, transparent 100%); clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);"></div>
+                <div style="text-align: center; z-index: 2;">
+                  <span id="shop-podium-class" style="font-size: 10px; font-weight: 800; color: #f59e0b; letter-spacing: 0.12em; text-transform: uppercase;">Active Hero</span>
+                  <div id="shop-podium-name" style="font-size: 13px; font-weight: 800; color: #f5e8d7; margin-top: 2px;">The Scholar</div>
                 </div>
                 
                 <!-- PROPORTIONED FLOATING CHARACTER STAGE -->
@@ -904,6 +979,12 @@ console.log(greet());
                   <!-- Main Hero Character (Proportioned to 160px with max-width enforced!) -->
                   <img id="shop-podium-img" class="holo-character-img" src="./assets/heroes/scholar.png" alt="Active Hero" />
                   
+                  <!-- Head Accessory Overlay -->
+                  <img id="shop-podium-head" src="" alt="Head Accessory" style="width: 55px; height: 55px; object-fit: contain; position: absolute; top: -5px; left: 50%; transform: translateX(-50%); z-index: 5; display: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); pointer-events: none; animation: podFloat 3.5s ease-in-out infinite;" />
+
+                  <!-- Hand Accessory Overlay -->
+                  <img id="shop-podium-hand" src="" alt="Hand Accessory" style="width: 45px; height: 45px; object-fit: contain; position: absolute; left: 0px; bottom: 25px; z-index: 5; display: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); pointer-events: none; animation: podFloat 3.5s ease-in-out infinite;" />
+
                   <!-- Active Pet Companion floating beside Hero -->
                   <img id="shop-podium-pet" src="./assets/items/hedwig_owl.png" alt="Pet Companion" style="width: 55px; height: 55px; object-fit: contain; position: absolute; right: -8px; bottom: 25px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.8)); animation: float3D 3.5s ease-in-out infinite 0.5s; z-index: 5; display: block;" />
 
@@ -911,30 +992,24 @@ console.log(greet());
                   <div class="podium-stage-base-3d"></div>
                 </div>
 
-                <!-- Slot Status Badges -->
-                <div style="display: flex; gap: 6px; width: 100%; z-index: 5;">
-                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 5px; font-size: 9.5px;">
-                    <span style="color: rgba(245,232,215,0.45);">Head:</span> <strong id="slot-head-name" style="color: #f59e0b;">None</strong>
+                <div style="display: flex; gap: 6px; width: 100%; z-index: 2;">
+                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.6); border: 1px solid rgba(245,158,11,0.15); border-radius: 8px; padding: 5px 2px; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <span style="color: rgba(245,232,215,0.4);">Head:</span> <strong id="slot-head-name" style="color: #f59e0b;">None</strong>
                   </div>
-                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 5px; font-size: 9.5px;">
-                    <span style="color: rgba(245,232,215,0.45);">Hand:</span> <strong id="slot-hand-name" style="color: #f59e0b;">None</strong>
+                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.6); border: 1px solid rgba(245,158,11,0.15); border-radius: 8px; padding: 5px 2px; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <span style="color: rgba(245,232,215,0.4);">Hand:</span> <strong id="slot-hand-name" style="color: #f59e0b;">None</strong>
                   </div>
-                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 5px; font-size: 9.5px;">
-                    <span style="color: rgba(245,232,215,0.45);">Outfit:</span> <strong id="slot-outfit-name" style="color: #34d399;">Default</strong>
+                  <div style="flex: 1; text-align: center; background: rgba(20,16,11,0.6); border: 1px solid rgba(245,158,11,0.15); border-radius: 8px; padding: 5px 2px; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <span style="color: rgba(245,232,215,0.4);">Pet:</span> <strong id="slot-pet-name" style="color: #f59e0b;">None</strong>
                   </div>
                 </div>
               </div>
 
-              <!-- Inventory Backpack Items -->
+              <!-- Inventory Equipped Items -->
               <div class="inventory-container">
-                <h3 style="font-size: 12px; color: rgba(245,232,215,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;">Equipped Gear</h3>
-                <div class="equipped-list" id="equipped-items-container">
+                <h3 style="font-size: 12px; color: rgba(245,232,215,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;">Equipped Gear Slots</h3>
+                <div class="equipped-list" id="equipped-items-container" style="display: flex; gap: 12px;">
                   <!-- Currently active gear -->
-                </div>
-                
-                <h3 style="margin-top: 20px; font-size: 12px; color: rgba(245,232,215,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;">Backpack Inventory</h3>
-                <div class="backpack-grid" id="backpack-items-container">
-                  <!-- Owned items -->
                 </div>
               </div>
             </div>
@@ -953,40 +1028,6 @@ console.log(greet());
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <script type="text/babel">
-    const AVATAR_CHARACTERS = [
-      { id: 'peasant', name: 'Peasant', sprite: './src/modules/avatar/assets/characters/villagers/MiniPeasant.png', pack: 'villagers', tier: 'Base Starter', unlockType: 'default', unlockValue: null, description: 'A humble beginner scholar. Honest work and eager to learn.' },
-      { id: 'worker', name: 'Worker', sprite: './src/modules/avatar/assets/characters/villagers/MiniWorker.png', pack: 'villagers', tier: 'Base Starter', unlockType: 'default', unlockValue: null, description: 'Builds their knowledge foundation brick by brick.' },
-      { id: 'villager_man', name: 'Villager Scholar (M)', sprite: './src/modules/avatar/assets/characters/villagers/MiniVillagerMan.png', pack: 'villagers', tier: 'Base Starter', unlockType: 'default', unlockValue: null, description: 'A standard scholar avatar dedicated to daily learning tasks.' },
-      { id: 'villager_woman', name: 'Villager Scholar (F)', sprite: './src/modules/avatar/assets/characters/villagers/MiniVillagerWoman.png', pack: 'villagers', tier: 'Base Starter', unlockType: 'default', unlockValue: null, description: 'An enthusiastic student ready to complete core quizzes.' },
-      { id: 'gatherer', name: 'Gatherer', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniGatherer.png', pack: 'villagers2', tier: 'Level Reward', unlockType: 'level', unlockValue: 2, description: 'Gathers notes and references from all online tutorials.' },
-      { id: 'lumberjack', name: 'Lumberjack', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniLumberjack.png', pack: 'villagers2', tier: 'Level Reward', unlockType: 'level', unlockValue: 3, description: 'Chops down complex problems into manageable micro-tasks.' },
-      { id: 'miner', name: 'Miner', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniMiner.png', pack: 'villagers2', tier: 'Level Reward', unlockType: 'level', unlockValue: 4, description: 'Digs deep into textbooks and core documentation.' },
-      { id: 'shield_man', name: 'Shield Defender', sprite: './src/modules/avatar/assets/characters/humans/MiniShieldMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 5, description: 'Defends their study streak from external distractions.' },
-      { id: 'hunter', name: 'Hunter', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniHunter.png', pack: 'villagers2', tier: 'Level Reward', unlockType: 'level', unlockValue: 6, description: 'Hunts down rare bugs and solves performance leaks.' },
-      { id: 'sword_man', name: 'Sword Fighter', sprite: './src/modules/avatar/assets/characters/humans/MiniSwordMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 8, description: 'Slashes through complex code challenges with confidence.' },
-      { id: 'grave_digger', name: 'Grave Digger', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniGraveDigger.png', pack: 'villagers2', tier: 'Level Reward', unlockType: 'level', unlockValue: 9, description: 'Buries outdated concepts and deprecated libraries.' },
-      { id: 'prince', name: 'Prince', sprite: './src/modules/avatar/assets/characters/humans/MiniPrinceMan.png', pack: 'humans', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 10, description: 'Royal descendant who has mastered mid-tier curriculum.' },
-      { id: 'princess', name: 'Princess', sprite: './src/modules/avatar/assets/characters/villagers/MiniPrincess.png', pack: 'villagers', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 10, description: 'Noble scholar excelling in algorithmic synchronization.' },
-      { id: 'old_man', name: 'Sage Mentor (M)', sprite: './src/modules/avatar/assets/characters/villagers/MiniOldMan.png', pack: 'villagers', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 12, description: 'A wise advisor who guides students through difficult semesters.' },
-      { id: 'old_woman', name: 'Sage Mentor (F)', sprite: './src/modules/avatar/assets/characters/villagers/MiniOldWoman.png', pack: 'villagers', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 12, description: 'Possesses decades of experience in software engineering concepts.' },
-      { id: 'noble_man', name: 'Noble Lord', sprite: './src/modules/avatar/assets/characters/villagers/MiniNobleMan.png', pack: 'villagers', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 15, description: 'Patron of the arts and compiler optimizations.' },
-      { id: 'noble_woman', name: 'Noble Lady', sprite: './src/modules/avatar/assets/characters/villagers/MiniNobleWoman.png', pack: 'villagers', tier: 'Prestige Tier', unlockType: 'level', unlockValue: 15, description: 'Exquisite scholar who drafts elegant structural designs.' },
-      { id: 'king', name: 'King', sprite: './src/modules/avatar/assets/characters/humans/MiniKingMan.png', pack: 'humans', tier: 'Legendary', unlockType: 'level', unlockValue: 20, description: 'Ruler of the ScholarQuest leaderboards.' },
-      { id: 'queen', name: 'Queen', sprite: './src/modules/avatar/assets/characters/villagers/MiniQueen.png', pack: 'villagers', tier: 'Legendary', unlockType: 'level', unlockValue: 20, description: 'Supreme organizer of multiplayer study sync strategies.' },
-      { id: 'merchant', name: 'Gold Shop Merchant', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniMerchant.png', pack: 'villagers2', tier: 'Gold Exchange', unlockType: 'gold', unlockValue: 150, description: 'Owner of the Honesty Gold Shop. Unlocks for custom trade.' },
-      { id: 'blacksmith', name: 'Blacksmith', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniBlacksmith.png', pack: 'villagers2', tier: 'Gold Exchange', unlockType: 'gold', unlockValue: 200, description: 'Forges powerful learning habits and workspace themes.' },
-      { id: 'suspicious_merchant', name: 'Suspicious Merchant', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniSuspiciousMerchant.png', pack: 'villagers2', tier: 'Gold Exchange', unlockType: 'gold', unlockValue: 250, description: 'Offers mysterious items and secret cheat sheets.' },
-      { id: 'thief', name: 'Thief', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniThief.png', pack: 'villagers2', tier: 'Gold Exchange', unlockType: 'gold', unlockValue: 300, description: 'Steals focus back from endless social media scrolling.' },
-      { id: 'archer', name: 'Habit Archer', sprite: './src/modules/avatar/assets/characters/humans/MiniArcherMan.png', pack: 'humans', tier: 'Habit Milestone', unlockType: 'habit', unlockValue: 5, description: 'Hits habit goals with precision. Streak level 5 required.' },
-      { id: 'crossbow_man', name: 'Crossbow Marksman', sprite: './src/modules/avatar/assets/characters/humans/MiniCrossBowMan.png', pack: 'humans', tier: 'Habit Milestone', unlockType: 'habit', unlockValue: 12, description: 'Rapid-fires study sessions. Streak level 12 required.' },
-      { id: 'mage', name: 'Study Mage', sprite: './src/modules/avatar/assets/characters/humans/MiniMage.png', pack: 'humans', tier: 'Focus Milestone', unlockType: 'focus', unlockValue: 50, description: 'Manipulates time to maximize focus. 50 Focus Points required.' },
-      { id: 'arch_mage', name: 'Grand Archmage', sprite: './src/modules/avatar/assets/characters/humans/MiniArchMage.png', pack: 'humans', tier: 'Focus Milestone', unlockType: 'focus', unlockValue: 150, description: 'Transcends simple Pomodoros. 150 Focus Points required.' },
-      { id: 'nun', name: 'Wellness Cleric', sprite: './src/modules/avatar/assets/characters/villagers2/original/MiniNun.png', pack: 'villagers2', tier: 'StudySync Link', unlockType: 'studysync', unlockValue: 'connected', description: 'Ensures wellness breaks during group study. Active StudySync Room required.' },
-      { id: 'halberd_man', name: 'Halberdier', sprite: './src/modules/avatar/assets/characters/humans/MiniHalberdMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 7, description: 'Guards the entrance to the Focus Arena.' },
-      { id: 'spear_man', name: 'Spear Guardsman', sprite: './src/modules/avatar/assets/characters/humans/MiniSpearMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 6, description: 'Keeps track of daily tasks and minor quests.' },
-      { id: 'horse_man', name: 'Horse Rider', sprite: './src/modules/avatar/assets/characters/humans/MiniHorseMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 11, description: 'Travels between CodeScroll compiler layers.' },
-      { id: 'cavalier_man', name: 'Cavalier Knight', sprite: './src/modules/avatar/assets/characters/humans/MiniCavalierMan.png', pack: 'humans', tier: 'Level Reward', unlockType: 'level', unlockValue: 14, description: 'Honored academician who defends standard protocols.' },
-    ];
 
     // Frame size per sprite pack
     // villagers & villagers2: 48x48 frames | humans: 64x64 frames
@@ -1023,39 +1064,24 @@ console.log(greet());
       };
     };
 
-    // ── 8 BASE CHIBI HERO CLASSES (INCLUDING HARRY POTTER & DRACO MALFOY) ──────
+    // ── LEVEL-GATED HERO CHARACTER CLASSES ────────────────────────────────────
     const BASE_HEROES = [
-      { id: 'peasant',        heroClass: 'The Scholar',    tagline: 'Diligent & Focused',   sprite: './assets/heroes/scholar.png',      isChibi: true, outfit: 'Scholar Robe & Scarf',  accessory: 'Round Glasses & Quill', description: 'A natural learner who thrives on structure. Wears medieval scholar robes with scarf and quill.', accent: '#f59e0b', glow: 'rgba(245,158,11,0.35)' },
-      { id: 'villager_woman', heroClass: 'The Apprentice', tagline: 'Creative & Curious',   sprite: './assets/heroes/apprentice.png',   isChibi: true, outfit: 'Craftsperson Apron',    accessory: 'Crafting Toolbelt',     description: 'Learns best through building. Equipped with green craft apron and tools.', accent: '#e879f9', glow: 'rgba(232,121,249,0.35)' },
-      { id: 'worker',         heroClass: 'The Peasant',    tagline: 'Steady & Reliable',    sprite: './assets/heroes/peasant.png',      isChibi: true, outfit: 'Linen Peasant Tunic',   accessory: 'Farmer Straw Hat',      description: 'Builds knowledge brick by brick. Simple linen tunic with straw hat.', accent: '#34d399', glow: 'rgba(52,211,153,0.35)' },
-      { id: 'gatherer',       heroClass: 'The Explorer',   tagline: 'Adaptive & Bold',      sprite: './assets/heroes/explorer.png',     isChibi: true, outfit: 'Blue Travel Cloak',     accessory: 'Explorer Compass',      description: 'Explores new concepts easily. Equipped with travel cloak and compass satchel.', accent: '#60a5fa', glow: 'rgba(96,165,250,0.35)' },
-      { id: 'shield_man',     heroClass: 'Guardian Knight',tagline: 'Defenders of Focus',  sprite: './assets/heroes/knight.png',       isChibi: true, outfit: 'Knight Tunic Tabard',   accessory: 'Wooden Shield & Spear', description: 'Guards study streak from distractions. Armor tunic tabard with wooden shield.', accent: '#38bdf8', glow: 'rgba(56,189,248,0.35)' },
-      { id: 'prince',         heroClass: 'Royal Highness', tagline: 'Majestic & Noble',     sprite: './assets/heroes/royal.png',        isChibi: true, outfit: 'Purple Royal Gown',     accessory: 'Royal Golden Crown',    description: 'Crown scholar with royal purple robes, gold embroidery, and scepter.', accent: '#a855f7', glow: 'rgba(168,85,247,0.35)' },
-      { id: 'harry_potter',   heroClass: 'Harry Potter',   tagline: 'Gryffindor Scholar Wizard', sprite: './assets/heroes/harry_potter.png', isChibi: true, outfit: 'Gryffindor Robes & Scarf', accessory: 'Magic Wand & Hedwig Owl', description: 'Brave Gryffindor wizard scholar with round glasses, lightning scar, and scarlet-gold robes.', accent: '#ef4444', glow: 'rgba(239,68,68,0.35)' },
-      { id: 'draco_malfoy',   heroClass: 'Draco Malfoy',   tagline: 'Slytherin Noble Wizard',    sprite: './assets/heroes/draco_malfoy.png', isChibi: true, outfit: 'Slytherin Cloak & Robes', accessory: 'Magic Wand & Serpent',   description: 'Noble Slytherin wizard with platinum blonde hair, green velvet robes, and silver crest.', accent: '#10b981', glow: 'rgba(16,185,129,0.35)' },
+      { id: 'peasant',        heroClass: 'The Scholar',    tagline: 'Diligent & Focused',   reqLevel: 1,  sprite: './assets/heroes/scholar.png',      isChibi: true, accessory: 'Quill & Scroll', description: 'Starting archetype: structured medieval scholar.', accent: '#f59e0b', glow: 'rgba(245,158,11,0.35)' },
+      { id: 'villager_woman', heroClass: 'The Apprentice', tagline: 'Creative & Curious',   reqLevel: 1,  sprite: './assets/heroes/apprentice.png',   isChibi: true, accessory: 'Crafting Toolbelt', description: 'Starting archetype: inquisitive artisan builder.', accent: '#e879f9', glow: 'rgba(232,121,249,0.35)' },
+      { id: 'worker',         heroClass: 'The Peasant',    tagline: 'Steady & Reliable',    reqLevel: 1,  sprite: './assets/heroes/peasant.png',      isChibi: true, accessory: 'Straw Hat', description: 'Starting archetype: steadfast daily quester.', accent: '#34d399', glow: 'rgba(52,211,153,0.35)' },
+      { id: 'gatherer',       heroClass: 'The Explorer',   tagline: 'Adaptive & Bold',      reqLevel: 1,  sprite: './assets/heroes/explorer.png',     isChibi: true, accessory: 'Brass Compass', description: 'Starting archetype: intrepid conceptual wanderer.', accent: '#60a5fa', glow: 'rgba(96,165,250,0.35)' },
+      { id: 'shield_man',     heroClass: 'Guardian Knight',tagline: 'Defender of Focus',    reqLevel: 5,  sprite: './assets/heroes/knight.png',       isChibi: true, accessory: 'Lion Shield', description: 'Unlocks at Level 5: armored guardian against distraction.', accent: '#38bdf8', glow: 'rgba(56,189,248,0.35)' },
+      { id: 'prince',         heroClass: 'Royal Highness', tagline: 'Majestic & Noble',     reqLevel: 10, sprite: './assets/heroes/royal.png',        isChibi: true, accessory: 'Golden Crown', description: 'Unlocks at Level 10: majestic crown scholar.', accent: '#a855f7', glow: 'rgba(168,85,247,0.35)' },
+      { id: 'enchanter',      heroClass: 'The Enchanter',  tagline: 'Mystic Scholar-Mage',  reqLevel: 15, sprite: './assets/heroes/scholar.png',      isChibi: true, accessory: 'Starry Tome', description: 'Unlocks at Level 15: original mystic mage with starry blue robes.', accent: '#0ea5e9', glow: 'rgba(14,165,233,0.35)' },
+      { id: 'shadow_rogue',   heroClass: 'The Shadow Rogue', tagline: 'Stealthy Strategist', reqLevel: 20, sprite: './assets/heroes/explorer.png',     isChibi: true, accessory: 'Shadow Cloak', description: 'Unlocks at Level 20: original stealth strategist in dark green cloak.', accent: '#10b981', glow: 'rgba(16,185,129,0.35)' }
     ];
 
-    // ── OUTFIT CUSTOMIZATION OPTIONS ─────────────────────────────────────────
-    const OUTFITS_DATA = [
-      { id: 'peasant',        name: 'Scholar Robe & Scarf', heroId: 'peasant',        icon: '📜', rarity: 'Common',    description: 'Pink & brown medieval scholar tunic with scarf and pouch.' },
-      { id: 'villager_woman', name: 'Apprentice Apron',    heroId: 'villager_woman', icon: '🛠️', rarity: 'Common',    description: 'Green craftsperson apron with leather belt and tools.' },
-      { id: 'worker',         name: 'Peasant Farmer Tunic', heroId: 'worker',         icon: '🌾', rarity: 'Common',    description: 'Rustic brown farmer tunic built for hard daily work.' },
-      { id: 'gatherer',       name: 'Explorer Travel Cloak',heroId: 'gatherer',       icon: '🧭', rarity: 'Rare',      description: 'Blue hooded travel cloak with shoulder satchel.' },
-      { id: 'shield_man',     name: 'Guardian Armor Tabard',heroId: 'shield_man',     icon: '🛡️', rarity: 'Rare',      description: 'Silver & gold tunic tabard with wooden shield.' },
-      { id: 'prince',         name: 'Royal Purple Robes',   heroId: 'prince',         icon: '👑', rarity: 'Legendary', description: 'Purple velvet royal gown with gold embroidery.' },
-      { id: 'harry_potter',   name: 'Gryffindor Wizard Robes', heroId: 'harry_potter', icon: '⚡', rarity: 'Legendary', description: 'Scarlet & gold Gryffindor wizard robes with lightning crest.' },
-      { id: 'draco_malfoy',   name: 'Slytherin Velvet Cloak', heroId: 'draco_malfoy', icon: '🐍', rarity: 'Legendary', description: 'Emerald & silver Slytherin velvet cloak with silver trim.' },
-    ];
-
-    // ── MAIN AVATAR SELECTOR (Qbit Avatar Customization Studio) ─────────────
+    // ── MAIN AVATAR SELECTOR (Character Classes Studio) ─────────────
     const AvatarSelector = ({
       level = 1, golds = 0, habitStreakPoints = 0, focusPoints = 0,
       studySyncStatus = 'disconnected', selectedAvatarId = 'peasant', onSelect = () => {}
     }) => {
-      const [activeTab, setActiveTab] = React.useState('outfits'); // 'outfits' | 'heroes' | 'shop'
       const [savedAlert, setSavedAlert] = React.useState(false);
-      const currentStats = { level, golds, habitStreakPoints, focusPoints, studySyncStatus };
-
       const activeHero = BASE_HEROES.find(h => h.id === selectedAvatarId) || BASE_HEROES[0];
 
       const handleSave = () => {
@@ -1071,21 +1097,19 @@ console.log(greet());
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', padding: '24px', background: 'linear-gradient(145deg, rgba(14,11,8,0.92), rgba(24,18,12,0.95))', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '20px', boxShadow: '0 12px 36px rgba(0,0,0,0.6)' }}>
 
-          {/* Top Header & Stats */}
+          {/* Top Header & Level Unlock Banner */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid rgba(245,158,11,0.12)', paddingBottom: '16px' }}>
             <div>
               <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#f59e0b', margin: 0, letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                ✨ Scholar Customization Studio
+                🎭 Character Classes
               </h2>
               <p style={{ fontSize: '12px', color: 'rgba(245,232,215,0.5)', margin: '4px 0 0' }}>
-                Customize your medieval hero avatar, outfits & accessories
+                Level up your Scholar to permanently unlock higher hero archetypes (Never purchased with coins)
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '10px', padding: '6px 14px' }}>
-                <span>⭐</span><span style={{ fontSize: '12px', fontWeight: 800, color: '#f59e0b' }}>LV {level}</span>
-                <span style={{ width: '1px', height: '14px', background: 'rgba(245,158,11,0.2)', margin: '0 4px' }} />
-                <span>🪙</span><span style={{ fontSize: '12px', fontWeight: 800, color: '#fbbf24' }}>{golds} Coins</span>
+                <span>⭐</span><span style={{ fontSize: '12px', fontWeight: 800, color: '#f59e0b' }}>Current: Level {level}</span>
               </div>
             </div>
           </div>
@@ -1096,9 +1120,6 @@ console.log(greet());
             {/* LEFT COLUMN: 3D SPOTLIGHT PODIUM STAGE */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'radial-gradient(circle at 50% 30%, rgba(245,158,11,0.15) 0%, rgba(10,8,6,0.85) 75%)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '18px', padding: '24px 16px 20px', position: 'relative', overflow: 'hidden' }}>
 
-              {/* Spotlight Ambient Beam */}
-              <div style={{ position: 'absolute', top: '-40px', width: '140px', height: '140px', background: 'radial-gradient(circle, rgba(245,158,11,0.3) 0%, transparent 70%)', filter: 'blur(20px)', pointerEvents: 'none' }} />
-
               {/* Character Title & Tagline */}
               <div style={{ textAlign: 'center', marginBottom: '14px', zIndex: 2 }}>
                 <span style={{ fontSize: '10px', fontWeight: 800, color: activeHero.accent, letterSpacing: '0.15em', textTransform: 'uppercase' }}>{activeHero.heroClass}</span>
@@ -1107,75 +1128,58 @@ console.log(greet());
 
               {/* 3D PODIUM STAGE & AVATAR DISPLAY */}
               <div style={{ position: 'relative', width: '200px', height: '210px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '10px 0' }}>
-
-                {/* Hero Chibi Character */}
-                <img src={activeHero.sprite} alt={activeHero.heroClass} style={{ width: '160px', height: '160px', objectFit: 'contain', filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.6))', animation: 'podFloat 3.5s ease-in-out infinite', zIndex: 3 }} />
-
-                {/* 3D Oval Stage Base */}
-                <div style={{ width: '160px', height: '42px', borderRadius: '50%', background: `radial-gradient(ellipse at center, ${activeHero.accent}33 0%, rgba(20,15,8,0.9) 70%)`, border: `2px solid ${activeHero.accent}`, boxShadow: `0 0 25px ${activeHero.glow}, inset 0 0 15px ${activeHero.accent}40`, position: 'absolute', bottom: '10px', zIndex: 1 }} />
+                <img src={activeHero.sprite} alt={activeHero.heroClass} style={{ width: '160px', height: '160px', objectFit: 'contain', filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.6))', zIndex: 3 }} />
+                <div style={{ width: '160px', height: '42px', borderRadius: '50%', background: `radial-gradient(ellipse at center, ${activeHero.accent}33 0%, rgba(20,15,8,0.9) 70%)`, border: `2px solid ${activeHero.accent}`, boxShadow: `0 0 25px ${activeHero.glow}`, position: 'absolute', bottom: '10px', zIndex: 1 }} />
               </div>
 
-              {/* Equipped Badges */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', marginBottom: '18px', zIndex: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(20,16,11,0.6)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: '8px', padding: '6px 10px', fontSize: '10.5px' }}>
-                  <span style={{ color: 'rgba(245,232,215,0.5)' }}>👕 Outfit:</span>
-                  <span style={{ fontWeight: 700, color: activeHero.accent }}>{activeHero.outfit}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(20,16,11,0.6)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: '8px', padding: '6px 10px', fontSize: '10.5px' }}>
-                  <span style={{ color: 'rgba(245,232,215,0.5)' }}>👒 Accessory:</span>
-                  <span style={{ fontWeight: 700, color: '#f5e8d7' }}>{activeHero.accessory}</span>
-                </div>
-              </div>
-
-              {/* SAVE MY AVATAR BUTTON */}
+              {/* SET AS ACTIVE BUTTON */}
               <button
                 onClick={handleSave}
                 style={{
                   width: '100%', padding: '12px 16px', background: savedAlert ? 'linear-gradient(135deg, #059669, #10b981)' : `linear-gradient(135deg, #b45309, #f59e0b)`,
-                  border: 'none', borderRadius: '12px', color: '#ffffff', fontWeight: 800, fontSize: '13px', letterSpacing: '0.04em', cursor: 'pointer',
-                  boxShadow: savedAlert ? '0 0 20px rgba(16,185,129,0.4)' : '0 4px 18px rgba(245,158,11,0.4)', transition: 'all 0.2s ease', outline: 'none'
+                  border: 'none', borderRadius: '12px', color: '#ffffff', fontWeight: 800, fontSize: '13px', cursor: 'pointer', outline: 'none'
                 }}
               >
-                {savedAlert ? '✓ Avatar Saved!' : 'Save My Avatar ✨'}
+                {savedAlert ? '✓ Set as Active Hero!' : 'Set as Active Hero ✨'}
               </button>
             </div>
 
-            {/* RIGHT COLUMN: HERO CHARACTER SELECTION GRID */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(10,8,6,0.6)', padding: '10px 16px', borderRadius: '12px', border: '1px solid rgba(245,158,11,0.15)' }}>
-                <span style={{ fontSize: '13px', fontWeight: 800, color: '#f59e0b', letterSpacing: '0.04em' }}>🎭 Choose Your Hero Avatar Class</span>
-                <span style={{ fontSize: '11px', color: 'rgba(245,232,215,0.45)' }}>8 Character Classes Available</span>
-              </div>
+            {/* RIGHT COLUMN: HERO CLASSES GRID */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              {BASE_HEROES.map(hero => {
+                const isUnlocked = level >= hero.reqLevel;
+                const isSelected = selectedAvatarId === hero.id;
 
-              {/* 4-COLUMN HERO SELECTION CARDS */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-                {BASE_HEROES.map(hero => {
-                  const isSelected = selectedAvatarId === hero.id;
-                  return (
-                    <button
-                      key={hero.id}
-                      onClick={() => onSelect(hero.id)}
-                      style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '14px 8px',
-                        background: isSelected ? 'rgba(28,20,11,0.95)' : 'rgba(12,10,7,0.5)',
-                        border: `2px solid ${isSelected ? hero.accent : 'rgba(245,158,11,0.12)'}`,
-                        borderRadius: '14px', cursor: 'pointer', outline: 'none', textAlign: 'center',
-                        boxShadow: isSelected ? `0 0 20px ${hero.glow}` : 'none', transition: 'all 0.2s'
-                      }}
-                    >
-                      <img src={hero.sprite} alt={hero.heroClass} style={{ width: '68px', height: '68px', objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.6))' }} />
-                      <div>
-                        <div style={{ fontSize: '11.5px', fontWeight: 800, color: isSelected ? hero.accent : '#f5e8d7' }}>{hero.heroClass}</div>
-                        <div style={{ fontSize: '9.5px', color: 'rgba(245,232,215,0.4)', fontStyle: 'italic', marginTop: '1px' }}>{hero.tagline}</div>
+                return (
+                  <button
+                    key={hero.id}
+                    disabled={!isUnlocked}
+                    onClick={() => isUnlocked && onSelect(hero.id)}
+                    style={{
+                      display: 'flex', gap: '14px', alignItems: 'center', padding: '14px',
+                      background: isSelected ? 'rgba(28,20,11,0.95)' : (isUnlocked ? 'rgba(12,10,7,0.5)' : 'rgba(10,8,6,0.3)'),
+                      border: `2px solid ${isSelected ? hero.accent : (isUnlocked ? 'rgba(245,158,11,0.15)' : 'rgba(245,232,215,0.08)')}`,
+                      borderRadius: '14px', cursor: isUnlocked ? 'pointer' : 'not-allowed', outline: 'none', textAlign: 'left',
+                      opacity: isUnlocked ? 1 : 0.45, transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ width: '54px', height: '54px', backgroundImage: `url(${hero.sprite})`, backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundSize: 'contain', flexShrink: 0, filter: isUnlocked ? 'none' : 'grayscale(100%)' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: isUnlocked ? (isSelected ? hero.accent : '#f5e8d7') : 'rgba(245,232,215,0.4)' }}>{hero.heroClass}</span>
+                        {isSelected ? (
+                          <span style={{ fontSize: '9px', fontWeight: 800, color: hero.accent, background: `${hero.accent}20`, padding: '2px 6px', borderRadius: '4px' }}>ACTIVE</span>
+                        ) : (!isUnlocked && (
+                          <span style={{ fontSize: '9px', fontWeight: 800, color: '#ef4444', background: 'rgba(239,68,68,0.15)', padding: '2px 6px', borderRadius: '4px' }}>🔒 LV {hero.reqLevel}</span>
+                        ))}
                       </div>
-                      {isSelected && <span style={{ fontSize: '8px', fontWeight: 800, color: hero.accent, background: `${hero.accent}20`, padding: '2px 6px', borderRadius: '4px' }}>✓ SELECTED</span>}
-                    </button>
-                  );
-                })}
-              </div>
+                      <div style={{ fontSize: '10.5px', color: 'rgba(245,232,215,0.5)', marginTop: '3px' }}>{hero.tagline}</div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
-            </div>
           </div>
         </div>
       );
@@ -1211,7 +1215,7 @@ console.log(greet());
   </script>
 
   <!-- Application Main Logic -->
-  <script type="module" src="app.js?v=7"></script>
+  <script type="module" src="app.js?v=15"></script>
 
   <!-- ==================== AUTHENTICATION PORTAL MODAL ==================== -->
   <div id="auth-modal" class="auth-modal-backdrop hidden">

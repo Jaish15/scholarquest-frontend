@@ -1,39 +1,40 @@
 /* ==========================================
    ScholarQuest Focus Arena Module
-   Handles Pomodoro Timer, Web Audio Synth, Logs
+   Handles Pomodoro Timer & Ambient Sound Loop Engine
+   Synced with Session Timer (Start/Pause/Stop at 00:00)
    ========================================== */
 
 import { state, addXP, addCoins, saveState, updateUI } from '../app.js';
 
 // Timer State
 let timerInterval = null;
-let totalDuration = 25 * 60; // default 25m in seconds
+let totalDuration = 25 * 60; // 25 minutes default
 let timeRemaining = 25 * 60;
 let isRunning = false;
 let currentMultiplier = 1.0;
-let activePreset = 25; // 25, 5, 15
+let activePreset = 25;
 
-// Web Audio Context for Sound Generator
+// Web Audio Ambient Engine State
 let audioCtx = null;
-let activeSynthNodes = {}; // stores synth sources to stop them
+let activeSoundType = 'rain'; // 'rain', 'nature', 'thunder', 'whitenoise', 'fire', 'lofi'
+let isAudioMuted = false;
+let masterVolume = 0.5;
+let masterGainNode = null;
+let activeSynthNodes = {}; // Active AudioNode objects
 
 export function initFocus() {
   setupTimerUI();
   setupPresets();
-  setupAmbientSounds();
+  setupAmbientSoundsUI();
 }
 
 function setupTimerUI() {
   const toggleBtn = document.getElementById('btn-toggle-timer');
   const resetBtn = document.getElementById('btn-reset-timer');
-  
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', toggleTimer);
-  }
-  if (resetBtn) {
-    resetBtn.addEventListener('click', resetTimer);
-  }
-  
+
+  if (toggleBtn) toggleBtn.addEventListener('click', toggleTimer);
+  if (resetBtn) resetBtn.addEventListener('click', resetTimer);
+
   updateTimerDisplay();
 }
 
@@ -46,11 +47,10 @@ function setupPresets() {
           return;
         }
       }
-      
-      // Update UI active states
+
       presets.forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
-      
+
       const minutes = parseInt(btn.getAttribute('data-time'));
       activePreset = minutes;
       totalDuration = minutes * 60;
@@ -72,19 +72,23 @@ function toggleTimer() {
 function startTimer() {
   if (isRunning) return;
   isRunning = true;
-  
+
   const icon = document.getElementById('btn-timer-icon');
   if (icon) {
     icon.setAttribute('data-lucide', 'pause');
     if (window.lucide) window.lucide.createIcons();
   }
-  
-  document.getElementById('timer-status').innerText = activePreset === 25 ? 'FOCUSING...' : 'RESTING...';
-  
+
+  const statusEl = document.getElementById('timer-status');
+  if (statusEl) statusEl.innerText = activePreset === 25 ? 'FOCUSING...' : 'RESTING...';
+
+  // Start or Resume Ambient Audio Sync
+  playAmbientLoop();
+
   timerInterval = setInterval(() => {
     timeRemaining--;
     updateTimerDisplay();
-    
+
     if (timeRemaining <= 0) {
       completeFocusSession();
     }
@@ -94,14 +98,18 @@ function startTimer() {
 function pauseTimer() {
   isRunning = false;
   clearInterval(timerInterval);
-  
+
   const icon = document.getElementById('btn-timer-icon');
   if (icon) {
     icon.setAttribute('data-lucide', 'play');
     if (window.lucide) window.lucide.createIcons();
   }
-  
-  document.getElementById('timer-status').innerText = 'PAUSED';
+
+  const statusEl = document.getElementById('timer-status');
+  if (statusEl) statusEl.innerText = 'PAUSED';
+
+  // Pause Ambient Audio Sync
+  stopAmbientLoop();
 }
 
 function resetTimer() {
@@ -113,15 +121,13 @@ function resetTimer() {
 }
 
 function updateTimerDisplay() {
-  // Compute minutes and seconds
   const m = Math.floor(timeRemaining / 60);
   const s = timeRemaining % 60;
   const timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  
-  document.getElementById('timer-time').innerText = timeStr;
-  
-  // Update circular Ring
-  // Circumference of radius 120 = 2 * PI * 120 = 753.98
+
+  const textEl = document.getElementById('timer-time');
+  if (textEl) textEl.innerText = timeStr;
+
   const ring = document.getElementById('timer-ring-progress');
   if (ring) {
     const pct = timeRemaining / totalDuration;
@@ -132,57 +138,56 @@ function updateTimerDisplay() {
 
 function updateMultiplierUI() {
   const multEl = document.getElementById('focus-multiplier');
-  if (multEl) {
-    multEl.innerText = `Multiplier: ${currentMultiplier.toFixed(1)}x`;
-  }
+  if (multEl) multEl.innerText = `Multiplier: ${currentMultiplier.toFixed(1)}x`;
 }
 
 function completeFocusSession() {
   pauseTimer();
-  
+
+  // AUTOMATIC AUDIO STOP AT EXACTLY 00:00
+  stopAmbientLoop();
+
   let xpAward = 0;
   let coinAward = 0;
   let description = '';
-  
-  if (activePreset === 25) { // Focus session completed
+
+  if (activePreset === 25) {
     xpAward = Math.round(40 * currentMultiplier);
     coinAward = Math.round(15 * currentMultiplier);
     description = 'Completed Focus Quest';
-    
-    // Increment streaks
     currentMultiplier = Math.min(currentMultiplier + 0.1, 2.0);
-    state.stats.focusMinutes += 25;
-  } else { // Break completed
+    state.stats.focusMinutes = (state.stats.focusMinutes || 0) + 25;
+  } else {
     xpAward = 10;
     coinAward = 0;
     description = 'Recharged Mind during Break';
   }
-  
+
+  // Apply Pet Companion Passive Perk
+  const equippedPet = state.equipped ? state.equipped.pet : 'none';
+  if (equippedPet === 'magic_cat' && xpAward > 0) {
+    xpAward += Math.max(1, Math.round(xpAward * 0.02));
+  }
+
   updateMultiplierUI();
   addXP(xpAward);
   addCoins(coinAward);
-  
-  // Log inside history panel
   logFocusEvent(description, activePreset, xpAward);
-  
-  // Reset timer
+
   timeRemaining = totalDuration;
   updateTimerDisplay();
-  
-  alert(`🔔 Bell rings! focus session complete. Rewards: +${xpAward} XP / +${coinAward} Coins!`);
+
+  alert(`🔔 Session Complete! Audio stopped automatically at 00:00. Rewards: +${xpAward} XP / +${coinAward} Coins!`);
 }
 
 function logFocusEvent(desc, duration, xpReward) {
   const container = document.getElementById('focus-logs');
   if (!container) return;
-  
-  // Remove empty placeholder
+
   const emptyLog = container.querySelector('.empty-log');
   if (emptyLog) emptyLog.remove();
-  
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
+
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const logEl = document.createElement('div');
   logEl.className = 'log-item';
   logEl.innerHTML = `
@@ -190,270 +195,225 @@ function logFocusEvent(desc, duration, xpReward) {
     <span class="log-desc">${desc} (${duration}m)</span>
     <span class="log-reward">+${xpReward} XP</span>
   `;
-  
   container.insertBefore(logEl, container.firstChild);
 }
 
-/* ========================================================
-   WEB AUDIO SYNTHESIZERS (Premium Dynamic Soundscapes)
-   ======================================================== */
+/* ============================================================
+   AMBIENT AUDIO PLAYER ENGINE (Web Audio API Procedural Synth)
+   ============================================================ */
 
 function initAudioContext() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGainNode = audioCtx.createGain();
+    masterGainNode.gain.setValueAtTime(isAudioMuted ? 0 : masterVolume, audioCtx.currentTime);
+    masterGainNode.connect(audioCtx.destination);
   }
 }
 
-function setupAmbientSounds() {
-  const toggleBtns = document.querySelectorAll('.sound-toggle-btn');
-  
-  toggleBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      initAudioContext();
-      
-      // If browser AudioContext is suspended, resume it
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+function setupAmbientSoundsUI() {
+  // Sound Selector Cards
+  const cards = document.querySelectorAll('.sound-select-card');
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+
+      activeSoundType = card.getAttribute('data-sound');
+
+      // If timer is actively running, restart sound loop with new sound choice
+      if (isRunning) {
+        stopAmbientLoop();
+        playAmbientLoop();
       }
-      
-      const soundType = btn.getAttribute('data-sound');
-      const isPlaying = btn.classList.contains('playing');
-      
-      // Stop all sounds first to prevent layering overlays
-      stopAllSounds();
-      toggleBtns.forEach(b => {
-        b.classList.remove('playing');
-        b.innerHTML = '<i data-lucide="play"></i> Play';
-      });
-      
-      if (!isPlaying) {
-        btn.classList.add('playing');
-        btn.innerHTML = '<i data-lucide="square"></i> Stop';
-        startAmbientSound(soundType);
-      }
-      
-      if (window.lucide) window.lucide.createIcons();
     });
   });
+
+  // Mute Button
+  const muteBtn = document.getElementById('btn-mute-sound');
+  if (muteBtn) {
+    muteBtn.addEventListener('click', () => {
+      isAudioMuted = !isAudioMuted;
+      if (masterGainNode && audioCtx) {
+        masterGainNode.gain.setValueAtTime(isAudioMuted ? 0 : masterVolume, audioCtx.currentTime);
+      }
+      muteBtn.innerHTML = isAudioMuted 
+        ? '<i data-lucide="volume-x"></i> Unmute' 
+        : '<i data-lucide="volume-2"></i> Mute';
+      if (window.lucide) window.lucide.createIcons();
+    });
+  }
+
+  // Volume Slider
+  const volSlider = document.getElementById('ambient-volume-slider');
+  if (volSlider) {
+    volSlider.addEventListener('input', (e) => {
+      masterVolume = parseFloat(e.target.value);
+      if (masterGainNode && audioCtx && !isAudioMuted) {
+        masterGainNode.gain.setValueAtTime(masterVolume, audioCtx.currentTime);
+      }
+    });
+  }
+
+  // Manual Stop Button
+  const stopBtn = document.getElementById('btn-stop-ambient');
+  if (stopBtn) {
+    stopBtn.addEventListener('click', () => {
+      stopAmbientLoop();
+    });
+  }
 }
 
-function stopAllSounds() {
+function playAmbientLoop() {
+  initAudioContext();
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
+  stopAmbientLoop();
+
+  // Route sound generator by type
+  /* ASSET REFERENCE NOTE: To swap procedural synth with custom local MP3 audio files:
+     const audio = new Audio('/assets/sounds/' + activeSoundType + '.mp3');
+     audio.loop = true; audio.play(); */
+  if (activeSoundType === 'rain') playRainSynth();
+  else if (activeSoundType === 'nature') playNatureSynth();
+  else if (activeSoundType === 'thunder') playThunderSynth();
+  else if (activeSoundType === 'calmfocus' || activeSoundType === 'whitenoise') playCalmFocusSynth();
+  else playRainSynth();
+}
+
+function stopAmbientLoop() {
   Object.keys(activeSynthNodes).forEach(key => {
     try {
-      activeSynthNodes[key].stop();
+      if (activeSynthNodes[key] && activeSynthNodes[key].stop) {
+        activeSynthNodes[key].stop();
+      }
     } catch (e) {}
     delete activeSynthNodes[key];
   });
 }
 
-function startAmbientSound(type) {
-  if (type === 'rain') {
-    playRainSound();
-  } else if (type === 'fire') {
-    playCampfireSound();
-  } else if (type === 'lofi') {
-    playLoFiBeats();
-  }
+// ── 1. SOFT STEADY RAIN (Warm Lowpass Filtered Rain, No Harsh Claps) ─────────
+function playRainSynth() {
+  const buffer = createNoiseBuffer();
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(320, audioCtx.currentTime);
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGainNode);
+
+  source.start();
+  activeSynthNodes['rain'] = source;
 }
 
-// Generate White Noise Buffer
+// ── 2. CALM NATURE (Gentle Breeze & Subtle Forest Chimes) ────────────────────
+function playNatureSynth() {
+  const buffer = createNoiseBuffer();
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(480, audioCtx.currentTime);
+  filter.Q.setValueAtTime(1.2, audioCtx.currentTime);
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGainNode);
+
+  source.start();
+  activeSynthNodes['nature'] = source;
+}
+
+// ── 3. DISTANT THUNDER (Deep Low Sub Rumble & Gentle Rain) ───────────────────
+function playThunderSynth() {
+  const buffer = createNoiseBuffer();
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(90, audioCtx.currentTime);
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGainNode);
+
+  source.start();
+  activeSynthNodes['thunder'] = source;
+}
+
+// ── 4. CALM FOCUS (Lo-Fi Ambient Instrumental Pad, Replacing Harsh White Noise)
+function playCalmFocusSynth() {
+  const freqs = [261.63, 329.63, 392.00, 493.88]; // C4, E4, G4, B4 (Cmaj7 soothing chord)
+  const masterOscGain = audioCtx.createGain();
+  masterOscGain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+
+  freqs.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(450, audioCtx.currentTime);
+
+    osc.connect(filter);
+    filter.connect(masterOscGain);
+    osc.start();
+
+    activeSynthNodes[`calm_${i}`] = osc;
+  });
+
+  masterOscGain.connect(masterGainNode);
+}
+
+// ── 5. CAMPFIRE SYNTHESIS ───────────────────────────────────────────────────
+function playCampfireSynth() {
+  const buffer = createNoiseBuffer();
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(90, audioCtx.currentTime);
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGainNode);
+
+  source.start();
+  activeSynthNodes['fire'] = source;
+}
+
 function createNoiseBuffer() {
-  const bufferSize = audioCtx.sampleRate * 2; // 2 seconds of noise
+  const bufferSize = audioCtx.sampleRate * 2;
   const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) {
     data[i] = Math.random() * 2 - 1;
   }
   return buffer;
-}
-
-// Synthesize Rain Sound (Low-pass filtered white noise with slight gain modulation)
-function playRainSound() {
-  const noiseSource = audioCtx.createBufferSource();
-  noiseSource.buffer = createNoiseBuffer();
-  noiseSource.loop = true;
-  
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(380, audioCtx.currentTime);
-  
-  const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-  
-  noiseSource.connect(filter);
-  filter.connect(gain);
-  gain.connect(audioCtx.destination);
-  
-  noiseSource.start();
-  activeSynthNodes['rain'] = noiseSource;
-}
-
-// Synthesize Cozy Campfire (Sub-bass crackle rumble + random clicking impulse triggers)
-function playCampfireSound() {
-  // Flame rumble (low frequency noise)
-  const rumbleSource = audioCtx.createBufferSource();
-  rumbleSource.buffer = createNoiseBuffer();
-  rumbleSource.loop = true;
-  
-  const rumbleFilter = audioCtx.createBiquadFilter();
-  rumbleFilter.type = 'lowpass';
-  rumbleFilter.frequency.setValueAtTime(80, audioCtx.currentTime);
-  
-  const rumbleGain = audioCtx.createGain();
-  rumbleGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-  
-  rumbleSource.connect(rumbleFilter);
-  rumbleFilter.connect(rumbleGain);
-  rumbleGain.connect(audioCtx.destination);
-  
-  rumbleSource.start();
-  activeSynthNodes['rumble'] = rumbleSource;
-
-  // Crackle impulse simulator
-  const intervalId = setInterval(() => {
-    if (!activeSynthNodes['rumble']) {
-      clearInterval(intervalId);
-      return;
-    }
-    
-    // Play a tiny high-pitched click randomly
-    if (Math.random() > 0.45) {
-      playFireCrackleClick();
-    }
-  }, 120);
-  
-  // Custom dummy node so stopAllSounds can stop the interval check
-  activeSynthNodes['fire'] = {
-    stop: () => {
-      clearInterval(intervalId);
-      if (rumbleSource) rumbleSource.stop();
-    }
-  };
-}
-
-function playFireCrackleClick() {
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(1500 + Math.random() * 2000, audioCtx.currentTime);
-  
-  gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
-  
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.05);
-}
-
-// Synthesize Lo-Fi Beats (Gentle keyboard chords playing on loop)
-function playLoFiBeats() {
-  const tempo = 80;
-  const beatDuration = 60 / tempo; // duration of 1 beat in seconds
-  
-  const chordProgression = [
-    [196, 246.9, 293.7, 349.2], // G major 7
-    [174.6, 220, 261.6, 329.6],  // F major 7
-    [164.8, 196, 246.9, 293.7],  // E minor 7
-    [220, 261.6, 329.6, 392]     // A minor 7
-  ];
-  
-  let currentChordIndex = 0;
-  
-  function playChordStep() {
-    if (!activeSynthNodes['lofi']) return;
-    
-    const now = audioCtx.currentTime;
-    const chord = chordProgression[currentChordIndex];
-    
-    // Generate soft synth voices for each note in chord
-    const oscNodes = [];
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(450, now);
-    
-    chord.forEach((freq, idx) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now);
-      
-      // Delay attack slightly for retro arpeggiated piano look
-      const attackDelay = idx * 0.04;
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.04, now + attackDelay + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + beatDuration * 4 - 0.2);
-      
-      osc.connect(gain);
-      gain.connect(filter);
-      
-      osc.start(now + attackDelay);
-      osc.stop(now + beatDuration * 4);
-      oscNodes.push(osc);
-    });
-    
-    // Kick drum synthesis on beats 1 and 3
-    playKick(now);
-    playKick(now + beatDuration * 2);
-    
-    // Snare/Shaker simulation on beats 2 and 4
-    playSnare(now + beatDuration);
-    playSnare(now + beatDuration * 3);
-    
-    filter.connect(audioCtx.destination);
-    
-    currentChordIndex = (currentChordIndex + 1) % chordProgression.length;
-    
-    // Schedule next chord loop step
-    const nextStepTime = beatDuration * 4 * 1000;
-    setTimeout(playChordStep, nextStepTime);
-  }
-  
-  // Kick synth
-  function playKick(time) {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    
-    osc.frequency.setValueAtTime(120, time);
-    osc.frequency.exponentialRampToValueAtTime(40, time + 0.15);
-    
-    gain.gain.setValueAtTime(0.2, time);
-    gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
-    
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    
-    osc.start(time);
-    osc.stop(time + 0.2);
-  }
-  
-  // Snare/Hat synth
-  function playSnare(time) {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(280, time);
-    
-    gain.gain.setValueAtTime(0.06, time);
-    gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.12);
-    
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    
-    osc.start(time);
-    osc.stop(time + 0.15);
-  }
-
-  // Setup loop trigger
-  activeSynthNodes['lofi'] = {
-    stop: () => {
-      activeSynthNodes['lofi'] = null;
-    }
-  };
-  
-  playChordStep();
 }

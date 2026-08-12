@@ -1,240 +1,300 @@
 /* ==========================================
    ScholarQuest CodeScroll Module
-   Interactive coding challenges & JS execution sandboxing
+   3-Tier Difficulty System (Beginner, Intermediate, Advanced)
+   1,080 Practical Coding Challenges across 9 Technical Domains
    ========================================== */
 
 import { state, addXP, addCoins, saveState, updateUI } from '../app.js';
+import { CODE_SCROLL_BANK } from '../src/data/codeScrollBank.js';
+import { PYTHON_CODE_CHALLENGES } from '../src/data/domains/python.js';
+import { JAVASCRIPT_CODE_CHALLENGES } from '../src/data/domains/javascript.js';
+import { UML_CODE_CHALLENGES } from '../src/data/domains/uml.js';
+import { SOFTWARE_TESTING_CODE_CHALLENGES } from '../src/data/domains/softwareTesting.js';
+import { ADVANCED_JAVA_CODE_CHALLENGES } from '../src/data/domains/advancedJava.js';
+import { RUBY_CODE_CHALLENGES } from '../src/data/domains/ruby.js';
+import { ML_CODE_CHALLENGES } from '../src/data/domains/machineLearning.js';
+import { DL_CODE_CHALLENGES } from '../src/data/domains/deepLearning.js';
+import { CYBERSECURITY_CODE_CHALLENGES } from '../src/data/domains/cybersecurity.js';
 
-const LESSONS = [
-  {
-    id: 'js_vars',
-    title: '1. Variables & Arithmetic',
-    lang: 'JavaScript',
-    xpReward: 40,
-    coinReward: 15,
-    completed: false,
-    desc: `
-      <h4>Goal:</h4>
-      <p>Declare a variable named <code>multiplier</code> and set it to <code>8</code>.</p>
-      <p>Declare another variable named <code>total</code> and set it to <code>10 * multiplier</code>.</p>
-    `,
-    template: `// Declare multiplier and set to 8
-let multiplier = 8;
-
-// Declare total and set to 10 * multiplier
-let total = 10 * multiplier;
-
-console.log("Multiplier:", multiplier);
-console.log("Total:", total);`,
-    validator: `
-      if (typeof multiplier === 'undefined') throw new Error('multiplier variable is not declared.');
-      if (multiplier !== 8) throw new Error('multiplier must be exactly 8.');
-      if (typeof total === 'undefined') throw new Error('total variable is not declared.');
-      if (total !== 80) throw new Error('total must equal 80 (10 * multiplier).');
-    `
-  },
-  {
-    id: 'js_strings',
-    title: '2. String Assembler',
-    lang: 'JavaScript',
-    xpReward: 50,
-    coinReward: 20,
-    completed: false,
-    desc: `
-      <h4>Goal:</h4>
-      <p>Complete the function <code>generateRoomCode(num)</code> to concatenate and return the prefix string <code>"SCQ-"</code> followed by the input <code>num</code>.</p>
-    `,
-    template: `function generateRoomCode(num) {
-  // Write your code here
-  return "SCQ-" + num;
-}
-
-console.log(generateRoomCode(4829));`,
-    validator: `
-      if (typeof generateRoomCode !== 'function') throw new Error('generateRoomCode function is not defined.');
-      if (generateRoomCode(4829) !== 'SCQ-4829') throw new Error('generateRoomCode(4829) must return "SCQ-4829".');
-      if (generateRoomCode(1000) !== 'SCQ-1000') throw new Error('generateRoomCode(1000) must return "SCQ-1000".');
-    `
-  },
-  {
-    id: 'js_arrays',
-    title: '3. Peak Finder (DSA)',
-    lang: 'JavaScript',
-    xpReward: 70,
-    coinReward: 30,
-    completed: false,
-    desc: `
-      <h4>Goal:</h4>
-      <p>Write a function <code>findMax(arr)</code> that accepts an array of integers and returns the maximum value found inside it.</p>
-    `,
-    template: `function findMax(arr) {
-  // Write loop/logic to find max
-  let max = arr[0];
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i] > max) {
-      max = arr[i];
-    }
-  }
-  return max;
-}
-
-console.log("Max item is:", findMax([12, 45, 2, 9, 32]));`,
-    validator: `
-      if (typeof findMax !== 'function') throw new Error('findMax function is not defined.');
-      if (findMax([1, 5, 3]) !== 5) throw new Error('findMax([1, 5, 3]) did not return 5.');
-      if (findMax([-10, -5, -2]) !== -2) throw new Error('findMax([-10, -5, -2]) did not return -2.');
-    `
-  }
+// Aggregate 1,080 CodeScroll Challenges across all 9 Domains & 3 Tiers
+const FULL_CODE_BANK = [
+  ...PYTHON_CODE_CHALLENGES,
+  ...JAVASCRIPT_CODE_CHALLENGES,
+  ...UML_CODE_CHALLENGES,
+  ...SOFTWARE_TESTING_CODE_CHALLENGES,
+  ...ADVANCED_JAVA_CODE_CHALLENGES,
+  ...RUBY_CODE_CHALLENGES,
+  ...ML_CODE_CHALLENGES,
+  ...DL_CODE_CHALLENGES,
+  ...CYBERSECURITY_CODE_CHALLENGES,
+  ...CODE_SCROLL_BANK
 ];
 
-let activeLessonIndex = 0;
+const DOMAINS = [
+  'Python', 'JavaScript', 'UML', 'Software Testing',
+  'Advanced Java', 'Ruby Programming', 'Machine Learning',
+  'Deep Learning', 'Cybersecurity'
+];
+
+let selectedDomain = 'Python';
+let selectedDifficulty = 'Beginner'; // 'Beginner', 'Intermediate', 'Advanced'
+
+let currentDomainChallenges = [];
+let activeChallengeIndex = 0;
 
 export function initCodeScroll() {
   loadCompletedLessons();
-  renderLessons();
-  loadLesson(0);
+  setupDomainFilter();
+  setupDifficultyFilter();
+  filterChallenges('Python', 'Beginner');
   setupWorkspaceEvents();
 }
 
 function loadCompletedLessons() {
   const completedIds = JSON.parse(localStorage.getItem('scholarquest_completed_scrolls') || '[]');
-  LESSONS.forEach(l => {
-    if (completedIds.includes(l.id)) {
-      l.completed = true;
+  FULL_CODE_BANK.forEach(c => {
+    if (completedIds.includes(c.id)) {
+      c.completed = true;
     }
   });
 }
 
-function saveCompletedLesson(lessonId) {
+function saveCompletedLesson(challengeId) {
   const completedIds = JSON.parse(localStorage.getItem('scholarquest_completed_scrolls') || '[]');
-  if (!completedIds.includes(lessonId)) {
-    completedIds.push(lessonId);
+  if (!completedIds.includes(challengeId)) {
+    completedIds.push(challengeId);
   }
   localStorage.setItem('scholarquest_completed_scrolls', JSON.stringify(completedIds));
 }
 
-function renderLessons() {
+function setupDomainFilter() {
+  const select = document.getElementById('codescroll-domain-select');
+  if (!select) return;
+
+  select.innerHTML = '';
+  DOMAINS.forEach(dom => {
+    const opt = document.createElement('option');
+    opt.value = dom;
+    opt.innerText = `${dom} Challenges`;
+    select.appendChild(opt);
+  });
+
+  select.value = selectedDomain;
+
+  select.addEventListener('change', (e) => {
+    selectedDomain = e.target.value;
+    filterChallenges(selectedDomain, selectedDifficulty);
+  });
+}
+
+function setupDifficultyFilter() {
+  const select = document.getElementById('codescroll-difficulty-select');
+  if (!select) return;
+
+  select.value = selectedDifficulty;
+
+  select.addEventListener('change', (e) => {
+    selectedDifficulty = e.target.value;
+    filterChallenges(selectedDomain, selectedDifficulty);
+  });
+}
+
+function filterChallenges(domain, difficulty) {
+  selectedDomain = domain;
+  selectedDifficulty = difficulty;
+
+  currentDomainChallenges = FULL_CODE_BANK.filter(c => c.domain === domain && c.difficulty === difficulty);
+  if (currentDomainChallenges.length === 0) {
+    currentDomainChallenges = FULL_CODE_BANK.filter(c => c.domain === domain);
+  }
+
+  activeChallengeIndex = 0;
+  renderChallengesList();
+  if (currentDomainChallenges.length > 0) {
+    loadChallenge(0);
+  }
+}
+
+function renderChallengesList() {
   const container = document.getElementById('lessons-list');
   if (!container) return;
   container.innerHTML = '';
-  
-  LESSONS.forEach((lesson, idx) => {
+
+  const diffColor = selectedDifficulty === 'Beginner' ? '#10b981' : (selectedDifficulty === 'Intermediate' ? '#f59e0b' : '#ef4444');
+
+  currentDomainChallenges.forEach((challenge, idx) => {
     const item = document.createElement('div');
-    item.className = `lesson-item ${idx === activeLessonIndex ? 'active' : ''}`;
+    item.className = `lesson-item ${idx === activeChallengeIndex ? 'active' : ''}`;
+    item.style.cssText = `
+      padding: 12px 14px; background: ${idx === activeChallengeIndex ? 'rgba(245,158,11,0.15)' : 'rgba(20,16,11,0.6)'};
+      border: 1px solid ${idx === activeChallengeIndex ? 'rgba(245,158,11,0.4)' : 'rgba(245,158,11,0.12)'};
+      border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s ease;
+      display: flex; align-items: center; justify-content: space-between;
+    `;
+
     item.innerHTML = `
       <div class="lesson-info">
-        <span class="lesson-title">${lesson.title}</span>
-        <span class="lesson-reward-lbl">+${lesson.xpReward} XP / +${lesson.coinReward} Coins</span>
+        <div style="font-size: 13px; font-weight: 800; color: ${idx === activeChallengeIndex ? '#f59e0b' : '#f5e8d7'};">${challenge.title}</div>
+        <div style="font-size: 10px; color: ${diffColor}; margin-top: 2px; font-weight: 800;">+${challenge.xpReward} XP / +${challenge.coinReward} Coins</div>
       </div>
       <div>
-        ${lesson.completed ? '<span class="lesson-status completed">Cleared</span>' : '<span class="lesson-status text-muted">Scroll locked</span>'}
+        ${challenge.completed ? '<span style="font-size: 10px; background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid #10b981; padding: 2px 8px; border-radius: 6px; font-weight: 800;">Cleared</span>' : '<span style="font-size: 10px; color: rgba(245,232,215,0.4);">Locked</span>'}
       </div>
     `;
-    
+
     item.addEventListener('click', () => {
-      document.querySelectorAll('.lesson-item').forEach(el => el.classList.remove('active'));
-      item.classList.add('active');
-      loadLesson(idx);
+      activeChallengeIndex = idx;
+      renderChallengesList();
+      loadChallenge(idx);
     });
-    
+
     container.appendChild(item);
   });
 }
 
-function loadLesson(idx) {
-  activeLessonIndex = idx;
-  const lesson = LESSONS[idx];
-  
-  document.getElementById('current-lesson-title').innerText = lesson.title;
-  document.getElementById('current-lesson-lang').innerText = lesson.lang;
-  document.getElementById('lesson-desc').innerHTML = lesson.desc;
-  document.getElementById('code-editor-input').value = lesson.template;
-  
-  document.getElementById('console-output-text').innerText = '[System] Lesson loaded. Ready to run.';
+function loadChallenge(idx) {
+  if (!currentDomainChallenges[idx]) return;
+  activeChallengeIndex = idx;
+  const challenge = currentDomainChallenges[idx];
+
+  const titleEl = document.getElementById('current-lesson-title');
+  if (titleEl) titleEl.innerText = `${challenge.domain} (${challenge.difficulty}): ${challenge.title}`;
+
+  const langEl = document.getElementById('current-lesson-lang');
+  if (langEl) langEl.innerText = challenge.lang || 'JavaScript';
+
+  const descEl = document.getElementById('lesson-desc');
+  if (descEl) descEl.innerHTML = challenge.problemStatement;
+
+  const editorInput = document.getElementById('code-editor-input');
+  if (editorInput) editorInput.value = challenge.starterCode;
+
+  const consoleEl = document.getElementById('console-output-text');
+  if (consoleEl) consoleEl.innerText = `[System] ${challenge.domain} (${challenge.difficulty}) Scroll Loaded. Ready to run assertions.`;
+
+  renderHintDrawer(challenge);
 }
 
-function setupWorkspaceEvents() {
-  document.getElementById('btn-run-code').addEventListener('click', runUserCode);
-  document.getElementById('btn-submit-code').addEventListener('click', submitUserCode);
-  document.getElementById('btn-clear-console').addEventListener('click', () => {
-    document.getElementById('console-output-text').innerText = '';
+function renderHintDrawer(challenge) {
+  const container = document.getElementById('codescroll-hint-drawer');
+  if (!container) return;
+
+  container.innerHTML = `
+    <button type="button" id="btn-toggle-hint" class="btn secondary-btn btn-sm" style="width: 100%; margin-top: 12px; font-size: 11px;">
+      💡 Toggle Hint & Solution Explanation
+    </button>
+    <div id="codescroll-hint-content" class="hidden" style="margin-top: 10px; padding: 12px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); border-radius: 10px; font-size: 12px; color: #f5e8d7; display: none;">
+      <div style="font-weight: 800; color: #f59e0b; margin-bottom: 4px;">💡 Hint:</div>
+      <div style="margin-bottom: 8px;">${challenge.hint || 'No hint provided.'}</div>
+      <div style="font-weight: 800; color: #10b981; margin-bottom: 4px;">📘 Solution Explanation:</div>
+      <div>${challenge.explanation || 'Write standard code according to goal requirements.'}</div>
+    </div>
+  `;
+
+  document.getElementById('btn-toggle-hint')?.addEventListener('click', () => {
+    const content = document.getElementById('codescroll-hint-content');
+    if (content) {
+      const isHidden = content.classList.contains('hidden');
+      if (isHidden) {
+        content.classList.remove('hidden');
+        content.style.display = 'block';
+      } else {
+        content.classList.add('hidden');
+        content.style.display = 'none';
+      }
+    }
   });
 }
 
-// In-browser custom JS sandbox
+function setupWorkspaceEvents() {
+  document.getElementById('btn-run-code')?.addEventListener('click', runUserCode);
+  document.getElementById('btn-submit-code')?.addEventListener('click', submitUserCode);
+  document.getElementById('btn-clear-console')?.addEventListener('click', () => {
+    const consoleEl = document.getElementById('console-output-text');
+    if (consoleEl) consoleEl.innerText = '';
+  });
+}
+
 function runUserCode() {
-  const code = document.getElementById('code-editor-input').value;
+  const code = document.getElementById('code-editor-input')?.value || '';
   const logs = [];
-  
-  // Hijack console.log
+
   const originalLog = console.log;
   console.log = (...args) => {
     logs.push(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' '));
   };
-  
+
   try {
-    // Run evaluated code
     const runner = new Function(code);
     runner();
-    
-    // Restore log
     console.log = originalLog;
-    
-    // Print to workspace console
-    const outputText = logs.length > 0 ? logs.join('\n') : '[Success] Code ran without outputting console logs.';
-    document.getElementById('console-output-text').innerText = outputText;
+
+    const outputText = logs.length > 0 ? logs.join('\n') : '[Success] Code ran cleanly with no output errors.';
+    const consoleEl = document.getElementById('console-output-text');
+    if (consoleEl) consoleEl.innerText = outputText;
     return true;
   } catch (err) {
     console.log = originalLog;
-    document.getElementById('console-output-text').innerText = `[Error] ${err.message}`;
+    const consoleEl = document.getElementById('console-output-text');
+    if (consoleEl) consoleEl.innerText = `[Error] ${err.message}`;
     return false;
   }
 }
 
-// Run code + assertions validation check
 function submitUserCode() {
-  const code = document.getElementById('code-editor-input').value;
-  const lesson = LESSONS[activeLessonIndex];
-  
-  // Hijack console log
+  const code = document.getElementById('code-editor-input')?.value || '';
+  const challenge = currentDomainChallenges[activeChallengeIndex];
+  if (!challenge) return;
+
   const originalLog = console.log;
   const logs = [];
   console.log = (...args) => {
     logs.push(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' '));
   };
-  
+
   try {
-    // Run user logic + verification checks
     const verifyScript = `
       ${code}
-      ${lesson.validator}
+      ${challenge.validator}
     `;
     const runner = new Function(verifyScript);
     runner();
-    
     console.log = originalLog;
-    
-    // Reward Grant
-    if (!lesson.completed) {
-      lesson.completed = true;
-      saveCompletedLesson(lesson.id);
-      
-      addXP(lesson.xpReward);
-      addCoins(lesson.coinReward);
-      
-      state.stats.lessonsCompleted += 1;
+
+    if (!challenge.completed) {
+      challenge.completed = true;
+      saveCompletedLesson(challenge.id);
+
+      let xpFinal = challenge.xpReward;
+      let coinFinal = challenge.coinReward;
+
+      const equippedPet = state.equipped ? state.equipped.pet : 'none';
+      if (equippedPet === 'baby_dragon' && xpFinal > 0) {
+        xpFinal += Math.max(1, Math.round(xpFinal * 0.02));
+      }
+      if (equippedPet === 'silver_serpent') {
+        coinFinal += 5;
+      }
+
+      addXP(xpFinal);
+      addCoins(coinFinal);
+
+      if (!state.stats) state.stats = {};
+      state.stats.lessonsCompleted = (state.stats.lessonsCompleted || 0) + 1;
       saveState();
       updateUI();
-      
-      renderLessons(); // refresh sidebar statuses
-      alert(`🎉 Quest Cleared! +${lesson.xpReward} XP / +${lesson.coinReward} Coins awarded!`);
+
+      renderChallengesList();
+      alert(`🎉 Quest Cleared! +${xpFinal} XP / +${coinFinal} Coins awarded!`);
     } else {
-      alert('You have already claimed rewards for this lesson scroll!');
+      alert('You have already claimed rewards for clearing this scroll!');
     }
-    
-    document.getElementById('console-output-text').innerText = `[PASS] Verification Complete!\n${logs.join('\n')}`;
+
+    const consoleEl = document.getElementById('console-output-text');
+    if (consoleEl) consoleEl.innerText = `[PASS] Assertions Verified!\n${logs.join('\n')}`;
   } catch (err) {
     console.log = originalLog;
-    document.getElementById('console-output-text').innerText = `[FAIL] Code failed assertion checks:\n-> ${err.message}`;
+    const consoleEl = document.getElementById('console-output-text');
+    if (consoleEl) consoleEl.innerText = `[FAIL] Code failed assertion checks:\n-> ${err.message}`;
   }
 }

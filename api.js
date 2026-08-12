@@ -33,11 +33,15 @@ async function request(method, path, body = null, requiresAuth = true) {
   }
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 800);
     const res = await fetch(`${API_BASE}${path}`, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'API Error');
     return { ok: true, data };
@@ -51,25 +55,18 @@ async function request(method, path, body = null, requiresAuth = true) {
 export const api = {
 
   /**
-   * Register a new user
-   * @param {string} username
-   * @param {string} email
-   * @param {string} password
-   * @returns {Promise<{ok, data}>}
-   */
-  /**
    * Register a new user (with backend sync & offline fallback)
    */
   async register(username, email, password) {
-    const result = await request('POST', '/auth/register', { username, email, password }, false);
+    const cleanUsername = (username || 'Scholar').trim();
+    const result = await request('POST', '/auth/register', { username: cleanUsername, email, password }, false);
     if (result.ok) {
       auth.setToken(result.data.token);
       auth.setUserId(result.data.user.id);
       return result;
     }
 
-    // If server responded with a HTTP error (e.g. 409 user already exists), return error to user
-    if (result.error && !result.error.toLowerCase().includes('failed to fetch')) {
+    if (result.error && !result.error.toLowerCase().includes('failed to fetch') && !result.error.toLowerCase().includes('aborted')) {
       return result;
     }
 
@@ -79,8 +76,8 @@ export const api = {
     const mockId = `local_user_${Date.now()}`;
     const mockUser = {
       id: mockId,
-      username: username || 'Scholar',
-      email: email || 'scholar@mscit.edu',
+      username: cleanUsername,
+      email: email || `${cleanUsername.toLowerCase()}@scholarquest.edu`,
       level: 1,
       xp: 0,
       coins: 150,
@@ -110,22 +107,27 @@ export const api = {
    * Login an existing user by Email or Username (with backend sync & offline fallback)
    */
   async login(emailOrUsername, password) {
-    const result = await request('POST', '/auth/login', { email: emailOrUsername, identifier: emailOrUsername, password }, false);
+    const inputName = (emailOrUsername || 'Scholar').trim();
+    const result = await request('POST', '/auth/login', { email: inputName, identifier: inputName, password }, false);
     if (result.ok) {
       auth.setToken(result.data.token);
       auth.setUserId(result.data.user.id);
       return result;
     }
 
-    // Fallback: Login locally if user exists or create guest session
+    // Fallback: Login locally if server offline or unreachable
     console.warn('[API] Server offline — logging in locally');
     const mockToken = `local_token_${Date.now()}`;
-    const mockId = `local_user_1`;
-    const username = emailOrUsername.includes('@') ? emailOrUsername.split('@')[0] : emailOrUsername;
+    // Reuse existing persistent device ID or generate a new unique one
+    const existingId = localStorage.getItem('sq_user_id');
+    const mockId = (existingId && !existingId.startsWith('guest_')) ? existingId : `local_user_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const username = inputName.includes('@') ? inputName.split('@')[0] : inputName;
+    const cleanUsername = username ? (username.charAt(0).toUpperCase() + username.slice(1)) : 'Scholar';
+    
     const mockUser = {
       id: mockId,
-      username: username.charAt(0).toUpperCase() + username.slice(1),
-      email: emailOrUsername.includes('@') ? emailOrUsername : `${emailOrUsername}@scholarquest.edu`,
+      username: cleanUsername,
+      email: inputName.includes('@') ? inputName : `${inputName}@scholarquest.edu`,
       level: 1,
       xp: 0,
       coins: 150,

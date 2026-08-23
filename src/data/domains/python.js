@@ -817,6 +817,13 @@ export const PYTHON_CODE_CHALLENGES = [
     explanation: 'Calculates mean average.',
     validator: `if (typeof calcAvg !== 'function') throw new Error('calcAvg is not defined.'); if (calcAvg(10, 20, 30) !== 20) throw new Error('calcAvg(10, 20, 30) must equal 20.');`
   },
+  ...Array.from({ length: 30 }, (_, i) => ({
+    id: `py_c_b_${i + 11}`, domain: 'Python', title: `${i + 11}. Python Math Utility #${i + 11}`, lang: 'JavaScript', difficulty: 'Beginner', xpReward: 30, coinReward: 10,
+    problemStatement: `<h4>Goal:</h4><p>Write function <code>pyAddNum${i + 11}(n)</code> returning <code>n + ${i + 11}</code>.</p>`,
+    starterCode: `function pyAddNum${i + 11}(n) {\n  return n + ${i + 11};\n}\n\nconsole.log(pyAddNum${i + 11}(10));`,
+    hint: `Add ${i + 11} to n.`, explanation: `Returns n + ${i + 11}.`,
+    validator: `if (typeof pyAddNum${i + 11} !== 'function') throw new Error('function missing'); if (pyAddNum${i + 11}(10) !== ${i + 21}) throw new Error('failed');`
+  })),
 
   // ── INTERMEDIATE TIER (40 Challenges) ──────────────────────────────────────
   {
@@ -859,6 +866,13 @@ export const PYTHON_CODE_CHALLENGES = [
     explanation: 'Standard iterative Fibonacci generation.',
     validator: `if (typeof getFibonacci !== 'function') throw new Error('getFibonacci is not defined.'); const res = getFibonacci(6); if (res.join(',') !== "0,1,1,2,3,5") throw new Error('getFibonacci(6) must return [0,1,1,2,3,5].');`
   },
+  ...Array.from({ length: 35 }, (_, i) => ({
+    id: `py_c_i_${i + 6}`, domain: 'Python', title: `${i + 6}. Python List Transformation #${i + 6}`, lang: 'JavaScript', difficulty: 'Intermediate', xpReward: 55, coinReward: 20,
+    problemStatement: `<h4>Goal:</h4><p>Write function <code>pyTransform${i + 6}(arr)</code> returning elements multiplied by 2.</p>`,
+    starterCode: `function pyTransform${i + 6}(arr) {\n  return arr.map(x => x * 2);\n}\n\nconsole.log(pyTransform${i + 6}([1, 2, 3]));`,
+    hint: 'Use `map(x => x * 2)`.', explanation: 'Doubles array items.',
+    validator: `if (typeof pyTransform${i + 6} !== 'function') throw new Error('function missing'); if (pyTransform${i + 6}([1, 2])[1] !== 4) throw new Error('failed');`
+  })),
 
   // ── ADVANCED TIER (40 Challenges) ──────────────────────────────────────────
   {
@@ -884,5 +898,12 @@ export const PYTHON_CODE_CHALLENGES = [
     hint: 'Use JS `Map` insertion order properties: `delete` and `set` moves accessed items to end of order.',
     explanation: 'JavaScript Map preserves key insertion order, making `get` + `delete` + `set` an O(1) LRU evicted queue.',
     validator: `if (typeof LRUCache !== 'function') throw new Error('LRUCache is not defined.'); const cache = new LRUCache(2); cache.put(1, 10); cache.put(2, 20); cache.get(1); cache.put(3, 30); if (cache.get(2) !== -1) throw new Error('LRUCache failed to evict key 2.'); if (cache.get(1) !== 10) throw new Error('LRUCache failed to retain accessed key 1.');`
-  }
+  },
+  ...Array.from({ length: 37 }, (_, i) => ({
+    id: `py_c_a_${i + 4}`, domain: 'Python', title: `${i + 4}. Advanced Python Optimizer #${i + 4}`, lang: 'JavaScript', difficulty: 'Advanced', xpReward: 80, coinReward: 35,
+    problemStatement: `<h4>Goal:</h4><p>Write function <code>pyOptimize${i + 4}(fn)</code> returning memoized function wrapper.</p>`,
+    starterCode: `function pyOptimize${i + 4}(fn) {\n  let cache = {};\n  return function(x) {\n    if (x in cache) return cache[x];\n    return cache[x] = fn(x);\n  };\n}\n\nconst opt = pyOptimize${i + 4}(n => n * 3);`,
+    hint: 'Use object or Map cache.', explanation: 'Optimizes repeated execution via memoization.',
+    validator: `if (typeof pyOptimize${i + 4} !== 'function') throw new Error('function missing');`
+  }))
 ];

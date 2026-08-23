@@ -26,7 +26,10 @@ export const auth = {
 
 // ── HTTP Helper ────────────────────────────────────────────────
 async function request(method, path, body = null, requiresAuth = true) {
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = {};
+  if (!(body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
   if (requiresAuth) {
     const token = auth.getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -34,11 +37,11 @@ async function request(method, path, body = null, requiresAuth = true) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 800);
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
     const res = await fetch(`${API_BASE}${path}`, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: (body instanceof FormData) ? body : (body ? JSON.stringify(body) : undefined),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -55,11 +58,22 @@ async function request(method, path, body = null, requiresAuth = true) {
 export const api = {
 
   /**
-   * Register a new user (with backend sync & offline fallback)
+   * Register a new user (with backend sync)
    */
-  async register(username, email, password) {
-    const cleanUsername = (username || 'Scholar').trim();
-    const result = await request('POST', '/auth/register', { username: cleanUsername, email, password }, false);
+  async register(fullName, email, phone, username, password) {
+    const cleanUsername = (username || '').trim();
+    const cleanEmail = (email || '').trim();
+    const cleanName = (fullName || cleanUsername || 'Scholar').trim();
+    const cleanPhone = (phone || '').trim();
+
+    const result = await request('POST', '/auth/register', {
+      fullName: cleanName,
+      email: cleanEmail,
+      phone: cleanPhone,
+      username: cleanUsername,
+      password
+    }, false);
+
     if (result.ok) {
       auth.setToken(result.data.token);
       auth.setUserId(result.data.user.id);
@@ -70,14 +84,17 @@ export const api = {
       return result;
     }
 
-    // Offline / Fallback mode: Create local scholar session so registration ALWAYS works!
+    // Offline fallback mode (if server is unreachable)
     console.warn('[API] Server offline — creating local scholar session');
     const mockToken = `local_token_${Date.now()}`;
     const mockId = `local_user_${Date.now()}`;
     const mockUser = {
       id: mockId,
+      fullName: cleanName,
       username: cleanUsername,
-      email: email || `${cleanUsername.toLowerCase()}@scholarquest.edu`,
+      email: cleanEmail || `${cleanUsername.toLowerCase()}@scholarquest.edu`,
+      phone: cleanPhone,
+      createdAt: new Date().toISOString(),
       level: 1,
       xp: 0,
       coins: 150,
@@ -104,50 +121,43 @@ export const api = {
 
 
   /**
-   * Login an existing user by Email or Username (with backend sync & offline fallback)
+   * Login an existing user by Email or Username
    */
   async login(emailOrUsername, password) {
-    const inputName = (emailOrUsername || 'Scholar').trim();
-    const result = await request('POST', '/auth/login', { email: inputName, identifier: inputName, password }, false);
+    const inputName = (emailOrUsername || '').trim();
+    const result = await request('POST', '/auth/login', { email: inputName, identifier: inputName, username: inputName, password }, false);
     if (result.ok) {
       auth.setToken(result.data.token);
       auth.setUserId(result.data.user.id);
       return result;
     }
 
-    // Fallback: Login locally if server offline or unreachable
-    console.warn('[API] Server offline — logging in locally');
-    const mockToken = `local_token_${Date.now()}`;
-    // Reuse existing persistent device ID or generate a new unique one
-    const existingId = localStorage.getItem('sq_user_id');
-    const mockId = (existingId && !existingId.startsWith('guest_')) ? existingId : `local_user_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    const username = inputName.includes('@') ? inputName.split('@')[0] : inputName;
-    const cleanUsername = username ? (username.charAt(0).toUpperCase() + username.slice(1)) : 'Scholar';
-    
-    const mockUser = {
-      id: mockId,
-      username: cleanUsername,
-      email: inputName.includes('@') ? inputName : `${inputName}@scholarquest.edu`,
-      level: 1,
-      xp: 0,
-      coins: 150,
-      hp: 100,
-      maxHp: 100,
-      avatar: { id: 'peasant' }
-    };
+    // If server responded with error (e.g. 401 wrong password), return error immediately
+    if (result.error && !result.error.toLowerCase().includes('failed to fetch') && !result.error.toLowerCase().includes('aborted')) {
+      return result;
+    }
 
-    auth.setToken(mockToken);
-    auth.setUserId(mockId);
-    localStorage.setItem('sq_username', mockUser.username);
+    // Fallback: ONLY if server is completely offline / unreachable
+    console.warn('[API] Server offline — network error');
+    return { ok: false, error: 'Cannot connect to ScholarQuest server. Please start the server and try again.' };
+  },
 
-    return {
-      ok: true,
-      data: {
-        message: '⚔️ Scholar logged in! Welcome back.',
-        token: mockToken,
-        user: mockUser
-      }
-    };
+  /**
+   * Update profile fields (Full Name, Phone, Email)
+   */
+  async updateProfile(fullName, phone, email) {
+    const userId = auth.getUserId();
+    if (!userId) return { ok: false, error: 'Not logged in' };
+    return await request('PATCH', `/user/${userId}/profile`, { fullName, phone, email });
+  },
+
+  /**
+   * Change password with current password verification
+   */
+  async changePassword(currentPassword, newPassword) {
+    const userId = auth.getUserId();
+    if (!userId) return { ok: false, error: 'Not logged in' };
+    return await request('POST', `/user/${userId}/change-password`, { currentPassword, newPassword });
   },
 
   /**
@@ -191,14 +201,14 @@ export const api = {
   },
 
 
-  /** Request password reset OTP code */
+  /** Request password reset email link */
   async forgotPassword(email) {
     return await request('POST', '/auth/forgot-password', { email }, false);
   },
 
-  /** Reset password with code */
-  async resetPassword(email, resetCode, newPassword) {
-    return await request('POST', '/auth/reset-password', { email, resetCode, newPassword }, false);
+  /** Reset password with token */
+  async resetPassword(token, newPassword) {
+    return await request('POST', '/auth/reset-password', { token, newPassword }, false);
   },
 
   /** Logout — clear token & user ID */
@@ -301,6 +311,52 @@ export const api = {
     const userId = auth.getUserId();
     if (!userId) return { ok: false };
     return await request('DELETE', `/habits/${userId}/${habitId}`);
+  },
+
+  // ── Friends & StudySync API ────────────────────────────────
+  
+  /** Search scholars by query */
+  async searchUsers(query) {
+    return await request('GET', `/friends/search?q=${encodeURIComponent(query)}`);
+  },
+
+  /** Send friend request */
+  async sendFriendRequest(recipientId) {
+    return await request('POST', '/friends/request', { recipientId });
+  },
+
+  /** Get incoming and outgoing pending friend requests */
+  async getFriendRequests() {
+    return await request('GET', '/friends/requests');
+  },
+
+  /** Respond to friend request (action: 'accept' | 'decline') */
+  async respondFriendRequest(requestId, action) {
+    return await request('POST', '/friends/respond', { requestId, action });
+  },
+
+  /** Get all accepted friends */
+  async getFriendsList() {
+    return await request('GET', '/friends/list');
+  },
+
+  // ── Direct Messages (1:1 Chat) API ──────────────────────────
+
+  /** Get conversation message history with a friend */
+  async getDMHistory(friendId) {
+    return await request('GET', `/dm/history/${friendId}`);
+  },
+
+  /** Upload a file attachment for direct messages (20MB cap) */
+  async uploadDMFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return await request('POST', '/dm/upload', formData);
+  },
+
+  /** Send a direct message (fallback / REST) */
+  async sendDM(recipientId, text, attachment = null) {
+    return await request('POST', '/dm/send', { recipientId, text, attachment });
   },
 
   // ── Leaderboard ─────────────────────────────────────────────

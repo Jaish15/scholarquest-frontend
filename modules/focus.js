@@ -80,7 +80,7 @@ function startTimer() {
   }
 
   const statusEl = document.getElementById('timer-status');
-  if (statusEl) statusEl.innerText = activePreset === 25 ? 'FOCUSING...' : 'RESTING...';
+  if (statusEl) statusEl.innerText = (activePreset === 5 || activePreset === 15) ? 'RESTING...' : 'FOCUSING...';
 
   // Start or Resume Ambient Audio Sync
   playAmbientLoop();
@@ -126,7 +126,10 @@ function updateTimerDisplay() {
   const timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
   const textEl = document.getElementById('timer-time');
-  if (textEl) textEl.innerText = timeStr;
+  if (textEl) {
+    textEl.textContent = timeStr;
+    textEl.innerText = timeStr;
+  }
 
   const ring = document.getElementById('timer-ring-progress');
   if (ring) {

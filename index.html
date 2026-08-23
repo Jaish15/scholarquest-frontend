@@ -17,7 +17,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=40">
 </head>
 <body class="theme-gold dark-mode">
   
@@ -78,16 +78,28 @@
         <!-- FORM 2: REGISTER -->
         <form id="pg-form-register" class="login-form hidden">
           <div class="form-group">
-            <label for="pg-reg-username"><i data-lucide="user"></i> Scholar Name (Username)</label>
-            <input type="text" id="pg-reg-username" required placeholder="KnightCoder" minlength="3">
+            <label for="pg-reg-fullname"><i data-lucide="user"></i> Full Name</label>
+            <input type="text" id="pg-reg-fullname" required placeholder="Jayasri Scholar">
           </div>
           <div class="form-group">
             <label for="pg-reg-email"><i data-lucide="mail"></i> Email Address</label>
             <input type="email" id="pg-reg-email" required placeholder="scholar@mscit.edu">
           </div>
           <div class="form-group">
+            <label for="pg-reg-phone"><i data-lucide="phone"></i> Phone Number</label>
+            <input type="tel" id="pg-reg-phone" required placeholder="+1 234 567 8900">
+          </div>
+          <div class="form-group">
+            <label for="pg-reg-username"><i data-lucide="user-check"></i> Username</label>
+            <input type="text" id="pg-reg-username" required placeholder="KnightCoder" minlength="3">
+          </div>
+          <div class="form-group">
             <label for="pg-reg-password"><i data-lucide="lock"></i> Password</label>
-            <input type="password" id="pg-reg-password" required placeholder="At least 4 characters" minlength="4">
+            <input type="password" id="pg-reg-password" required placeholder="At least 8 characters" minlength="8">
+          </div>
+          <div class="form-group">
+            <label for="pg-reg-confirm-password"><i data-lucide="shield-check"></i> Confirm Password</label>
+            <input type="password" id="pg-reg-confirm-password" required placeholder="Re-enter password" minlength="8">
           </div>
           <button type="submit" class="btn primary-btn page-submit-btn" id="pg-btn-register">
             <span>Create Account & Join Quest 🚀</span>
@@ -95,38 +107,33 @@
         </form>
 
         <!-- FORM 3: FORGOT PASSWORD -->
+        <!-- FORM 3: FORGOT & RESET PASSWORD -->
         <div id="pg-container-forgot" class="login-form hidden">
-          <!-- Step 1: Request Code -->
+          <!-- Request Reset Link Form -->
           <form id="pg-form-forgot-step1">
-            <p class="auth-step-desc">Enter your account email to dispatch a 6-digit recovery code.</p>
+            <p class="auth-step-desc" style="font-size: 12px; color: rgba(245,232,215,0.7); margin-bottom: 14px;">Enter your registered email address to receive a secure password reset link via Resend.</p>
             <div class="form-group">
               <label for="pg-forgot-email"><i data-lucide="mail"></i> Registered Email</label>
               <input type="email" id="pg-forgot-email" required placeholder="scholar@mscit.edu">
             </div>
             <button type="submit" class="btn primary-btn page-submit-btn" id="pg-btn-forgot1">
-              <span>Send Recovery Code ✉️</span>
+              <span>Send Reset Link ✉️</span>
             </button>
           </form>
 
-          <!-- Demo OTP Code Display Box -->
-          <div id="pg-demo-code-box" class="demo-code-box hidden">
-            <div class="demo-code-title">🔑 DEMO RECOVERY CODE</div>
-            <div class="demo-code-val" id="pg-demo-code-val">------</div>
-            <p class="demo-code-sub">Code pre-filled below for instant testing!</p>
-          </div>
-
-          <!-- Step 2: Reset Password -->
-          <form id="pg-form-forgot-step2" class="hidden" style="margin-top: 15px;">
-            <div class="form-group">
-              <label for="pg-reset-code"><i data-lucide="shield-alert"></i> 6-Digit Recovery Code</label>
-              <input type="text" id="pg-reset-code" required placeholder="123456" maxlength="6">
-            </div>
+          <!-- Reset Password Form (Activated when token is present in URL) -->
+          <form id="pg-form-reset-password" class="hidden">
+            <p class="auth-step-desc" style="font-size: 12px; color: rgba(245,232,215,0.7); margin-bottom: 14px;">Enter a new password for your account (at least 8 characters).</p>
             <div class="form-group">
               <label for="pg-reset-new-password"><i data-lucide="key"></i> New Password</label>
-              <input type="password" id="pg-reset-new-password" required placeholder="Enter new password" minlength="4">
+              <input type="password" id="pg-reset-new-password" required placeholder="At least 8 characters" minlength="8">
             </div>
-            <button type="submit" class="btn primary-btn page-submit-btn" id="pg-btn-forgot2">
-              <span>Reset Password & Update DB 🔑</span>
+            <div class="form-group">
+              <label for="pg-reset-confirm-password"><i data-lucide="shield-check"></i> Confirm New Password</label>
+              <input type="password" id="pg-reset-confirm-password" required placeholder="Re-enter new password" minlength="8">
+            </div>
+            <button type="submit" class="btn primary-btn page-submit-btn" id="pg-btn-reset-submit">
+              <span>Reset Password 🔑</span>
             </button>
           </form>
 
@@ -146,9 +153,6 @@
           </button>
           <button type="button" class="social-auth-btn social-github" data-sso="github" title="Authenticate with GitHub" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; border-radius: 50%; background: rgba(38, 25, 11, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); outline: none;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="#f59e0b" style="display:block;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          </button>
-          <button type="button" class="social-auth-btn social-leetcode" data-sso="leetcode" title="Authenticate with LeetCode" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; border-radius: 50%; background: rgba(38, 25, 11, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); outline: none;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
           </button>
         </div>
 
@@ -195,7 +199,7 @@
         </button>
         <button class="nav-item" data-target="studysync">
           <i data-lucide="users"></i>
-          <span>StudySync</span>
+          <span>ScholarCircle</span>
         </button>
         <button class="nav-item" data-target="codescroll">
           <i data-lucide="terminal"></i>
@@ -463,6 +467,9 @@
                   <div class="reward-pill xp-reward"><i data-lucide="sparkles"></i> <span id="results-xp-gain">+50 XP</span></div>
                   <div class="reward-pill coin-reward"><i data-lucide="coins"></i> <span id="results-coin-gain">+20 Coins</span></div>
                 </div>
+                <div id="results-friends-compare" class="results-compare-box hidden" style="margin: 16px 0; padding: 12px; border-radius: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); text-align: left; width: 100%; max-width: 380px;">
+                  <!-- Dynamic Friend Leaderboard Comparison -->
+                </div>
                 <button class="btn primary-btn" id="btn-close-results">Back to Quizzes</button>
               </div>
             </div>
@@ -557,8 +564,10 @@
                 </button>
               </div>
               
-              <div class="timer-presets">
+              <div class="timer-presets" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
                 <button class="preset-btn active" data-time="25">Focus (25m)</button>
+                <button class="preset-btn" data-time="45">Focus (45m)</button>
+                <button class="preset-btn" data-time="60">Focus (1h)</button>
                 <button class="preset-btn" data-time="5">Short Break (5m)</button>
                 <button class="preset-btn" data-time="15">Long Break (15m)</button>
               </div>
@@ -694,122 +703,161 @@
         <section id="view-studysync" class="content-view">
           <div class="module-hero-chip" id="chip-studysync">
             <div class="module-hero-chip-sprite" id="chip-sprite-studysync"></div>
-            <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; StudySync</span>
+            <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; ScholarCircle — Friends &amp; Direct Messages</span>
           </div>
 
-          <!-- Error Alert Banner -->
-          <div id="sync-error-banner" class="glass card hidden" style="background: rgba(220,38,38,0.25); border: 1px solid #ef4444; color: #fecaca; padding: 12px 18px; margin-bottom: 16px; border-radius: 12px; font-size: 13px; font-weight: 700; display: none;">
-          </div>
-
-          <div class="studysync-grid">
-            
-            <!-- Lobby Entry / Creation Board -->
-            <div class="glass card sync-lobby-card" id="sync-lobby-panel">
-              <div class="lobby-welcome">
-                <div class="lobby-icon">📡</div>
-                <h2>StudySync Multiplayer Rooms</h2>
-                <p class="text-sub">Join forces with peers in real-time Pomodoro sessions and Quiz Battles (Max 15 Members per Room).</p>
-              </div>
-              
-              <div class="lobby-actions">
-                <div class="join-action">
-                  <input type="text" id="room-code-input" placeholder="6-Char Join Code (e.g. X7K2QP)" maxlength="6" class="glass-input" style="text-transform: uppercase; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.1em;">
-                  <button class="btn primary-btn" id="btn-join-room">Join Room</button>
-                </div>
-                <div class="divider"><span>OR</span></div>
-                <button class="btn secondary-btn" id="btn-create-room">Create Study Room</button>
-              </div>
+          <!-- Top Search & Navigation Bar -->
+          <div class="studysync-top-bar glass">
+            <div class="studysync-search-wrapper">
+              <i data-lucide="search" class="search-icon"></i>
+              <input type="text" id="scholar-search-input" placeholder="Search scholars by username or email..." class="glass-input" autocomplete="off" />
+              <button class="btn primary-btn btn-sm" id="btn-search-scholars">Find Scholars</button>
             </div>
-            
-            <!-- Active Room Arena (Hidden initially) -->
-            <div class="glass card sync-room-card hidden" id="sync-room-panel">
-              <div class="room-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 14px; margin-bottom: 16px;">
-                <div class="room-title-info" style="display: flex; align-items: center; gap: 12px;">
-                  <h2 id="room-id-display" style="font-size: 18px; font-weight: 800; color: #f59e0b; margin: 0; font-family: 'JetBrains Mono', monospace;">Room Code: ------</h2>
-                  <button type="button" class="btn secondary-btn btn-sm" id="btn-copy-code" style="padding: 4px 10px; font-size: 11px;">📋 Copy Code</button>
-                  <span class="active-badge" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #10b981; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 800;"><span class="pulse-dot"></span> <span id="room-occupant-count">1/15 Members</span></span>
-                </div>
-                <button class="btn secondary-btn btn-sm" id="btn-leave-room">Leave Room</button>
-              </div>
-              
-              <div class="room-main-layout">
-                <!-- Group Timer & Connected Members -->
-                <div class="room-workspace-side">
-                  <!-- Squad Members Grid (Up to 15) -->
-                  <div class="squad-box">
-                    <h3 style="font-size: 14px; color: #f59e0b; font-weight: 800; margin-bottom: 10px;">👥 Connected Squad Members</h3>
-                    <div class="squad-list" id="squad-members-container">
-                      <!-- Dynamically populated -->
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Interaction & Live Battle Box -->
-                <div class="room-interaction-side">
-                  <!-- Tab toggles for Chat and Shared Activity -->
-                  <div class="room-tabs">
-                    <button class="room-tab active" data-tab="chat">Room Chat</button>
-                    <button class="room-tab" data-tab="battle">Shared Activity</button>
-                  </div>
-                  
-                  <!-- Chat Tab -->
-                  <div class="room-tab-content active" id="room-chat-tab">
-                    <div class="chat-messages-container" id="chat-messages" style="height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 6px;">
-                      <!-- Chat messages -->
-                    </div>
-                    <div class="chat-input-row" style="margin-top: 12px; display: flex; gap: 8px;">
-                      <input type="text" id="chat-input-field" placeholder="Send a message to your squad..." class="glass-input" style="flex: 1;">
-                      <button class="btn primary-btn" id="btn-send-chat"><i data-lucide="send"></i></button>
-                    </div>
-                  </div>
-                  
-                  <!-- Shared Activity Tab -->
-                  <div class="room-tab-content" id="room-battle-tab">
-                    <div class="battle-lobby" id="battle-lobby-pane">
-                      <h3>Multiplayer Shared Activity</h3>
-                      <p class="text-sub">Host can launch a synchronized QuizForge or CodeScroll challenge for all room members.</p>
-                      
-                      <!-- Host Controls Bar -->
-                      <div id="host-controls-bar" style="margin: 16px 0; display: flex; align-items: center; gap: 10px;">
-                        <select id="activity-module-select" class="glass-input" style="flex: 1; padding: 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); color: #f5e8d7; font-weight: 700; border-radius: 10px;">
-                          <option value="quizforge">⚡ QuizForge Challenge</option>
-                          <option value="codescroll">💻 CodeScroll Challenge</option>
-                        </select>
-                      </div>
+            <div class="studysync-tab-toggles">
+              <button class="studysync-nav-btn active" id="tab-btn-friends" data-tab="friends">
+                <i data-lucide="users"></i> Friends (<span id="friends-count">0</span>)
+              </button>
+              <button class="studysync-nav-btn" id="tab-btn-requests" data-tab="requests">
+                <i data-lucide="mail"></i> Requests <span class="badge-pill hidden" id="pending-requests-badge">0</span>
+              </button>
+              <button class="studysync-nav-btn" id="tab-btn-leaderboard" data-tab="leaderboard">
+                <i data-lucide="trophy"></i> Rankings 🏆
+              </button>
+            </div>
+          </div>
 
-                      <button class="btn primary-btn btn-lg" id="btn-start-quiz-battle" style="width: 100%;">Start Shared Activity 🚀</button>
-                    </div>
-                    
-                    <div class="battle-active hidden" id="battle-active-pane">
-                      <div class="battle-question" style="background: rgba(12,10,7,0.6); padding: 16px; border-radius: 12px; border: 1px solid rgba(245,158,11,0.2); margin-bottom: 16px;">
-                        <h4 id="battle-question-title" style="font-size: 15px; color: #f5e8d7; font-weight: 800; margin-bottom: 14px;">Loading question...</h4>
-                        <div class="options-grid" id="battle-options-container" style="display: flex; flex-direction: column; gap: 8px;">
-                          <!-- Injected options -->
-                        </div>
-                      </div>
-                      
-                      <div class="battle-leaderboard-box">
-                        <h5 style="font-size: 13px; font-weight: 800; color: #f59e0b; margin-bottom: 8px;">🏆 Live Room Leaderboard</h5>
-                        <div class="battle-leaderboard-list" id="battle-standing-list">
-                          <!-- Real-time room standings -->
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div class="battle-finished hidden" id="battle-finished-pane">
-                      <h4>Activity Completed!</h4>
-                      <div class="winner-announcement" id="battle-winner-text" style="font-size: 16px; font-weight: 800; color: #f59e0b; margin: 12px 0;">Final Leaderboard Updated!</div>
-                      <div class="rewards-display" style="display: flex; gap: 10px; margin-bottom: 16px;">
-                        <span class="reward-pill xp-reward" style="background: rgba(245,158,11,0.2); border: 1px solid #f59e0b; color: #f59e0b; padding: 4px 12px; border-radius: 8px; font-weight: 800;">+40 XP</span>
-                        <span class="reward-pill coin-reward" style="background: rgba(16,185,129,0.2); border: 1px solid #10b981; color: #10b981; padding: 4px 12px; border-radius: 8px; font-weight: 800;">+15 Coins</span>
-                      </div>
-                      <button class="btn secondary-btn" id="btn-reset-battle">Return to Activity Lobby</button>
-                    </div>
-                  </div>
+          <!-- Search Results Dropdown / Modal -->
+          <div id="search-results-panel" class="glass card search-results-panel hidden">
+            <div class="search-results-header">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <i data-lucide="sparkles" style="color:var(--primary-color);"></i>
+                <h3 style="font-size:14px; font-weight:800; color:#f5e8d7; margin:0;">Scholars Search Results</h3>
+              </div>
+              <button class="btn-icon-close" id="btn-close-search">✕</button>
+            </div>
+            <div id="search-results-list" class="search-results-list">
+              <!-- Dynamically populated search cards -->
+            </div>
+          </div>
+
+          <!-- Notification / Error Toast -->
+          <div id="studysync-alert" class="studysync-alert-toast hidden"></div>
+
+          <!-- Main Layout Grid -->
+          <div class="studysync-main-layout">
+            
+            <!-- Left Side: Friends List & Pending Requests -->
+            <div class="studysync-sidebar-panel">
+              
+              <!-- Pending Requests Section (Shown when Requests tab is active or requests arrive) -->
+              <div id="pending-requests-section" class="glass card requests-card hidden">
+                <div class="section-header-row">
+                  <h3 class="section-title"><i data-lucide="inbox"></i> Incoming Requests</h3>
+                  <span class="badge-pill" id="incoming-count-badge">0</span>
+                </div>
+                <div id="pending-requests-list" class="pending-requests-list">
+                  <!-- Pending items -->
+                </div>
+              </div>
+
+              <!-- Friend Leaderboard Section (Shown when Rankings tab is active) -->
+              <div id="friends-leaderboard-section" class="glass card requests-card hidden" style="border: 1px solid rgba(245, 158, 11, 0.3);">
+                <div class="section-header-row" style="display:flex; align-items:center; justify-space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(245, 158, 11, 0.2);">
+                  <h3 class="section-title" style="margin:0; font-size:14px; font-weight:800; color:#fbbf24; display:flex; align-items:center; gap:6px;">
+                    <i data-lucide="trophy"></i> Comparative Leaderboard
+                  </h3>
+                  <button class="btn secondary-btn btn-sm" id="btn-refresh-friends-lb" style="padding: 2px 8px; font-size: 10px;">↻ Refresh</button>
+                </div>
+                <div id="friends-leaderboard-list" class="pending-requests-list" style="display: flex; flex-direction: column; gap: 8px;">
+                  <!-- Dynamically populated friend leaderboard cards -->
+                </div>
+              </div>
+
+              <!-- Friends List Section -->
+              <div class="glass card friends-list-card" id="friends-list-section">
+                <div class="friends-list-header">
+                  <h3 class="section-title"><i data-lucide="shield-check"></i> Study Companions</h3>
+                  <span class="online-counter" id="online-friends-count">0 Online</span>
+                </div>
+                <div id="friends-list-container" class="friends-list-container">
+                  <!-- Dynamically populated friends cards -->
                 </div>
               </div>
             </div>
-            
+
+            <!-- Right Side: 1:1 Direct Message Thread -->
+            <div class="studysync-chat-panel">
+              
+              <!-- Empty State: No friend selected -->
+              <div id="chat-empty-state" class="glass card chat-empty-card">
+                <div class="empty-icon-art">💬</div>
+                <h2>Direct Message Realm</h2>
+                <p class="text-sub">Select a scholar friend from the list to start a private study chat, share code files, PDFs, images, and notes!</p>
+                <div class="empty-quick-tip">
+                  <span>💡 Tip: Search for classmates above and send them a quest invite to connect.</span>
+                </div>
+              </div>
+
+              <!-- Active Chat Thread -->
+              <div id="chat-active-state" class="glass card chat-active-card hidden">
+                <!-- Thread Header -->
+                <div class="chat-thread-header" style="display: flex; justify-content: space-between; align-items: center;">
+                  <div class="chat-user-profile">
+                    <div class="chat-user-avatar-wrap">
+                      <div class="chat-user-avatar-sprite" id="active-friend-avatar"></div>
+                      <span class="status-indicator-dot" id="active-friend-status-dot"></span>
+                    </div>
+                    <div class="chat-user-details">
+                      <div class="chat-user-name-row">
+                        <h3 id="active-friend-name">Scholar Name</h3>
+                        <span class="level-pill" id="active-friend-level">LV 1</span>
+                      </div>
+                      <span class="status-text" id="active-friend-status-text">🟢 Online</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn primary-btn btn-sm" id="btn-invite-battle" style="padding: 6px 12px; font-size: 11px; font-weight: 800;">
+                    ⚔️ Invite to Battle
+                  </button>
+                </div>
+
+                <!-- Messages Feed -->
+                <div class="chat-feed-container" id="dm-chat-feed">
+                  <!-- Injected message bubbles -->
+                </div>
+
+                <!-- Typing Indicator -->
+                <div class="typing-indicator hidden" id="chat-typing-indicator">
+                  <span class="dot"></span><span class="dot"></span><span class="dot"></span> 
+                  <span id="typing-username">Friend</span> is typing...
+                </div>
+
+                <!-- Attachment Preview Before Sending -->
+                <div class="attachment-preview-bar hidden" id="chat-attachment-preview">
+                  <div class="attachment-preview-info">
+                    <span class="attachment-preview-icon" id="preview-file-icon">📄</span>
+                    <div class="attachment-preview-text">
+                      <span class="attachment-name" id="preview-file-name">notes.py</span>
+                      <span class="attachment-size" id="preview-file-size">14 KB</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn-remove-attachment" id="btn-remove-attachment" title="Remove attachment">✕</button>
+                </div>
+
+                <!-- Chat Input Row -->
+                <div class="chat-input-bar">
+                  <input type="file" id="dm-file-input" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.txt,.md,.py,.js,.jsx,.ts,.tsx,.java,.rb,.cpp,.c,.cs,.h,.hpp,.html,.css,.scss,.json,.xml,.yaml,.yml,.go,.rs,.sql,.sh,.php,.swift,.kt" />
+                  <button type="button" class="btn-icon-attach" id="btn-attach-file" title="Attach file (< 5MB: PDF, Images, Code, Notes)">
+                    <i data-lucide="paperclip"></i>
+                  </button>
+                  <input type="text" id="dm-message-input" placeholder="Type a message to your friend..." class="glass-input dm-input" autocomplete="off" />
+                  <button type="button" class="btn primary-btn" id="btn-send-dm">
+                    <i data-lucide="send"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
           </div>
         </section>
         
@@ -821,34 +869,128 @@
           </div>
           <div class="codescroll-grid">
             
-            <!-- Left Side: Lessons List -->
-            <div class="glass card lessons-list-card">
-              <h2>CodeScroll Scrolls</h2>
-              <p class="text-sub" style="margin-bottom: 12px;">Master interactive coding across 9 technical subjects</p>
+            <!-- Left Column: Lessons List + LeetCode Profile Stats -->
+            <div class="codescroll-left-column" style="display: flex; flex-direction: column; gap: 20px;">
               
-              <!-- Domain & Difficulty Filter Selects -->
-              <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                <select id="codescroll-domain-select" class="glass-input" style="flex: 1; padding: 8px 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); color: #f5e8d7; font-weight: 700; border-radius: 8px;">
-                  <!-- Populated dynamically by codescroll.js -->
-                </select>
-                <select id="codescroll-difficulty-select" class="glass-input" style="width: 140px; padding: 8px 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; font-weight: 800; border-radius: 8px;">
-                  <option value="Beginner">🟢 Beginner</option>
-                  <option value="Intermediate">🟡 Intermediate</option>
-                  <option value="Advanced">🔴 Advanced</option>
-                </select>
+              <!-- Challenge List Card -->
+              <div class="glass card lessons-list-card">
+                <h2>CodeScroll Scrolls</h2>
+                <p class="text-sub" style="margin-bottom: 12px;">Master interactive coding across 9 technical subjects</p>
+                
+                <!-- Domain & Difficulty Filter Selects -->
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                  <select id="codescroll-domain-select" class="glass-input" style="flex: 1; padding: 8px 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); color: #f5e8d7; font-weight: 700; border-radius: 8px;">
+                    <!-- Populated dynamically by codescroll.js -->
+                  </select>
+                  <select id="codescroll-difficulty-select" class="glass-input" style="width: 140px; padding: 8px 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; font-weight: 800; border-radius: 8px;">
+                    <option value="Beginner">🟢 Beginner</option>
+                    <option value="Intermediate">🟡 Intermediate</option>
+                    <option value="Advanced">🔴 Advanced</option>
+                  </select>
+                </div>
+
+                <div class="lessons-container" id="lessons-list">
+                  <!-- Dynamically populated -->
+                </div>
               </div>
 
-              <div class="lessons-container" id="lessons-list">
-                <!-- Dynamically populated -->
+              <!-- ==================== LEETCODE PROFILE STATS CARD ==================== -->
+              <div class="glass card leetcode-profile-card" style="border: 1px solid rgba(245,158,11,0.25); background: rgba(15,12,8,0.85); border-radius: 14px; padding: 18px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(245,158,11,0.2);">
+                  <div>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
+                      🟡 LeetCode Profile Stats
+                    </h3>
+                    <p style="margin: 2px 0 0 0; font-size: 11px; color: rgba(245,232,215,0.6);">
+                      Link public LeetCode username to display solve counts & rank
+                    </p>
+                  </div>
+                  <span style="font-size: 10px; background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); padding: 2px 8px; border-radius: 6px; font-weight: 800;">
+                    Public Display
+                  </span>
+                </div>
+
+                <!-- Form for linking profile -->
+                <div id="leetcode-link-form" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                  <input type="text" id="leetcode-username-input" class="glass-input" placeholder="LeetCode Username (e.g. NeetCode)" style="flex: 1; padding: 8px 12px; background: rgba(20,16,11,0.9); border: 1px solid rgba(245,158,11,0.4); color: #f5e8d7; font-weight: 700; border-radius: 8px; font-size: 12px;" />
+                  <button class="btn primary-btn" id="btn-link-leetcode" style="padding: 8px 14px; font-size: 12px; font-weight: 800;">
+                    Link Profile
+                  </button>
+                </div>
+                <div id="leetcode-status-msg" style="font-size: 11px; margin-bottom: 8px; font-weight: 700;"></div>
+
+                <!-- Stats Display Card (hidden until linked) -->
+                <div id="leetcode-stats-display" style="display: none; background: rgba(20,16,11,0.6); border: 1px solid rgba(245,158,11,0.2); border-radius: 10px; padding: 12px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <div>
+                      <a id="leetcode-profile-link" href="#" target="_blank" style="font-size: 14px; font-weight: 900; color: #f59e0b; text-decoration: none;">
+                        @<span id="leetcode-disp-username">username</span> ↗
+                      </a>
+                      <div style="font-size: 10px; color: rgba(245,232,215,0.5); margin-top: 2px;">
+                        Global Rank: #<span id="leetcode-disp-rank">N/A</span> &nbsp;•&nbsp; Reputation: <span id="leetcode-disp-rep">0</span>
+                      </div>
+                    </div>
+                    <button class="btn secondary-btn btn-sm" id="btn-unlink-leetcode" style="padding: 3px 8px; font-size: 10px;">
+                      Disconnect
+                    </button>
+                  </div>
+
+                  <!-- Stats Grid -->
+                  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center;">
+                    <div style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 6px 4px;">
+                      <div style="font-size: 16px; font-weight: 900; color: #f5e8d7;" id="leetcode-stat-total">0</div>
+                      <div style="font-size: 9px; font-weight: 800; color: #f59e0b;">TOTAL</div>
+                    </div>
+                    <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; padding: 6px 4px;">
+                      <div style="font-size: 16px; font-weight: 900; color: #10b981;" id="leetcode-stat-easy">0</div>
+                      <div style="font-size: 9px; font-weight: 800; color: #10b981;">EASY</div>
+                    </div>
+                    <div style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 6px 4px;">
+                      <div style="font-size: 16px; font-weight: 900; color: #f59e0b;" id="leetcode-stat-medium">0</div>
+                      <div style="font-size: 9px; font-weight: 800; color: #f59e0b;">MEDIUM</div>
+                    </div>
+                    <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 6px 4px;">
+                      <div style="font-size: 16px; font-weight: 900; color: #ef4444;" id="leetcode-stat-hard">0</div>
+                      <div style="font-size: 9px; font-weight: 800; color: #ef4444;">HARD</div>
+                    </div>
+                  </div>
+                </div>
               </div>
+
             </div>
             
-            <!-- Right Side: Coding Console and Workspace -->
+            <!-- Right Side: Unified Coding Console and Workspace -->
             <div class="glass card coding-workspace-card">
-              <div class="workspace-header">
-                <h3 id="current-lesson-title">Select a Lesson to Begin</h3>
-                <span class="badge" id="current-lesson-lang">JavaScript</span>
+              
+              <!-- Workspace Mode Header Tabs -->
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid rgba(245,158,11,0.2); flex-wrap: wrap; gap: 10px;">
+                <!-- Mode Toggle Buttons -->
+                <div class="ide-mode-tabs" style="display: flex; gap: 6px; background: rgba(20,16,11,0.9); padding: 3px; border-radius: 8px; border: 1px solid rgba(245,158,11,0.3);">
+                  <button id="tab-mode-challenge" class="btn btn-sm primary-btn" style="padding: 4px 12px; font-size: 11px; font-weight: 800;">
+                    🎯 Quest Challenge
+                  </button>
+                  <button id="tab-mode-sandbox" class="btn btn-sm secondary-btn" style="padding: 4px 12px; font-size: 11px; font-weight: 800;">
+                    🧪 Free Practice
+                  </button>
+                </div>
+
+                <!-- Right Header Controls -->
+                <div id="ide-header-right-controls" style="display: flex; align-items: center; gap: 10px;">
+                  <span class="badge" id="current-lesson-lang">JavaScript</span>
+                  <div id="sandbox-lang-select-container" style="display: none; align-items: center; gap: 6px;">
+                    <label for="sandbox-lang-select" style="font-size: 11px; font-weight: 800; color: #f59e0b;">Lang:</label>
+                    <select id="sandbox-lang-select" class="glass-input" style="padding: 4px 8px; background: rgba(20,16,11,0.9); border: 1px solid rgba(245,158,11,0.4); color: #f5e8d7; font-weight: 800; border-radius: 6px; font-size: 11px;">
+                      <option value="python">Python 3</option>
+                      <option value="javascript">JavaScript</option>
+                      <option value="c">C (GCC)</option>
+                      <option value="cpp">C++ (GCC)</option>
+                      <option value="ruby">Ruby</option>
+                    </select>
+                  </div>
+                </div>
               </div>
+
+              <h3 id="current-lesson-title" style="margin: 0 0 10px 0; font-size: 18px; font-weight: 900; color: #f59e0b;">Select a Lesson to Begin</h3>
               
               <div class="workspace-body">
                 <!-- Description Panel -->
@@ -856,14 +998,25 @@
                   <p>Choose a scroll from the list on the left to load its coding quest. Write code to solve the challenge and execute assertions.</p>
                 </div>
                 
+                <!-- Progressive 3-Stage Help Action Bar (Challenge Mode Only) -->
+                <div id="codescroll-help-bar" style="display: flex; align-items: center; justify-content: space-between; margin: 10px 0; padding: 8px 12px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 12px; font-weight: 800; color: #f59e0b;">💡 Quest Guidance:</span>
+                    <span id="codescroll-help-stage-indicator" style="font-size: 11px; color: rgba(245,232,215,0.7);">Click Help for progressive hints</span>
+                  </div>
+                  <button id="btn-codescroll-help" class="btn btn-sm secondary-btn" style="padding: 4px 10px; font-size: 11px; font-weight: 800; color: #f59e0b; border-color: rgba(245,158,11,0.4);">
+                    💡 Need Help? (Stage 1/3)
+                  </button>
+                </div>
+
                 <!-- Toggleable Hint & Explanation Drawer -->
-                <div id="codescroll-hint-drawer"></div>
+                <div id="codescroll-hint-drawer" style="display: none; margin-bottom: 12px; padding: 12px; background: rgba(20,16,11,0.9); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px;"></div>
                 
-                <!-- Editor Panel (Stylized Mock Editor) -->
+                <!-- Editor Panel (Single Unified Editor) -->
                 <div class="editor-pane">
                   <div class="editor-title-bar">
-                    <span class="file-name">index.js</span>
-                    <span class="editor-lang-indicator">JS Sandbox</span>
+                    <span class="file-name" id="unified-editor-file-name">index.js</span>
+                    <span class="editor-lang-indicator" id="unified-editor-mode-indicator">Challenge Quest</span>
                   </div>
                   <div class="editor-textarea-wrapper">
                     <div class="line-numbers">
@@ -881,7 +1034,7 @@ console.log(greet());
                 <!-- Console/Output Area -->
                 <div class="console-pane">
                   <div class="console-title-bar">
-                    <span>Console Log</span>
+                    <span id="unified-console-label">Console Log</span>
                     <button class="btn btn-sm secondary-btn" id="btn-clear-console">Clear</button>
                   </div>
                   <div class="console-output" id="console-output-text">
@@ -890,13 +1043,36 @@ console.log(greet());
                 </div>
               </div>
               
-              <div class="workspace-footer">
-                <button class="btn secondary-btn" id="btn-run-code"><i data-lucide="play"></i> Run Code</button>
-                <button class="btn primary-btn" id="btn-submit-code"><i data-lucide="check"></i> Submit Quest</button>
+              <!-- Workspace Footer Actions -->
+              <div class="workspace-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px;">
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn secondary-btn" id="btn-run-code"><i data-lucide="play"></i> ▶ Run Code</button>
+                  <button class="btn primary-btn" id="btn-submit-code"><i data-lucide="check"></i> Submit Quest</button>
+                </div>
+                <!-- Share to ScholarCircle Button (Challenge Mode Only) -->
+                <button class="btn secondary-btn" id="btn-share-scholarcircle" style="padding: 8px 14px; font-weight: 800; color: #38bdf8; border-color: rgba(56,189,248,0.4);">
+                  📡 Share to ScholarCircle
+                </button>
               </div>
             </div>
-            
+
           </div>
+
+          <!-- Modal for Share to ScholarCircle -->
+          <div id="modal-share-scholarcircle" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
+            <div class="glass card" style="width: 360px; max-width: 90%; padding: 20px; border: 1px solid rgba(245,158,11,0.4); background: rgba(18,14,10,0.95); border-radius: 14px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(245,158,11,0.2);">
+                <h4 style="margin: 0; font-size: 15px; font-weight: 900; color: #38bdf8;">📡 Share Challenge Quest</h4>
+                <button id="btn-close-share-modal" class="btn btn-sm secondary-btn" style="padding: 2px 6px; font-size: 12px;">✕</button>
+              </div>
+              <p style="font-size: 11px; color: rgba(245,232,215,0.7); margin-bottom: 12px;">Select a ScholarCircle friend to send a direct message with a link to this challenge quest:</p>
+              <div id="share-friends-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; margin-bottom: 14px;">
+                <!-- Populated dynamically -->
+              </div>
+              <div id="share-modal-status" style="font-size: 11px; font-weight: 700; text-align: center;"></div>
+            </div>
+          </div>
+
         </section>
         
         <!-- ==================== REPORT CARD VIEW ==================== -->
@@ -942,7 +1118,6 @@ console.log(greet());
               
               <div class="shop-tabs">
                 <button class="shop-tab active" data-category="accessories">Avatar Upgrades</button>
-                <button class="shop-tab" data-category="outfits">👕 Outfits & Tunics</button>
                 <button class="shop-tab" data-category="pets">🐾 Magical Pets</button>
                 <button class="shop-tab" data-category="bundles" style="color: #a855f7; font-weight: 800;">📦 Bundles</button>
                 <button class="shop-tab" data-category="themes">UI Themes</button>
@@ -968,28 +1143,27 @@ console.log(greet());
                   ⚡ PREVIEW MODE
                 </div>
 
-                <div class="spotlight-beam" style="height: 250px; width: 180px; background: linear-gradient(180deg, rgba(245, 158, 11, 0.35) 0%, rgba(245, 158, 11, 0.05) 70%, transparent 100%); clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);"></div>
-                <div style="text-align: center; z-index: 2;">
+                <div class="spotlight-beam"></div>
+                <div style="text-align: center; z-index: 2; margin-top: 4px;">
                   <span id="shop-podium-class" style="font-size: 10px; font-weight: 800; color: #f59e0b; letter-spacing: 0.12em; text-transform: uppercase;">Active Hero</span>
                   <div id="shop-podium-name" style="font-size: 13px; font-weight: 800; color: #f5e8d7; margin-top: 2px;">The Scholar</div>
                 </div>
                 
-                <!-- PROPORTIONED FLOATING CHARACTER STAGE -->
-                <div class="holo-avatar-container" style="width: 180px; height: 180px;">
-                  <!-- Main Hero Character (Proportioned to 160px with max-width enforced!) -->
-                  <img id="shop-podium-img" class="holo-character-img" src="./assets/heroes/scholar.png" alt="Active Hero" />
+                <!-- PROPORTIONED FLOATING CHARACTER STAGE FRAME -->
+                <div class="holo-avatar-container" style="position: relative; z-index: 3; width: 100px; height: 100px; background: rgba(18,14,9,0.85); border: 1px solid rgba(245,158,11,0.35); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 10px 0; box-shadow: 0 4px 16px rgba(0,0,0,0.6);">
+                  <!-- Main Hero Character (Proportioned to 85px) -->
+                  <img id="shop-podium-img" class="holo-character-img" src="./assets/heroes/scholar.png" alt="Active Hero" style="width: 85px; height: 85px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6));" />
                   
                   <!-- Head Accessory Overlay -->
-                  <img id="shop-podium-head" src="" alt="Head Accessory" style="width: 55px; height: 55px; object-fit: contain; position: absolute; top: -5px; left: 50%; transform: translateX(-50%); z-index: 5; display: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); pointer-events: none; animation: podFloat 3.5s ease-in-out infinite;" />
+                  <img id="shop-podium-head" src="" alt="Head Accessory" style="width: 40px; height: 40px; object-fit: contain; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); z-index: 5; display: none; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6)); pointer-events: none;" />
 
                   <!-- Hand Accessory Overlay -->
-                  <img id="shop-podium-hand" src="" alt="Hand Accessory" style="width: 45px; height: 45px; object-fit: contain; position: absolute; left: 0px; bottom: 25px; z-index: 5; display: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); pointer-events: none; animation: podFloat 3.5s ease-in-out infinite;" />
+                  <img id="shop-podium-hand" src="" alt="Hand Accessory" style="width: 32px; height: 32px; object-fit: contain; position: absolute; left: -8px; bottom: 10px; z-index: 5; display: none; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6)); pointer-events: none;" />
 
-                  <!-- Active Pet Companion floating beside Hero -->
-                  <img id="shop-podium-pet" src="./assets/items/hedwig_owl.png" alt="Pet Companion" style="width: 55px; height: 55px; object-fit: contain; position: absolute; right: -8px; bottom: 25px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.8)); animation: float3D 3.5s ease-in-out infinite 0.5s; z-index: 5; display: block;" />
-
-                  <!-- 3D Glowing Podium Base Ring -->
-                  <div class="podium-stage-base-3d"></div>
+                  <!-- Active Pet Companion Card attached to bottom-right -->
+                  <div id="shop-podium-pet-container" style="position: absolute; right: -16px; bottom: -8px; width: 44px; height: 44px; background: rgba(18,14,9,0.95); border: 1px solid rgba(245,158,11,0.45); border-radius: 10px; display: none; align-items: center; justify-content: center; z-index: 6; box-shadow: 0 4px 12px rgba(0,0,0,0.7);">
+                    <img id="shop-podium-pet" src="" alt="Pet Companion" style="width: 34px; height: 34px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));" />
+                  </div>
                 </div>
 
                 <div style="display: flex; gap: 6px; width: 100%; z-index: 2;">
@@ -1014,6 +1188,136 @@ console.log(greet());
               </div>
             </div>
             
+          </div>
+        </section>
+
+        <!-- ==================== STUDENT PROFILE & CHARACTER PAGE ==================== -->
+        <section id="view-profile" class="content-view">
+          <div class="module-hero-chip" id="chip-profile">
+            <div class="module-hero-chip-sprite" id="chip-sprite-profile"></div>
+            <span class="module-hero-chip-label">LV <span class="chip-level">1</span> &nbsp;•&nbsp; Student Profile &amp; Character Record</span>
+          </div>
+
+          <div style="max-width: 800px; margin: 0 auto; padding: 10px 0 30px 0;">
+            
+            <!-- PROFILE ALERT BANNER -->
+            <div id="profile-alert" class="auth-alert hidden" style="margin-bottom: 14px;"></div>
+
+            <!-- HEADER PROFILE BANNER CARD -->
+            <div class="user-profile-banner" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 14px; padding: 18px; display: flex; align-items: center; gap: 16px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);">
+              <div class="user-profile-avatar" id="profile-avatar-sprite" style="width: 60px; height: 60px; min-width: 60px; border-radius: 50%; border: 2px solid #f59e0b; box-shadow: 0 0 14px rgba(245, 158, 11, 0.4); background-repeat: no-repeat; background-position: center; background-size: contain;"></div>
+              <div class="user-profile-info" style="flex: 1;">
+                <h3 id="profile-fullname" style="margin: 0; color: #fff; font-size: 19px; font-weight: 800;">Scholar Name</h3>
+                <p id="profile-username-tag" style="margin: 2px 0 8px; color: #f59e0b; font-size: 14px; font-weight: 600;">@username</p>
+                <div class="profile-badges" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  <span class="badge" id="profile-level-badge" style="background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.5); color: #fbbf24; font-size: 11px; padding: 3px 10px; border-radius: 6px; font-weight: 700;">LV 1</span>
+                  <span class="badge" id="profile-xp-badge" style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.5); color: #60a5fa; font-size: 11px; padding: 3px 10px; border-radius: 6px; font-weight: 700;">0 XP</span>
+                  <span class="badge" id="profile-streak-badge" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; font-size: 11px; padding: 3px 10px; border-radius: 6px; font-weight: 700;">🔥 0 Day Streak</span>
+                  <span class="badge coin-badge" id="profile-coins-badge" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); color: #34d399; font-size: 11px; padding: 3px 10px; border-radius: 6px; font-weight: 700;">🪙 150</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW MODE: STUDENT DATA DISPLAY GRID -->
+            <div id="profile-view-mode" class="profile-data-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+              <h4 style="margin: 0 0 14px; color: #f59e0b; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="user-check"></i> Account &amp; Student Metadata
+              </h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div>
+                  <span style="font-size: 11px; color: rgba(255, 255, 255, 0.5); display: block; margin-bottom: 2px;">Full Name</span>
+                  <strong id="display-fullname" style="font-size: 14px; color: #f3f4f6;">-</strong>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: rgba(255, 255, 255, 0.5); display: block; margin-bottom: 2px;">Username</span>
+                  <strong id="display-username" style="font-size: 14px; color: #f3f4f6;">-</strong>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: rgba(255, 255, 255, 0.5); display: block; margin-bottom: 2px;">Email Address</span>
+                  <strong id="display-email" style="font-size: 14px; color: #f3f4f6;">-</strong>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: rgba(255, 255, 255, 0.5); display: block; margin-bottom: 2px;">Phone Number</span>
+                  <strong id="display-phone" style="font-size: 14px; color: #f3f4f6;">-</strong>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: rgba(255, 255, 255, 0.5); display: block; margin-bottom: 2px;">Active Hero Class</span>
+                  <strong id="display-heroclass" style="font-size: 14px; color: #f59e0b;">Peasant Scholar</strong>
+                </div>
+                <div>
+                  <span style="font-size: 11px; color: rgba(255, 255, 255, 0.5); display: block; margin-bottom: 2px;">Registration Date</span>
+                  <strong id="display-regdate" style="font-size: 14px; color: #f3f4f6;">-</strong>
+                </div>
+              </div>
+
+              <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 10px;">
+                <button type="button" class="btn primary-btn" id="btn-browse-hero-classes" style="width: 100%; padding: 10px; font-size: 13px; font-weight: 800;">
+                  <i data-lucide="shield"></i> 🎭 Character Classes Showcase
+                </button>
+                <div style="display: flex; gap: 10px;">
+                  <button type="button" class="btn secondary-btn" id="btn-mode-edit-profile" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 700;">
+                    <i data-lucide="edit-3"></i> Edit Profile
+                  </button>
+                  <button type="button" class="btn secondary-btn" id="btn-mode-change-pass" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 700;">
+                    <i data-lucide="key"></i> Change Password
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- EDIT PROFILE MODE FORM (Hidden by default) -->
+            <form id="profile-edit-mode" class="hidden" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+              <h4 style="margin: 0 0 14px; color: #f59e0b; font-size: 13px; font-weight: 800; text-transform: uppercase;">
+                ✏️ Edit Profile Details
+              </h4>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="edit-fullname" style="font-size: 11px;"><i data-lucide="user"></i> Full Name</label>
+                <input type="text" id="edit-fullname" required placeholder="Jayasri Scholar">
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="edit-email" style="font-size: 11px;"><i data-lucide="mail"></i> Email Address</label>
+                <input type="email" id="edit-email" required placeholder="scholar@mscit.edu">
+              </div>
+              <div class="form-group" style="margin-bottom: 14px;">
+                <label for="edit-phone" style="font-size: 11px;"><i data-lucide="phone"></i> Phone Number</label>
+                <input type="tel" id="edit-phone" placeholder="+1 234 567 8900">
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn primary-btn" id="btn-save-edit-profile" style="flex: 1; padding: 10px; font-size: 12px;">Save Changes</button>
+                <button type="button" class="btn secondary-btn" id="btn-cancel-edit-profile" style="flex: 1; padding: 10px; font-size: 12px;">Cancel</button>
+              </div>
+            </form>
+
+            <!-- CHANGE PASSWORD MODE FORM (Hidden by default) -->
+            <form id="profile-pass-mode" class="hidden" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+              <h4 style="margin: 0 0 14px; color: #f87171; font-size: 13px; font-weight: 800; text-transform: uppercase;">
+                🔑 Change Password
+              </h4>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="change-curr-pass" style="font-size: 11px;"><i data-lucide="lock"></i> Current Password</label>
+                <input type="password" id="change-curr-pass" required placeholder="Enter current password">
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="change-new-pass" style="font-size: 11px;"><i data-lucide="key"></i> New Password</label>
+                <input type="password" id="change-new-pass" required placeholder="At least 8 characters" minlength="8">
+              </div>
+              <div class="form-group" style="margin-bottom: 14px;">
+                <label for="change-confirm-pass" style="font-size: 11px;"><i data-lucide="shield-check"></i> Confirm New Password</label>
+                <input type="password" id="change-confirm-pass" required placeholder="Re-enter new password" minlength="8">
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn danger-btn" id="btn-save-change-pass" style="flex: 1; padding: 10px; font-size: 12px;">Update Password</button>
+                <button type="button" class="btn secondary-btn" id="btn-cancel-change-pass" style="flex: 1; padding: 10px; font-size: 12px;">Cancel</button>
+              </div>
+            </form>
+
+            <!-- FOOTER ACTION (ONLY Sync Progress, NO Logout Button) -->
+            <div class="profile-actions" style="display: flex; justify-content: flex-end;">
+              <button type="button" class="btn secondary-btn" id="btn-sync-state" style="padding: 10px 20px; font-size: 12px; font-weight: 700;">
+                <i data-lucide="refresh-cw"></i> Sync Progress
+              </button>
+            </div>
+
           </div>
         </section>
         
@@ -1190,7 +1494,7 @@ console.log(greet());
     window.onStateUpdate = (state) => {
       const container = document.getElementById('avatar-selector-root');
       if (!container) return;
-      const studySyncActive = !document.getElementById('sync-room-panel')?.classList.contains('hidden');
+      const studySyncActive = (window.studySyncConnected || !document.getElementById('chat-empty-state')?.classList.contains('hidden') || !document.getElementById('chat-active-state')?.classList.contains('hidden'));
       if (!avatarRoot) avatarRoot = ReactDOM.createRoot(container);
       avatarRoot.render(
         <AvatarSelector
@@ -1263,16 +1567,28 @@ console.log(greet());
       <!-- FORM 2: REGISTER -->
       <form id="form-auth-register" class="auth-form hidden">
         <div class="form-group">
-          <label for="reg-username"><i data-lucide="user"></i> Scholar Name (Username)</label>
-          <input type="text" id="reg-username" required placeholder="KnightCoder" minlength="3">
+          <label for="reg-fullname"><i data-lucide="user"></i> Full Name</label>
+          <input type="text" id="reg-fullname" required placeholder="Jayasri Scholar">
         </div>
         <div class="form-group">
           <label for="reg-email"><i data-lucide="mail"></i> Email Address</label>
           <input type="email" id="reg-email" required placeholder="scholar@mscit.edu">
         </div>
         <div class="form-group">
+          <label for="reg-phone"><i data-lucide="phone"></i> Phone Number</label>
+          <input type="tel" id="reg-phone" required placeholder="+1 234 567 8900">
+        </div>
+        <div class="form-group">
+          <label for="reg-username"><i data-lucide="user-check"></i> Username</label>
+          <input type="text" id="reg-username" required placeholder="KnightCoder" minlength="3">
+        </div>
+        <div class="form-group">
           <label for="reg-password"><i data-lucide="lock"></i> Password</label>
-          <input type="password" id="reg-password" required placeholder="At least 4 characters" minlength="4">
+          <input type="password" id="reg-password" required placeholder="At least 8 characters" minlength="8">
+        </div>
+        <div class="form-group">
+          <label for="reg-confirm-password"><i data-lucide="shield-check"></i> Confirm Password</label>
+          <input type="password" id="reg-confirm-password" required placeholder="Re-enter password" minlength="8">
         </div>
         <button type="submit" class="btn primary-btn auth-submit-btn" id="btn-submit-register">
           <span>Join the Quest 🚀</span>
@@ -1321,29 +1637,19 @@ console.log(greet());
         </div>
       </div>
 
-      <!-- LOGGED IN USER PROFILE VIEW (When open while logged in) -->
-      <div id="auth-profile-container" class="auth-form hidden">
-        <div class="user-profile-banner">
-          <div class="user-profile-avatar" id="profile-avatar-sprite"></div>
-          <div class="user-profile-info">
-            <h3 id="profile-username">Scholar</h3>
-            <p id="profile-email" class="text-sub">scholar@mscit.edu</p>
-            <div class="profile-badges">
-              <span class="badge" id="profile-level-badge">LV 1</span>
-              <span class="badge coin-badge" id="profile-coins-badge">🪙 150</span>
-            </div>
-          </div>
-        </div>
-        <div class="profile-actions">
-          <button type="button" class="btn secondary-btn" id="btn-sync-state" style="width: 100%; margin-bottom: 8px;">
-            <i data-lucide="refresh-cw"></i> Sync Progress with Server
-          </button>
-          <button type="button" class="btn danger-btn" id="btn-submit-logout" style="width: 100%;">
-            <i data-lucide="log-out"></i> Logout
-          </button>
-        </div>
-      </div>
+    </div>
+  </div>
 
+  <!-- SMALL LOGOUT CONFIRMATION MODAL (TOP NAVBAR USERNAME CLICK) -->
+  <div id="logout-confirm-modal" class="modal-backdrop hidden" style="position: fixed; inset: 0; z-index: 9999; background: rgba(10,8,6,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;">
+    <div class="glass card animate-scale" style="max-width: 360px; width: 90%; padding: 24px; text-align: center; border: 1px solid rgba(245,158,11,0.3); background: rgba(20,16,11,0.95); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
+      <div style="font-size: 36px; margin-bottom: 8px;">🚪</div>
+      <h3 style="font-size: 18px; font-weight: 800; color: #f5e8d7; margin: 0 0 8px 0;">Log out of ScholarQuest?</h3>
+      <p style="font-size: 12px; color: rgba(245,232,215,0.6); margin-bottom: 20px;">Your quest progress and inventory are safely saved on the server.</p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button type="button" id="btn-cancel-logout" class="btn secondary-btn" style="flex: 1; padding: 10px; font-weight: 700;">Cancel</button>
+        <button type="button" id="btn-confirm-logout" class="btn danger-btn" style="flex: 1; padding: 10px; font-weight: 800; background: #ef4444; color: #fff;">Logout</button>
+      </div>
     </div>
   </div>
 </body>

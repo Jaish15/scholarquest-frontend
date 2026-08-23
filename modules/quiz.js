@@ -155,26 +155,77 @@ export function renderQuizList() {
   });
 }
 
-function renderLeaderboard() {
+export async function renderLeaderboard() {
   const container = document.getElementById('quiz-leaderboards');
   if (!container) return;
   container.innerHTML = '';
 
-  const mock = [
-    { name: 'MSc_Queen', score: 3250 },
-    { name: 'DSA_Destroyer', score: 2800 },
-    { name: 'CodeSorcerer', score: 2450 },
-    { name: 'Vais_Scholar', score: 1980 }
-  ];
+  let friendsList = [];
+  try {
+    if (window.api && typeof window.api.getFriends === 'function') {
+      const res = await window.api.getFriends();
+      if (res && res.ok && Array.isArray(res.data)) {
+        friendsList = res.data;
+      }
+    }
+  } catch (err) {
+    console.error('[Quiz Leaderboard] Error fetching friends:', err);
+  }
 
-  mock.forEach((user, idx) => {
+  // Current logged in user
+  const currentUser = {
+    name: state.fullName || state.name || state.username || 'You',
+    xp: state.xp || 0,
+    avatar: state.avatar || { id: 'peasant' },
+    isSelf: true
+  };
+
+  if (!friendsList || friendsList.length === 0) {
+    // Empty state when user has zero friends
+    const emptyCard = document.createElement('div');
+    emptyCard.className = 'leader-empty-state';
+    emptyCard.style.cssText = 'padding: 20px 12px; text-align: center; color: var(--text-muted); font-size: 12px;';
+    emptyCard.innerHTML = `
+      <div style="font-size: 28px; margin-bottom: 6px;">⚔️</div>
+      <p style="margin: 0 0 10px; color: #f5e8d7; font-weight: 700; line-height: 1.4; font-size: 11px;">
+        Connect with friends to see the Hall of Fame — visit ScholarCircle to add scholars!
+      </p>
+      <button type="button" class="btn primary-btn btn-sm" id="btn-goto-scholarcircle" style="padding: 6px 12px; font-size: 11px; font-weight: 800;">
+        Visit ScholarCircle 👥
+      </button>
+    `;
+    container.appendChild(emptyCard);
+
+    document.getElementById('btn-goto-scholarcircle')?.addEventListener('click', () => {
+      if (typeof window.navigateTo === 'function') {
+        window.navigateTo('studysync');
+      }
+    });
+    return;
+  }
+
+  // Combine currentUser + friendsList into ranked leaderboard sorted by XP
+  const leaderboardData = [
+    currentUser,
+    ...friendsList.map(f => ({
+      name: f.username || f.fullName || 'Scholar',
+      xp: f.xp || 0,
+      avatar: f.avatar || { id: 'peasant' },
+      isSelf: false
+    }))
+  ].sort((a, b) => b.xp - a.xp);
+
+  leaderboardData.forEach((user, idx) => {
     const item = document.createElement('div');
-    item.className = 'leader-item';
+    item.className = `leader-item ${user.isSelf ? 'self-leader' : ''}`;
+    item.style.cssText = `display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; background: ${user.isSelf ? 'rgba(245,158,11,0.15)' : 'rgba(15,23,42,0.4)'}; border: 1px solid ${user.isSelf ? 'rgba(245,158,11,0.4)' : 'rgba(255,255,255,0.05)'};`;
+
     item.innerHTML = `
-      <span class="leader-rank rank-${idx + 1}">${idx + 1}</span>
-      <div class="leader-avatar">🧙</div>
-      <span class="leader-name">${user.name}</span>
-      <span class="leader-score">${user.score} pts</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="leader-rank rank-${idx + 1}" style="font-weight: 800; width: 18px; text-align: center; color: ${idx === 0 ? '#f59e0b' : (idx === 1 ? '#94a3b8' : (idx === 2 ? '#b45309' : '#64748b'))};">#${idx + 1}</span>
+        <span class="leader-name" style="font-weight: 700; font-size: 12px; color: ${user.isSelf ? '#f59e0b' : '#f3f4f6'};">${user.name} ${user.isSelf ? '(You)' : ''}</span>
+      </div>
+      <span class="leader-score" style="font-weight: 800; font-size: 12px; color: #3b82f6;">${user.xp} XP</span>
     `;
     container.appendChild(item);
   });
@@ -443,6 +494,70 @@ function finishQuiz() {
   state.stats.quizzesCompleted = (state.stats.quizzesCompleted || 0) + 1;
   saveState();
   updateUI();
+  renderQuizResultsFriendComparison();
+}
+
+async function renderQuizResultsFriendComparison() {
+  const compareBox = document.getElementById('results-friends-compare');
+  if (!compareBox) return;
+
+  let friendsList = [];
+  try {
+    if (window.api && typeof window.api.getFriends === 'function') {
+      const res = await window.api.getFriends();
+      if (res && res.ok && Array.isArray(res.data)) {
+        friendsList = res.data;
+      }
+    } else if (window.api && typeof window.api.getFriendsList === 'function') {
+      const res = await window.api.getFriendsList();
+      if (res && res.ok && res.data && Array.isArray(res.data.friends)) {
+        friendsList = res.data.friends;
+      }
+    }
+  } catch (err) {
+    console.warn('[Quiz Results] Error fetching friends for comparison:', err.message);
+  }
+
+  if (!friendsList || friendsList.length === 0) {
+    compareBox.classList.add('hidden');
+    return;
+  }
+
+  const currentUser = {
+    name: state.fullName || state.username || 'You',
+    xp: state.xp || 0,
+    isSelf: true
+  };
+
+  const rankedList = [
+    currentUser,
+    ...friendsList.map(f => ({
+      name: f.username || f.fullName || 'Scholar',
+      xp: f.xp || 0,
+      isSelf: false
+    }))
+  ].sort((a, b) => b.xp - a.xp);
+
+  const myRank = rankedList.findIndex(item => item.isSelf) + 1;
+  const topRanked = rankedList.slice(0, 3);
+
+  let listHtml = topRanked.map((item, idx) => `
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; font-size: 11px; color: ${item.isSelf ? '#f59e0b' : '#94a3b8'}; font-weight: ${item.isSelf ? '800' : '600'};">
+      <span>#${idx + 1} ${item.name} ${item.isSelf ? '(You)' : ''}</span>
+      <span style="color: #3b82f6;">${item.xp} XP</span>
+    </div>
+  `).join('');
+
+  compareBox.innerHTML = `
+    <div style="font-size: 11px; font-weight: 800; color: #f5e8d7; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+      <span>👥 How You Compare (Scholar Circle)</span>
+      <span style="color: #f59e0b;">Rank #${myRank} of ${rankedList.length}</span>
+    </div>
+    <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 4px 6px;">
+      ${listHtml}
+    </div>
+  `;
+  compareBox.classList.remove('hidden');
 }
 
 function closeQuizResults() {

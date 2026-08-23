@@ -8,24 +8,31 @@ import { initFocus } from './modules/focus.js';
 import { initHabits } from './modules/habits.js';
 import { initStudySync } from './modules/studysync.js';
 import { initCodeScroll } from './modules/codescroll.js';
-import { initShop, updateShopAndInventoryUI } from './modules/shop.js';
+import { initShop, updateShopAndInventoryUI, updatePodiumDisplay } from './modules/shop.js';
 import api, { auth } from './api.js';
 
 
-// Default State Configuration
+// Default State Configuration (Clean, Zeroed for New Users)
 const DEFAULT_STATE = {
   level: 1,
   xp: 0,
   coins: 150,
   hp: 100,
   maxHp: 100,
+  loginStreak: 0,
+  loginDates: [],
+  quizStats: {
+    quizzesCompleted: 0,
+    missedByDomain: {}
+  },
   avatar: {
+    id: 'peasant',
     skin: '#fbcfe8',
     eyes: 'happy',
     clothes: '#8b5cf6',
     accessory: 'none'
   },
-  inventory: ['basic_book'], // ids of items purchased
+  inventory: ['basic_book'],
   equipped: {
     head: 'none',
     hand: 'none',
@@ -39,24 +46,50 @@ const DEFAULT_STATE = {
   },
   activeTheme: 'gold',
   habits: [
-    { id: '1', name: 'Solve 1 DSA Problem', difficulty: 'medium', streak: 2, lastCompleted: '' },
-    { id: '2', name: 'Attend Lecture / Study 1 hour', difficulty: 'easy', streak: 1, lastCompleted: '' },
+    { id: '1', name: 'Solve 1 DSA Problem', difficulty: 'medium', streak: 0, lastCompleted: '' },
+    { id: '2', name: 'Attend Lecture / Study 1 hour', difficulty: 'easy', streak: 0, lastCompleted: '' },
     { id: '3', name: 'Write code in Python / JS', difficulty: 'hard', streak: 0, lastCompleted: '' }
   ]
 };
 
 // Global State
-export let state = { ...DEFAULT_STATE };
+export let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 
-// Initialize Application
-document.addEventListener('DOMContentLoaded', async () => {
+// User Storage Key Helper (Isolated per user ID)
+function getUserStorageKey(userId) {
+  const uid = userId || auth.getUserId();
+  return uid ? `scholarquest_state_${uid}` : 'scholarquest_state_guest';
+}
+
+// Migration Helper: Migrates legacy shared 'scholarquest_state' key to user-specific key
+function getSavedLocalState(userId) {
+  const userKey = getUserStorageKey(userId);
+  let saved = localStorage.getItem(userKey);
+  if (saved) {
+    try { return JSON.parse(saved); } catch (e) {}
+  }
+
+  // Check legacy shared key for existing account migration
+  const legacySaved = localStorage.getItem('scholarquest_state');
+  if (legacySaved) {
+    try {
+      const legacyData = JSON.parse(legacySaved);
+      if (!userId || legacyData.id === userId || legacyData.username === 'Jayasri' || legacyData.username === state.username) {
+        console.log(`[STATE MIGRATION] Migrated legacy state to ${userKey}`);
+        localStorage.setItem(userKey, legacySaved);
+        return legacyData;
+      }
+    } catch (e) {}
+  }
+  return null;
+}
+
+export async function hydrateFullApp() {
+  console.log('[App Engine] Running full data hydration sequence...');
   await loadState();
   initLoginStreak();
   window.saveState = saveState;
   window.updateUI = updateUI;
-  initNavigation();
-  initCore();
-  initAuth();
 
   // Initialize Subsystems
   initAvatar();
@@ -67,7 +100,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   initCodeScroll();
   initShop();
 
-  // Run Lucide Icons replacement
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('view') === 'codescroll') {
+    navigateTo('codescroll');
+  }
+
   if (window.lucide) {
     window.lucide.createIcons();
   }
@@ -76,44 +113,73 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateUI();
   generateDailyQuests();
   fetchDashboardLeaderboard();
+  if (typeof window.renderProfileModule === 'function') {
+    window.renderProfileModule();
+  }
+}
+
+window.hydrateFullApp = hydrateFullApp;
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', async () => {
+  window.saveState = saveState;
+  window.updateUI = updateUI;
+  initNavigation();
+  initCore();
+  initAuth();
+
+  await hydrateFullApp();
 });
 
-// Load state (from backend API if logged in, with localStorage fallback)
+// Load state (from backend API if logged in, with isolated per-user localStorage fallback)
 async function loadState() {
+  const currentUserId = auth.getUserId();
+
+  // Reset in-memory state to clean default first to prevent memory leak from previous session
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+
   let loadedState = null;
   if (auth.isLoggedIn()) {
     loadedState = await api.loadState();
   }
 
   if (!loadedState) {
-    const saved = localStorage.getItem('scholarquest_state');
-    if (saved) {
-      try {
-        loadedState = JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse save state, loading default.', e);
-      }
-    }
+    loadedState = getSavedLocalState(currentUserId);
   }
 
   if (loadedState) {
     state = {
       ...DEFAULT_STATE,
       ...loadedState,
-      stats: { ...DEFAULT_STATE.stats, ...loadedState.stats },
-      avatar: { ...DEFAULT_STATE.avatar, ...loadedState.avatar },
-      equipped: { ...DEFAULT_STATE.equipped, ...loadedState.equipped },
+      quizStats: {
+        quizzesCompleted: 0,
+        missedByDomain: {},
+        ...(loadedState.quizStats || {})
+      },
+      stats: { ...DEFAULT_STATE.stats, ...(loadedState.stats || {}) },
+      avatar: { ...DEFAULT_STATE.avatar, ...(loadedState.avatar || {}) },
+      equipped: { ...DEFAULT_STATE.equipped, ...(loadedState.equipped || {}) },
       inventory: loadedState.inventory || DEFAULT_STATE.inventory,
-      habits: loadedState.habits || DEFAULT_STATE.habits
+      habits: (loadedState.habits && loadedState.habits.length > 0) ? loadedState.habits : DEFAULT_STATE.habits,
+      loginDates: Array.isArray(loadedState.loginDates) ? loadedState.loginDates : [],
+      loginStreak: typeof loadedState.loginStreak === 'number' ? loadedState.loginStreak : 0
     };
-  } else {
-    state = { ...DEFAULT_STATE };
+    if (loadedState.id) {
+      auth.setUserId(loadedState.id);
+    }
   }
+
+  window.state = state;
 }
 
-// Save state (saves locally and syncs to backend if logged in)
+// Save state (saves locally to per-user key and syncs to backend if logged in)
 export function saveState() {
-  localStorage.setItem('scholarquest_state', JSON.stringify(state));
+  if (window.state && typeof window.state === 'object') {
+    window.state = { ...window.state, ...state };
+    state = window.state;
+  }
+  const userKey = getUserStorageKey();
+  localStorage.setItem(userKey, JSON.stringify(state));
   if (auth.isLoggedIn()) {
     api.saveState(state);
   }
@@ -123,11 +189,13 @@ export function saveState() {
 // Navigation Logic (Tab switching)
 function initNavigation() {
   const navItems = document.querySelectorAll('.nav-item');
-  const views = document.querySelectorAll('.content-view');
 
   function navigateTo(target) {
+    const navs = document.querySelectorAll('.nav-item');
+    const views = document.querySelectorAll('.content-view');
+
     // Update sidebar nav active state
-    navItems.forEach(nav => {
+    navs.forEach(nav => {
       if (nav.getAttribute('data-target') === target) {
         nav.classList.add('active');
       } else {
@@ -145,12 +213,29 @@ function initNavigation() {
     });
 
     // Specific tab update triggers
-    if (target === 'shop') {
+    if (target === 'dashboard') {
+      updateUI();
+      fetchDashboardLeaderboard();
+    } else if (target === 'shop') {
       updateShopAndInventoryUI();
     } else if (target === 'reportcard') {
       renderReportCardPage();
+    } else if (target === 'profile') {
+      if (typeof window.renderProfileModule === 'function') window.renderProfileModule();
+    } else if (target === 'codescroll') {
+      initCodeScroll();
+    } else if (target === 'studysync') {
+      initStudySync();
+    } else if (target === 'habitdojo') {
+      initHabits();
+    } else if (target === 'quizforge') {
+      initQuizzes();
+    } else if (target === 'focusarena') {
+      initFocus();
     }
   }
+
+  window.navigateTo = navigateTo;
 
   navItems.forEach(item => {
     item.addEventListener('click', () => {
@@ -177,33 +262,43 @@ function initNavigation() {
   });
 }
 
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 // Fetch Live Leaderboard for Dashboard Preview Card
 async function fetchDashboardLeaderboard() {
   const container = document.getElementById('dashboard-leaderboard');
   if (!container) return;
 
-  const res = await api.getLeaderboard();
-  if (res.ok && res.data && res.data.leaderboard) {
-    const list = res.data.leaderboard;
-    if (list.length === 0) {
-      container.innerHTML = `<div class="leaderboard-loading text-sub">No scholars on leaderboard yet. Be the first!</div>`;
-      return;
-    }
+  try {
+    const res = await api.getLeaderboard();
+    if (res && res.ok && res.data && res.data.leaderboard) {
+      const list = res.data.leaderboard;
+      if (list.length === 0) {
+        container.innerHTML = `<div class="leaderboard-loading text-sub">No scholars on leaderboard yet. Be the first!</div>`;
+        return;
+      }
 
-    container.innerHTML = list.slice(0, 5).map((item, idx) => {
-      const medalClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : 'normal';
-      const medalIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
-      return `
-        <div class="lb-rank-item">
-          <div class="lb-rank-left">
-            <div class="lb-medal ${medalClass}">${medalIcon}</div>
-            <div class="lb-username">${item.username || 'Scholar'}</div>
+      container.innerHTML = list.slice(0, 5).map((item, idx) => {
+        const medalClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : 'normal';
+        const medalIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+        return `
+          <div class="lb-rank-item">
+            <div class="lb-rank-left">
+              <div class="lb-medal ${medalClass}">${medalIcon}</div>
+              <div class="lb-username">${escapeHTML(item.username || 'Scholar')}</div>
+            </div>
+            <div class="lb-badge-lvl">LV ${item.level || 1} • ${item.xp || 0} XP</div>
           </div>
-          <div class="lb-badge-lvl">LV ${item.level || 1} • ${item.xp || 0} XP</div>
-        </div>
-      `;
-    }).join('');
-  } else {
+        `;
+      }).join('');
+    } else {
+      container.innerHTML = `<div class="leaderboard-loading text-sub">Connect server to view global rank</div>`;
+    }
+  } catch (err) {
+    console.warn('[Leaderboard Fetch Error]:', err.message);
     container.innerHTML = `<div class="leaderboard-loading text-sub">Connect server to view global rank</div>`;
   }
 }
@@ -246,9 +341,11 @@ export function addCoins(amount) {
 
 // Subtract HP and handle Fainting
 export function takeDamage(amount) {
-  state.hp -= amount;
-  if (state.hp <= 0) {
-    state.hp = 0;
+  const current = (window.state && typeof window.state === 'object') ? window.state : state;
+  current.hp = Math.max(0, current.hp - amount);
+  state.hp = current.hp;
+  window.state = current;
+  if (current.hp <= 0) {
     triggerFaintEffects();
   }
   saveState();
@@ -306,14 +403,78 @@ function triggerLevelUpEffects() {
   }, 5000);
 }
 
-// User Fainting System
+// User Fainting System (Blood Penalty)
 function triggerFaintEffects() {
-  alert('💀 Oh no! You took lethal damage and fainted. You lost 50% of your coins, and your HP has been restored to 100.');
-  state.coins = Math.floor(state.coins / 2);
-  state.hp = 100;
+  const current = (window.state && typeof window.state === 'object') ? window.state : state;
+  const initialCoins = current.coins || 0;
+  const coinsLost = Math.ceil(initialCoins / 2);
+  const oldXP = current.xp || 0;
+
+  current.coins = Math.max(0, initialCoins - coinsLost);
+  current.xp = 0; // Reset level progress within current level
+  current.hp = current.maxHp || 100; // Restore HP to max
+
+  state.coins = current.coins;
+  state.xp = current.xp;
+  state.hp = current.hp;
+  window.state = current;
+
   saveState();
   updateUI();
+
+  showBloodPenaltyFlashNotification(coinsLost, oldXP);
 }
+
+// Urgent Blood Penalty Flash Notification
+export function showBloodPenaltyFlashNotification(coinsLost, oldXP) {
+  let modal = document.getElementById('blood-penalty-flash-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'blood-penalty-flash-modal';
+    modal.className = 'welcome-modal-backdrop';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div class="welcome-modal-card animate-scale" style="background: linear-gradient(145deg, rgba(40, 10, 15, 0.98), rgba(20, 5, 8, 0.98)); border: 2px solid #ef4444; box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);">
+      <button type="button" class="welcome-modal-close" id="btn-close-blood-flash-x" style="color: #f87171;">&times;</button>
+      <div style="font-size: 44px; margin-bottom: 8px;">💀</div>
+      <div style="font-size: 22px; font-weight: 900; color: #ef4444; margin-bottom: 10px; text-shadow: 0 0 12px rgba(239,68,68,0.6); letter-spacing: 0.5px;">
+        BLOOD PENALTY TRIGGERED!
+      </div>
+      <p style="font-size: 14px; color: #fca5a5; margin-bottom: 16px; line-height: 1.5;">
+        Your character fainted from missed habits!
+      </p>
+      <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 14px; margin-bottom: 20px; text-align: left;">
+        <div style="font-size: 13px; color: #f87171; font-weight: 800; margin-bottom: 6px;">💥 Fainting Penalties:</div>
+        <div style="font-size: 12px; color: #fecdd3; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span>• Level Progress Reset:</span> <strong style="color:#ef4444;">${oldXP} XP ➔ 0 XP</strong>
+        </div>
+        <div style="font-size: 12px; color: #fecdd3; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span>• Coin Loss (-50%):</span> <strong style="color:#ef4444;">-${coinsLost} Coins</strong>
+        </div>
+        <div style="font-size: 12px; color: #34d399; display: flex; align-items: center; gap: 6px;">
+          <span>• HP Status Restored:</span> <strong>100/100 HP</strong>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center;">
+        <button type="button" class="btn primary-btn" id="btn-close-blood-flash" style="background: linear-gradient(135deg, #ef4444, #dc2626); border-color: #b91c1c; padding: 10px 24px; font-weight: 900; color: #fff;">
+          Return to Dojo ⚔️
+        </button>
+      </div>
+    </div>
+  `;
+
+  modal.classList.remove('hidden');
+
+  const closeModal = () => {
+    modal.classList.add('hidden');
+  };
+
+  document.getElementById('btn-close-blood-flash-x')?.addEventListener('click', closeModal);
+  document.getElementById('btn-close-blood-flash')?.addEventListener('click', closeModal);
+}
+window.showBloodPenaltyFlashNotification = showBloodPenaltyFlashNotification;
 
 // Get RPG Titles based on User Level
 export function getRankTitle(lvl) {
@@ -442,8 +603,9 @@ export function updateUI() {
   renderCharacterClassesGrid();
   renderLoginCalendar();
   renderWeakAreaCard();
+  generateDailyQuests();
+  fetchDashboardLeaderboard();
   renderReportCardPage();
-  setupProfileModal();
 
   // Expose state and notify React
   window.state = state;
@@ -546,19 +708,9 @@ function syncAvatarDisplay() {
   });
 
   // ── 4. SHOP VIEW FLOATING PODIUM STAGE ─────────────────────────
-  const shopPodiumImg   = document.getElementById('shop-podium-img');
-  const shopPodiumSprite = document.getElementById('shop-podium-sprite');
-  const shopPodiumName   = document.getElementById('shop-podium-name');
-  const shopPodiumClass  = document.getElementById('shop-podium-class');
-  const slotOutfitName   = document.getElementById('slot-outfit-name');
-  if (shopPodiumImg) {
-    shopPodiumImg.src = hero.sprite;
-  } else if (shopPodiumSprite) {
-    shopPodiumSprite.style.backgroundImage = `url('${hero.sprite}')`;
+  if (typeof updatePodiumDisplay === 'function') {
+    updatePodiumDisplay();
   }
-  if (shopPodiumName)  shopPodiumName.textContent  = hero.name;
-  if (shopPodiumClass) shopPodiumClass.textContent = `Active ${hero.name}`;
-  if (slotOutfitName)  slotOutfitName.textContent  = state.equipped && state.equipped.outfit ? state.equipped.outfit : 'Default';
 }
 
 // Export so it can be called externally
@@ -568,16 +720,10 @@ window.syncAvatarDisplay = syncAvatarDisplay;
    AUTHENTICATION MODULE CONTROLLER
    ============================================================ */
 function initAuth() {
+  window.initAuth = initAuth;
   // Main screen containers
   const loginScreen = document.getElementById('login-screen');
   const mainAppContainer = document.getElementById('main-app-container');
-
-  // Modal elements
-  const modal = document.getElementById('auth-modal');
-  const btnOpenAuth = document.getElementById('btn-open-auth');
-  const btnCloseAuth = document.getElementById('btn-close-auth');
-  const authBtnLabel = document.getElementById('auth-btn-label');
-  const alertModalEl = document.getElementById('auth-alert');
 
   // Dedicated Full-Screen Login Page elements
   const pgAlertEl = document.getElementById('pg-auth-alert');
@@ -589,13 +735,30 @@ function initAuth() {
   const pgFormRegister = document.getElementById('pg-form-register');
   const pgContainerForgot = document.getElementById('pg-container-forgot');
   const pgFormForgot1 = document.getElementById('pg-form-forgot-step1');
-  const pgFormForgot2 = document.getElementById('pg-form-forgot-step2');
-  const pgDemoCodeBox = document.getElementById('pg-demo-code-box');
-  const pgDemoCodeVal = document.getElementById('pg-demo-code-val');
+
+  // URL Token & Google SSO Parser
+  let resetToken = null;
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('token')) {
+    resetToken = urlParams.get('token');
+  } else if (window.location.hash.includes('token=')) {
+    const hashParts = window.location.hash.split('token=');
+    resetToken = hashParts[1]?.split('&')[0];
+  }
+
+  const ssoParam = urlParams.get('sso');
+  const errorParam = urlParams.get('error');
 
   const pgGotoForgot = document.getElementById('pg-goto-forgot');
   const pgGotoLogin = document.getElementById('pg-goto-login');
   const btnEnterGuest = document.getElementById('btn-enter-guest');
+
+  // Modal elements
+  const modal = document.getElementById('auth-modal');
+  const btnOpenAuth = document.getElementById('btn-open-auth');
+  const btnCloseAuth = document.getElementById('btn-close-auth');
+  const authBtnLabel = document.getElementById('auth-btn-label');
+  const alertModalEl = document.getElementById('auth-alert');
 
   // Modal elements
   const tabLogin = document.getElementById('tab-auth-login');
@@ -628,20 +791,48 @@ function initAuth() {
   }
 
   function showLoginScreen() {
-    if (loginScreen) {
-      loginScreen.style.setProperty('display', 'flex', 'important');
-      loginScreen.classList.remove('hidden');
-    }
     if (mainAppContainer) {
       mainAppContainer.style.setProperty('display', 'none', 'important');
       mainAppContainer.classList.add('hidden');
+    }
+    if (loginScreen) {
+      loginScreen.style.setProperty('display', 'flex', 'important');
+      loginScreen.classList.remove('hidden');
     }
     if (modal) modal.classList.add('hidden');
     if (window.lucide) window.lucide.createIcons();
   }
 
-  // 🚀 PAGE LOAD AUTHORIZATION CHECK
-  if (auth.isLoggedIn()) {
+  // 🚀 PAGE LOAD AUTHORIZATION & SOCIAL OAUTH ROUTER
+  if (errorParam) {
+    showLoginScreen();
+    showPgAlert('OAuth sign-in was cancelled or failed. Please try again.', 'error');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if ((ssoParam === 'google' || ssoParam === 'github') && resetToken) {
+    console.log(`[Auth Engine] ${ssoParam.toUpperCase()} OAuth callback detected. Storing session token...`);
+    auth.setToken(resetToken);
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    api.getCurrentUser().then(res => {
+      if (res.ok && res.data.user) {
+        auth.setUserId(res.data.user.id);
+        state.username = res.data.user.username;
+        localStorage.setItem('sq_username', res.data.user.username);
+        state = { ...state, ...res.data.user };
+        updateUI();
+        updateAuthHeaderBtn();
+        showAppScreen();
+      } else {
+        showAppScreen();
+      }
+    }).catch(() => {
+      showAppScreen();
+    });
+  } else if (resetToken || window.location.hash === '#reset-password') {
+    console.log('[Auth Engine] Reset password flow detected on page load. Opening Reset Form.');
+    showLoginScreen();
+    switchPageTab('forgot');
+  } else if (auth.isLoggedIn()) {
     showAppScreen();
   } else {
     showLoginScreen();
@@ -674,6 +865,25 @@ function initAuth() {
     alertModalEl.innerText = '';
   }
 
+  function showProfileAlert(msg, type = 'error') {
+    const el = document.getElementById('profile-alert');
+    if (!el) return;
+    el.className = `auth-alert ${type}`;
+    el.textContent = msg;
+    el.innerText = msg;
+    el.classList.remove('hidden');
+    if (typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function hideProfileAlert() {
+    const el = document.getElementById('profile-alert');
+    if (!el) return;
+    el.classList.add('hidden');
+    el.innerText = '';
+  }
+
   // Update Top Header Pill
   function updateAuthHeaderBtn() {
     if (!btnOpenAuth || !authBtnLabel) return;
@@ -687,24 +897,29 @@ function initAuth() {
   // ── FULL-SCREEN PAGE TAB SWITCHER ─────────────────────────────────
   function switchPageTab(targetTab) {
     hidePgAlert();
-    [pgTabLogin, pgTabRegister, pgTabForgot].forEach(tab => tab && tab.classList.remove('active'));
+    [pgTabLogin, pgTabRegister, pgTabForgot].forEach(tab => tab?.classList.remove('active'));
 
-    pgFormLogin.classList.add('hidden');
-    pgFormRegister.classList.add('hidden');
-    pgContainerForgot.classList.add('hidden');
+    pgFormLogin?.classList.add('hidden');
+    pgFormRegister?.classList.add('hidden');
+    pgContainerForgot?.classList.add('hidden');
 
     if (targetTab === 'login') {
-      pgTabLogin.classList.add('active');
-      pgFormLogin.classList.remove('hidden');
+      pgTabLogin?.classList.add('active');
+      pgFormLogin?.classList.remove('hidden');
     } else if (targetTab === 'register') {
-      pgTabRegister.classList.add('active');
-      pgFormRegister.classList.remove('hidden');
+      pgTabRegister?.classList.add('active');
+      pgFormRegister?.classList.remove('hidden');
     } else if (targetTab === 'forgot') {
-      pgTabForgot.classList.add('active');
-      pgContainerForgot.classList.remove('hidden');
-      pgFormForgot1.classList.remove('hidden');
-      pgFormForgot2.classList.add('hidden');
-      pgDemoCodeBox.classList.add('hidden');
+      pgTabForgot?.classList.add('active');
+      pgContainerForgot?.classList.remove('hidden');
+      const pgFormResetPassword = document.getElementById('pg-form-reset-password');
+      if (resetToken && pgFormResetPassword) {
+        pgFormForgot1?.classList.add('hidden');
+        pgFormResetPassword.classList.remove('hidden');
+      } else {
+        pgFormForgot1?.classList.remove('hidden');
+        if (pgFormResetPassword) pgFormResetPassword.classList.add('hidden');
+      }
     }
   }
 
@@ -726,10 +941,28 @@ function initAuth() {
     });
   }
 
-  // ── SOCIAL SSO OAUTH HANDLER (Google, GitHub, LeetCode) ─────────
+  // ── SOCIAL SSO OAUTH HANDLER (Google, GitHub) ─────────
   document.querySelectorAll('[data-sso]').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
       const provider = btn.getAttribute('data-sso');
+
+      if (provider === 'google') {
+        showPgAlert('Redirecting to Google OAuth... ⚔️', 'success');
+        setTimeout(() => {
+          window.location.href = 'http://localhost:3000/api/auth/google';
+        }, 300);
+        return;
+      }
+
+      if (provider === 'github') {
+        showPgAlert('Redirecting to GitHub OAuth... 🐙', 'success');
+        setTimeout(() => {
+          window.location.href = 'http://localhost:3000/api/auth/github';
+        }, 300);
+        return;
+      }
+
       showPgAlert(`Authenticating via ${provider}... ⚔️`, 'success');
 
       const res = await api.socialLogin(provider);
@@ -777,7 +1010,7 @@ function initAuth() {
           localStorage.setItem('sq_username', res.data.user.username);
           state = { ...state, ...res.data.user };
         }
-        updateUI();
+        await hydrateFullApp();
         updateAuthHeaderBtn();
 
         setTimeout(() => {
@@ -791,20 +1024,34 @@ function initAuth() {
   }
 
   // ── PAGE FORM 2: REGISTER ─────────────────────────────────────────
+  // ── PAGE FORM 2: REGISTER ─────────────────────────────────────────
   if (pgFormRegister) {
     pgFormRegister.addEventListener('submit', async (e) => {
       e.preventDefault();
       hidePgAlert();
 
-      const username = document.getElementById('pg-reg-username').value.trim();
+      const fullName = document.getElementById('pg-reg-fullname').value.trim();
       const email = document.getElementById('pg-reg-email').value.trim();
+      const phone = document.getElementById('pg-reg-phone').value.trim();
+      const username = document.getElementById('pg-reg-username').value.trim();
       const password = document.getElementById('pg-reg-password').value;
+      const confirmPassword = document.getElementById('pg-reg-confirm-password').value;
       const btnSubmit = document.getElementById('pg-btn-register');
+
+      if (password !== confirmPassword) {
+        showPgAlert('Passwords do not match. Please verify your password confirmation.');
+        return;
+      }
+
+      if (password.length < 8) {
+        showPgAlert('Password must be at least 8 characters long.');
+        return;
+      }
 
       btnSubmit.disabled = true;
       btnSubmit.innerText = 'Creating Account... 🚀';
 
-      const res = await api.register(username, email, password);
+      const res = await api.register(fullName, email, phone, username, password);
       btnSubmit.disabled = false;
       btnSubmit.innerHTML = '<span>Create Account & Join Quest 🚀</span>';
 
@@ -813,10 +1060,13 @@ function initAuth() {
         if (res.data.user) {
           state.username = res.data.user.username;
           state.email = res.data.user.email;
+          state.fullName = res.data.user.fullName;
+          state.phone = res.data.user.phone;
+          state.createdAt = res.data.user.createdAt;
           localStorage.setItem('sq_username', res.data.user.username);
           state = { ...state, ...res.data.user };
         }
-        updateUI();
+        await hydrateFullApp();
         updateAuthHeaderBtn();
 
         setTimeout(() => {
@@ -829,68 +1079,163 @@ function initAuth() {
     });
   }
 
-  // ── PAGE FORM 3: FORGOT PASSWORD STEP 1 ───────────────────────────
+  // ── PAGE FORM 3: FORGOT PASSWORD ───────────────────────────
   if (pgFormForgot1) {
     pgFormForgot1.addEventListener('submit', async (e) => {
       e.preventDefault();
       hidePgAlert();
 
-      const email = document.getElementById('pg-forgot-email').value.trim();
+      const emailInput = document.getElementById('pg-forgot-email');
+      const email = (emailInput ? emailInput.value : '').trim();
       const btnSubmit = document.getElementById('pg-btn-forgot1');
 
-      btnSubmit.disabled = true;
-      btnSubmit.innerText = 'Sending Code... ✉️';
+      if (!email) {
+        showPgAlert('Please enter your email address.');
+        return;
+      }
+
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span>Sending Reset Link... ✉️</span>';
+      }
 
       const res = await api.forgotPassword(email);
-      btnSubmit.disabled = false;
-      btnSubmit.innerHTML = '<span>Send Recovery Code ✉️</span>';
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<span>Send Reset Link ✉️</span>';
+      }
 
       if (res.ok) {
-        showPgAlert('Recovery code dispatched! See demo code below.', 'success');
-        if (res.data.resetCode) {
-          pgDemoCodeVal.innerText = res.data.resetCode;
-          pgDemoCodeBox.classList.remove('hidden');
-          document.getElementById('pg-reset-code').value = res.data.resetCode;
-        }
-        pgFormForgot1.classList.add('hidden');
-        pgFormForgot2.classList.remove('hidden');
+        showPgAlert(res.data.message || 'If that email is registered, a reset link has been sent. Please check your inbox.', 'success');
       } else {
-        showPgAlert(res.error || 'Failed to dispatch recovery code.');
+        showPgAlert(res.error || 'Failed to dispatch reset link.');
       }
     });
   }
 
-  // ── PAGE FORM 3: FORGOT PASSWORD STEP 2 ───────────────────────────
-  if (pgFormForgot2) {
-    pgFormForgot2.addEventListener('submit', async (e) => {
+  // ── PAGE FORM 4: RESET PASSWORD WITH TOKEN ───────────────────
+  const pgFormResetPassword = document.getElementById('pg-form-reset-password');
+  if (pgFormResetPassword) {
+    pgFormResetPassword.addEventListener('submit', async (e) => {
       e.preventDefault();
       hidePgAlert();
 
-      const email = document.getElementById('pg-forgot-email').value.trim();
-      const resetCode = document.getElementById('pg-reset-code').value.trim();
-      const newPassword = document.getElementById('pg-reset-new-password').value;
-      const btnSubmit = document.getElementById('pg-btn-forgot2');
+      const newPassEl = document.getElementById('pg-reset-new-password');
+      const confirmPassEl = document.getElementById('pg-reset-confirm-password');
+      const btnSubmit = document.getElementById('pg-btn-reset-submit');
 
-      btnSubmit.disabled = true;
-      btnSubmit.innerText = 'Updating Password... 🔑';
+      const newPass = newPassEl ? newPassEl.value : '';
+      const confirmPass = confirmPassEl ? confirmPassEl.value : '';
 
-      const res = await api.resetPassword(email, resetCode, newPassword);
-      btnSubmit.disabled = false;
-      btnSubmit.innerHTML = '<span>Reset Password & Update DB 🔑</span>';
+      if (!resetToken) {
+        showPgAlert('Invalid or missing password reset token. Please request a new link.');
+        return;
+      }
+
+      if (newPass.length < 8) {
+        showPgAlert('Password must be at least 8 characters long.');
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        showPgAlert('Passwords do not match. Please re-enter the same password in both fields.');
+        return;
+      }
+
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span>Resetting Password... 🔑</span>';
+      }
+
+      const res = await api.resetPassword(resetToken, newPass);
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<span>Reset Password 🔑</span>';
+      }
 
       if (res.ok) {
-        showPgAlert(res.data.message || 'Password reset successfully!', 'success');
-        document.getElementById('pg-login-email').value = email;
-
+        showPgAlert(res.data.message || '🎉 Password reset successfully! Redirecting to login...', 'success');
+        // Clean URL token
+        window.history.replaceState({}, document.title, window.location.pathname);
         setTimeout(() => {
           switchPageTab('login');
-          showPgAlert('Password updated! Please log in with your new password.', 'success');
-        }, 1200);
+        }, 1800);
       } else {
-        showPgAlert(res.error || 'Password reset failed.');
+        showPgAlert(res.error || 'Failed to reset password. Link may be invalid or expired.');
       }
     });
   }
+
+  // Helper function to render profile module data
+  function renderProfileModule() {
+    try {
+      if (window.state && typeof window.state === 'object') {
+        state = { ...state, ...window.state };
+      }
+
+      // Ensure default visible view mode (Metadata section + actions) is shown, and form modes are hidden by default
+      const profileViewMode = document.getElementById('profile-view-mode');
+      const formEditProfile = document.getElementById('profile-edit-mode');
+      const formChangePass = document.getElementById('profile-pass-mode');
+
+      if (profileViewMode) profileViewMode.classList.remove('hidden');
+      if (formEditProfile) formEditProfile.classList.add('hidden');
+      if (formChangePass) formChangePass.classList.add('hidden');
+
+      const fullName = state.fullName || state.name || state.profile?.fullName || state.username || 'Scholar';
+      const username = state.username || 'Scholar';
+      const email = state.email || 'scholar@mscit.edu';
+      const phone = state.phone || 'Not provided';
+      const avatarId = state.avatar ? (state.avatar.id || 'peasant') : 'peasant';
+      const hero = HERO_DISPLAY_DATA[avatarId] || HERO_DISPLAY_DATA['peasant'];
+
+      let formattedDate = 'Aug 19, 2026';
+      if (state.createdAt) {
+        try {
+          const d = new Date(state.createdAt);
+          formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } catch (e) {}
+      }
+
+      const elFullname = document.getElementById('profile-fullname');
+      const elUserTag = document.getElementById('profile-username-tag');
+      const elLevelBadge = document.getElementById('profile-level-badge');
+      const elXpBadge = document.getElementById('profile-xp-badge');
+      const elStreakBadge = document.getElementById('profile-streak-badge');
+      const elCoinsBadge = document.getElementById('profile-coins-badge');
+
+      const elDispFullname = document.getElementById('display-fullname');
+      const elDispUsername = document.getElementById('display-username');
+      const elDispEmail = document.getElementById('display-email');
+      const elDispPhone = document.getElementById('display-phone');
+      const elDispHeroClass = document.getElementById('display-heroclass');
+      const elDispRegDate = document.getElementById('display-regdate');
+
+      if (elFullname) { elFullname.textContent = fullName; elFullname.innerText = fullName; }
+      if (elUserTag) { elUserTag.textContent = `@${username}`; elUserTag.innerText = `@${username}`; }
+      if (elLevelBadge) { elLevelBadge.textContent = `LV ${state.level || 1}`; elLevelBadge.innerText = `LV ${state.level || 1}`; }
+      if (elXpBadge) { elXpBadge.textContent = `${state.xp || 0} XP`; elXpBadge.innerText = `${state.xp || 0} XP`; }
+      if (elStreakBadge) { elStreakBadge.textContent = `🔥 ${state.stats?.maxHabitStreak || 0} Day Streak`; elStreakBadge.innerText = `🔥 ${state.stats?.maxHabitStreak || 0} Day Streak`; }
+      if (elCoinsBadge) { elCoinsBadge.textContent = `🪙 ${state.coins || 150}`; elCoinsBadge.innerText = `🪙 ${state.coins || 150}`; }
+
+      if (elDispFullname) { elDispFullname.textContent = fullName; elDispFullname.innerText = fullName; }
+      if (elDispUsername) { elDispUsername.textContent = username; elDispUsername.innerText = username; }
+      if (elDispEmail) { elDispEmail.textContent = email; elDispEmail.innerText = email; }
+      if (elDispPhone) { elDispPhone.textContent = phone; elDispPhone.innerText = phone; }
+      if (elDispHeroClass) { elDispHeroClass.textContent = hero.name; elDispHeroClass.innerText = hero.name; }
+      if (elDispRegDate) { elDispRegDate.textContent = formattedDate; elDispRegDate.innerText = formattedDate; }
+
+      const profileSprite = document.getElementById('profile-avatar-sprite');
+      if (profileSprite && typeof makeSpriteStyle === 'function') {
+        profileSprite.style.cssText = makeSpriteStyle(hero, 52);
+      }
+    } catch (err) {
+      console.error('[renderProfileModule Error]', err);
+    }
+  }
+  window.renderProfileModule = renderProfileModule;
 
   // ── MODAL TAB SWITCHER & HANDLERS ────────────────────────────────
   function switchModalTab(targetTab) {
@@ -911,37 +1256,92 @@ function initAuth() {
     } else if (targetTab === 'forgot') {
       tabForgot.classList.add('active');
       containerForgot.classList.remove('hidden');
-      formForgot1.classList.remove('hidden');
-      formForgot2.classList.add('hidden');
-      demoCodeBox.classList.add('hidden');
+      const formAuthResetPassword = document.getElementById('form-auth-reset-password');
+      if (resetToken && formAuthResetPassword) {
+        formForgot1?.classList.add('hidden');
+        formAuthResetPassword.classList.remove('hidden');
+      } else {
+        formForgot1?.classList.remove('hidden');
+        if (formAuthResetPassword) formAuthResetPassword.classList.add('hidden');
+      }
     } else if (targetTab === 'profile') {
       containerProfile.classList.remove('hidden');
       document.querySelector('.auth-tabs').style.display = 'none';
 
-      document.getElementById('profile-username').innerText = state.username || 'Scholar';
-      document.getElementById('profile-email').innerText = state.email || 'scholar@mscit.edu';
-      document.getElementById('profile-level-badge').innerText = `LV ${state.level}`;
-      document.getElementById('profile-coins-badge').innerText = `🪙 ${state.coins}`;
+      // Reset profile sub-views
+      const viewMode = document.getElementById('profile-view-mode');
+      const editMode = document.getElementById('profile-edit-mode');
+      const passMode = document.getElementById('profile-pass-mode');
 
-      const avatarId = state.avatar ? state.avatar.id || 'peasant' : 'peasant';
-      const hero = HERO_DISPLAY_DATA[avatarId] || HERO_DISPLAY_DATA['peasant'];
-      const profileSprite = document.getElementById('profile-avatar-sprite');
-      if (profileSprite) {
-        profileSprite.style.cssText = makeSpriteStyle(hero, 48);
-      }
+      if (viewMode) viewMode.classList.remove('hidden');
+      if (editMode) editMode.classList.add('hidden');
+      if (passMode) passMode.classList.add('hidden');
+
+      renderProfileModule();
+      if (window.lucide) window.lucide.createIcons();
       return;
     }
     document.querySelector('.auth-tabs').style.display = 'flex';
   }
 
+  // FIX 2: Top Navbar Username Button Click -> Opens Small Logout Confirmation Modal ONLY
   if (btnOpenAuth) {
-    btnOpenAuth.addEventListener('click', () => {
+    btnOpenAuth.addEventListener('click', (e) => {
+      e.preventDefault();
       if (auth.isLoggedIn()) {
-        switchModalTab('profile');
+        const logoutConfirmModal = document.getElementById('logout-confirm-modal');
+        if (logoutConfirmModal) logoutConfirmModal.classList.remove('hidden');
       } else {
         switchModalTab('login');
+        if (modal) modal.classList.remove('hidden');
       }
-      modal.classList.remove('hidden');
+    });
+  }
+
+  // Small Logout Confirmation Popup Handlers
+  const btnCancelLogout = document.getElementById('btn-cancel-logout');
+  const btnConfirmLogout = document.getElementById('btn-confirm-logout');
+  const logoutConfirmModal = document.getElementById('logout-confirm-modal');
+
+  if (btnCancelLogout) {
+    btnCancelLogout.addEventListener('click', () => {
+      if (logoutConfirmModal) logoutConfirmModal.classList.add('hidden');
+    });
+  }
+
+  if (btnConfirmLogout) {
+    btnConfirmLogout.addEventListener('click', () => {
+      if (logoutConfirmModal) logoutConfirmModal.classList.add('hidden');
+      api.logout();
+      state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      window.state = state;
+      updateAuthHeaderBtn();
+      updateUI();
+      showLoginScreen();
+    });
+  }
+
+  // FIX 1: Sidebar Hero Card ("The Peasant" / Avatar + Level) Click -> Navigates to Dedicated Student Profile & Character Page
+  const sidebarWidget = document.getElementById('sidebar-avatar-widget');
+  if (sidebarWidget) {
+    sidebarWidget.style.cursor = 'pointer';
+    sidebarWidget.onclick = (e) => {
+      e.preventDefault();
+      if (auth.isLoggedIn() && typeof window.navigateTo === 'function') {
+        window.navigateTo('profile');
+      }
+    };
+  }
+
+  // Character Classes Showcase Quick-Access Button inside Profile Page
+  const btnBrowseHeroClasses = document.getElementById('btn-browse-hero-classes');
+  if (btnBrowseHeroClasses) {
+    btnBrowseHeroClasses.addEventListener('click', () => {
+      if (typeof window.navigateTo === 'function') {
+        window.navigateTo('dashboard');
+      }
+      const heroSection = document.getElementById('hero-showcase-banner');
+      if (heroSection) heroSection.scrollIntoView({ behavior: 'smooth' });
     });
   }
 
@@ -956,6 +1356,138 @@ function initAuth() {
   if (tabForgot) tabForgot.addEventListener('click', () => switchModalTab('forgot'));
   if (btnGotoForgot) btnGotoForgot.addEventListener('click', () => switchModalTab('forgot'));
   if (btnGotoLogin) btnGotoLogin.addEventListener('click', () => switchModalTab('login'));
+
+  // Profile Edit & Password Change Mode Listeners
+  const btnModeEditProfile = document.getElementById('btn-mode-edit-profile');
+  const btnCancelEditProfile = document.getElementById('btn-cancel-edit-profile');
+  const formEditProfile = document.getElementById('profile-edit-mode');
+
+  const btnModeChangePass = document.getElementById('btn-mode-change-pass');
+  const btnCancelChangePass = document.getElementById('btn-cancel-change-pass');
+  const formChangePass = document.getElementById('profile-pass-mode');
+
+  const profileViewMode = document.getElementById('profile-view-mode');
+
+  if (btnModeEditProfile) {
+    btnModeEditProfile.addEventListener('click', () => {
+      hideProfileAlert();
+      if (profileViewMode) profileViewMode.classList.add('hidden');
+      if (formChangePass) formChangePass.classList.add('hidden');
+      if (formEditProfile) {
+        document.getElementById('edit-fullname').value = state.fullName || state.name || state.username || '';
+        document.getElementById('edit-email').value = state.email || '';
+        document.getElementById('edit-phone').value = state.phone || '';
+        formEditProfile.classList.remove('hidden');
+      }
+    });
+  }
+
+  if (btnCancelEditProfile) {
+    btnCancelEditProfile.addEventListener('click', () => {
+      hideProfileAlert();
+      if (formEditProfile) formEditProfile.classList.add('hidden');
+      if (profileViewMode) profileViewMode.classList.remove('hidden');
+    });
+  }
+
+  if (formEditProfile) {
+    formEditProfile.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideProfileAlert();
+      const fullName = document.getElementById('edit-fullname').value.trim();
+      const email = document.getElementById('edit-email').value.trim();
+      const phone = document.getElementById('edit-phone').value.trim();
+
+      const btnSave = document.getElementById('btn-save-edit-profile');
+      btnSave.disabled = true;
+      btnSave.innerText = 'Saving...';
+
+      const res = await api.updateProfile(fullName, phone, email);
+      btnSave.disabled = false;
+      btnSave.innerText = 'Save Changes';
+
+      if (res.ok) {
+        showProfileAlert('Profile updated successfully!', 'success');
+        state.fullName = fullName;
+        state.email = email;
+        state.phone = phone;
+        if (res.data.user) {
+          state = { ...state, ...res.data.user };
+        }
+        formEditProfile.classList.add('hidden');
+        if (profileViewMode) profileViewMode.classList.remove('hidden');
+        renderProfileModule();
+      } else {
+        showProfileAlert(res.error || 'Failed to update profile.', 'error');
+      }
+    });
+  }
+
+  if (btnModeChangePass) {
+    btnModeChangePass.addEventListener('click', () => {
+      hideProfileAlert();
+      if (profileViewMode) profileViewMode.classList.add('hidden');
+      if (formEditProfile) formEditProfile.classList.add('hidden');
+      if (formChangePass) {
+        document.getElementById('change-curr-pass').value = '';
+        document.getElementById('change-new-pass').value = '';
+        document.getElementById('change-confirm-pass').value = '';
+        formChangePass.classList.remove('hidden');
+      }
+    });
+  }
+
+  if (btnCancelChangePass) {
+    btnCancelChangePass.addEventListener('click', () => {
+      hideProfileAlert();
+      if (formChangePass) formChangePass.classList.add('hidden');
+      if (profileViewMode) profileViewMode.classList.remove('hidden');
+    });
+  }
+
+  if (formChangePass) {
+    formChangePass.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideProfileAlert();
+      const currentPassword = document.getElementById('change-curr-pass').value;
+      const newPassword = document.getElementById('change-new-pass').value;
+      const confirmPassword = document.getElementById('change-confirm-pass').value;
+
+      if (!currentPassword) {
+        showProfileAlert('Current password is required.', 'error');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showProfileAlert('New passwords do not match. Please verify password confirmation.', 'error');
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        showProfileAlert('New password must be at least 8 characters long.', 'error');
+        return;
+      }
+
+      const btnSave = document.getElementById('btn-save-change-pass');
+      btnSave.disabled = true;
+      btnSave.innerText = 'Updating...';
+
+      const res = await api.changePassword(currentPassword, newPassword);
+      btnSave.disabled = false;
+      btnSave.innerText = 'Update Password';
+
+      if (res.ok) {
+        showProfileAlert('Password updated successfully! Keep your new credentials safe.', 'success');
+        document.getElementById('change-curr-pass').value = '';
+        document.getElementById('change-new-pass').value = '';
+        document.getElementById('change-confirm-pass').value = '';
+        formChangePass.classList.add('hidden');
+        if (profileViewMode) profileViewMode.classList.remove('hidden');
+      } else {
+        showProfileAlert(res.error || 'Current password is incorrect.', 'error');
+      }
+    });
+  }
 
   // Modal Login Form
   if (formLogin) {
@@ -1002,15 +1534,28 @@ function initAuth() {
       e.preventDefault();
       hideModalAlert();
 
-      const username = document.getElementById('reg-username').value.trim();
+      const fullName = document.getElementById('reg-fullname').value.trim();
       const email = document.getElementById('reg-email').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const username = document.getElementById('reg-username').value.trim();
       const password = document.getElementById('reg-password').value;
+      const confirmPassword = document.getElementById('reg-confirm-password').value;
       const btnSubmit = document.getElementById('btn-submit-register');
+
+      if (password !== confirmPassword) {
+        showModalAlert('Passwords do not match. Please verify your password confirmation.');
+        return;
+      }
+
+      if (password.length < 8) {
+        showModalAlert('Password must be at least 8 characters long.');
+        return;
+      }
 
       btnSubmit.disabled = true;
       btnSubmit.innerText = 'Creating Account... 🚀';
 
-      const res = await api.register(username, email, password);
+      const res = await api.register(fullName, email, phone, username, password);
       btnSubmit.disabled = false;
       btnSubmit.innerHTML = '<span>Join the Quest 🚀</span>';
 
@@ -1019,6 +1564,9 @@ function initAuth() {
         if (res.data.user) {
           state.username = res.data.user.username;
           state.email = res.data.user.email;
+          state.fullName = res.data.user.fullName;
+          state.phone = res.data.user.phone;
+          state.createdAt = res.data.user.createdAt;
           localStorage.setItem('sq_username', res.data.user.username);
           state = { ...state, ...res.data.user };
         }
@@ -1036,65 +1584,90 @@ function initAuth() {
     });
   }
 
-  // Modal Forgot Password Step 1
+  // Modal Forgot Password Request
   if (formForgot1) {
     formForgot1.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideModalAlert();
 
-      const email = document.getElementById('forgot-email').value.trim();
+      const emailInput = document.getElementById('forgot-email');
+      const email = (emailInput ? emailInput.value : '').trim();
       const btnSubmit = document.getElementById('btn-submit-forgot1');
 
-      btnSubmit.disabled = true;
-      btnSubmit.innerText = 'Sending Code... ✉️';
+      if (!email) {
+        showModalAlert('Please enter your registered email address.');
+        return;
+      }
+
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span>Sending Reset Link... ✉️</span>';
+      }
 
       const res = await api.forgotPassword(email);
-      btnSubmit.disabled = false;
-      btnSubmit.innerHTML = '<span>Send Recovery Code ✉️</span>';
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<span>Send Reset Link ✉️</span>';
+      }
 
       if (res.ok) {
-        showModalAlert('Recovery code dispatched!', 'success');
-        if (res.data.resetCode) {
-          demoCodeVal.innerText = res.data.resetCode;
-          demoCodeBox.classList.remove('hidden');
-          document.getElementById('reset-code').value = res.data.resetCode;
-        }
-        formForgot1.classList.add('hidden');
-        formForgot2.classList.remove('hidden');
+        showModalAlert(res.data.message || 'If that email is registered, a reset link has been sent.', 'success');
       } else {
-        showModalAlert(res.error || 'Failed to dispatch recovery code.');
+        showModalAlert(res.error || 'Failed to dispatch reset link.');
       }
     });
   }
 
-  // Modal Forgot Password Step 2
-  if (formForgot2) {
-    formForgot2.addEventListener('submit', async (e) => {
+  // Modal Reset Password with Token
+  const formAuthResetPassword = document.getElementById('form-auth-reset-password');
+  if (formAuthResetPassword) {
+    formAuthResetPassword.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideModalAlert();
 
-      const email = document.getElementById('forgot-email').value.trim();
-      const resetCode = document.getElementById('reset-code').value.trim();
-      const newPassword = document.getElementById('reset-new-password').value;
-      const btnSubmit = document.getElementById('btn-submit-forgot2');
+      const newPassEl = document.getElementById('reset-modal-new-password');
+      const confirmPassEl = document.getElementById('reset-modal-confirm-password');
+      const btnSubmit = document.getElementById('btn-submit-reset');
 
-      btnSubmit.disabled = true;
-      btnSubmit.innerText = 'Updating Password... 🔑';
+      const newPass = newPassEl ? newPassEl.value : '';
+      const confirmPass = confirmPassEl ? confirmPassEl.value : '';
 
-      const res = await api.resetPassword(email, resetCode, newPassword);
-      btnSubmit.disabled = false;
-      btnSubmit.innerHTML = '<span>Update Password 🔑</span>';
+      if (!resetToken) {
+        showModalAlert('Invalid or missing reset token.');
+        return;
+      }
+
+      if (newPass.length < 8) {
+        showModalAlert('Password must be at least 8 characters long.');
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        showModalAlert('Passwords do not match.');
+        return;
+      }
+
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span>Resetting Password... 🔑</span>';
+      }
+
+      const res = await api.resetPassword(resetToken, newPass);
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<span>Reset Password 🔑</span>';
+      }
 
       if (res.ok) {
-        showModalAlert(res.data.message || 'Password reset successfully!', 'success');
-        document.getElementById('login-email').value = email;
-
+        showModalAlert(res.data.message || '🎉 Password reset successfully!', 'success');
+        window.history.replaceState({}, document.title, window.location.pathname);
         setTimeout(() => {
           switchModalTab('login');
-          showModalAlert('Password updated! Please log in with your new password.', 'success');
-        }, 1200);
+        }, 1800);
       } else {
-        showModalAlert(res.error || 'Password reset failed.');
+        showModalAlert(res.error || 'Failed to reset password.');
       }
     });
   }
@@ -1105,6 +1678,8 @@ function initAuth() {
       api.logout();
       state.username = 'Scholar';
       delete state.email;
+      delete state.fullName;
+      delete state.phone;
       updateAuthHeaderBtn();
       updateUI();
       showLoginScreen();
@@ -1117,7 +1692,7 @@ function initAuth() {
       btnSyncState.innerText = 'Syncing...';
       await api.saveState(state);
       btnSyncState.disabled = false;
-      btnSyncState.innerHTML = '<i data-lucide="refresh-cw"></i> Sync Progress with Server';
+      btnSyncState.innerHTML = '<i data-lucide="refresh-cw"></i> Sync Progress';
       showModalAlert('Progress synced with backend server!', 'success');
       if (window.lucide) window.lucide.createIcons();
     });
@@ -1135,21 +1710,9 @@ function initLoginStreak() {
   const month = today.getMonth();
   const todayDate = today.getDate();
   const todayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(todayDate).padStart(2, '0')}`;
-  
-  // Seed past days if brand new / sparse for visual demonstration
-  if (state.loginDates.length < 3) {
-    for (let d = 1; d <= todayDate; d++) {
-      if (d % 3 !== 0) { // Mark ~70% of past days as active logins
-        const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        if (!state.loginDates.includes(dStr)) {
-          state.loginDates.push(dStr);
-        }
-      }
-    }
-  }
 
-  // Ensure today's date is recorded
-  if (!state.loginDates.includes(todayStr)) {
+  // Record today's login date if logged in
+  if (auth.isLoggedIn() && !state.loginDates.includes(todayStr)) {
     state.loginDates.push(todayStr);
   }
   
@@ -1159,7 +1722,7 @@ function initLoginStreak() {
 
 function calculateLoginStreak() {
   if (!state.loginDates || state.loginDates.length === 0) {
-    state.loginStreak = 1;
+    state.loginStreak = 0;
     return;
   }
   
@@ -1181,7 +1744,7 @@ function calculateLoginStreak() {
     }
   }
   
-  state.loginStreak = Math.max(streak, 1);
+  state.loginStreak = streak;
   if (!state.stats) state.stats = {};
   state.stats.maxHabitStreak = Math.max(state.stats.maxHabitStreak || 0, state.loginStreak);
 }
@@ -1580,120 +2143,6 @@ function generateReportCardPNG() {
   link.download = 'ScholarQuest_Report_Card.png';
   link.href = canvas.toDataURL('image/png');
   link.click();
-}
-
-// 7. Lightweight Local Profile Modal
-function setupProfileModal() {
-  const openBtn = document.getElementById('btn-open-auth');
-  const sidebarWidget = document.getElementById('sidebar-avatar-widget');
-
-  if (openBtn) {
-    openBtn.onclick = (e) => {
-      e.preventDefault();
-      openProfileModal();
-    };
-  }
-
-  if (sidebarWidget) {
-    sidebarWidget.style.cursor = 'pointer';
-    sidebarWidget.onclick = () => {
-      openProfileModal();
-    };
-  }
-}
-
-function openProfileModal() {
-  let modal = document.getElementById('local-profile-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'local-profile-modal';
-    modal.className = 'profile-modal-backdrop';
-    document.body.appendChild(modal);
-  }
-
-  const profile = state.profile || {};
-  const isComplete = profile.fullName && profile.email;
-
-  renderProfileContent(modal, isComplete, false);
-  modal.classList.remove('hidden');
-}
-
-function renderProfileContent(modal, isComplete, editMode) {
-  const profile = state.profile || {};
-  const avatarId = (state.avatar && state.avatar.id) ? state.avatar.id : 'peasant';
-  const hero = HERO_DISPLAY_DATA[avatarId] || HERO_DISPLAY_DATA['peasant'];
-
-  if (!isComplete || editMode) {
-    modal.innerHTML = `
-      <div class="profile-card-glass animate-scale">
-        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px; margin-bottom: 16px;">
-          <h2 style="font-size: 18px; font-weight: 800; color: #f59e0b; margin: 0;">👤 ${editMode ? 'Edit Profile' : 'Complete Your Profile'}</h2>
-          <button type="button" class="btn-close-profile" style="background: none; border: none; color: #f5e8d7; font-size: 18px; cursor: pointer;">✕</button>
-        </div>
-
-        <form id="local-profile-form">
-          <div style="margin-bottom: 14px;">
-            <label style="display: block; font-size: 11px; font-weight: 800; color: rgba(245,232,215,0.7); margin-bottom: 4px;">Full Name</label>
-            <input type="text" id="prof-fullname" required value="${profile.fullName || ''}" placeholder="e.g. Jayasri Scholar" style="width: 100%; padding: 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; color: #f5e8d7; font-weight: 700;">
-          </div>
-          <div style="margin-bottom: 14px;">
-            <label style="display: block; font-size: 11px; font-weight: 800; color: rgba(245,232,215,0.7); margin-bottom: 4px;">Phone Number</label>
-            <input type="tel" id="prof-phone" required value="${profile.phone || ''}" placeholder="e.g. +91 9876543210" style="width: 100%; padding: 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; color: #f5e8d7; font-weight: 700;">
-          </div>
-          <div style="margin-bottom: 18px;">
-            <label style="display: block; font-size: 11px; font-weight: 800; color: rgba(245,232,215,0.7); margin-bottom: 4px;">Email Address</label>
-            <input type="email" id="prof-email" required value="${profile.email || ''}" placeholder="e.g. jayasri@mscit.edu" style="width: 100%; padding: 10px; background: rgba(20,16,11,0.8); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; color: #f5e8d7; font-weight: 700;">
-          </div>
-          <button type="submit" class="btn primary-btn" style="width: 100%;">Save Profile Details ✨</button>
-        </form>
-      </div>
-    `;
-
-    modal.querySelector('.btn-close-profile')?.addEventListener('click', () => modal.classList.add('hidden'));
-    modal.querySelector('#local-profile-form')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      state.profile = {
-        fullName: document.getElementById('prof-fullname').value,
-        phone: document.getElementById('prof-phone').value,
-        email: document.getElementById('prof-email').value
-      };
-      saveState();
-      updateUI();
-      renderProfileContent(modal, true, false);
-    });
-  } else {
-    modal.innerHTML = `
-      <div class="profile-card-glass animate-scale">
-        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px; margin-bottom: 16px;">
-          <h2 style="font-size: 18px; font-weight: 800; color: #f59e0b; margin: 0;">👤 Scholar Profile</h2>
-          <button type="button" class="btn-close-profile" style="background: none; border: none; color: #f5e8d7; font-size: 18px; cursor: pointer;">✕</button>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 14px; background: rgba(20,16,11,0.6); padding: 14px; border-radius: 12px; border: 1px solid rgba(245,158,11,0.2); margin-bottom: 16px;">
-          <div style="width: 56px; height: 56px; background-image: url('${hero.sprite}'); background-repeat: no-repeat; background-position: center; background-size: contain; flex-shrink: 0;"></div>
-          <div>
-            <div style="font-size: 16px; font-weight: 800; color: #f5e8d7;">${profile.fullName}</div>
-            <div style="font-size: 12px; color: #f59e0b; font-weight: 800;">${hero.name} (Level ${state.level || 1})</div>
-          </div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: rgba(245,232,215,0.8); margin-bottom: 18px;">
-          <div>📧 <strong>Email:</strong> ${profile.email}</div>
-          <div>📞 <strong>Phone:</strong> ${profile.phone}</div>
-          <div>🔥 <strong>Streak:</strong> ${state.loginStreak || 1} Days</div>
-          <div>⭐ <strong>Total XP:</strong> ${state.xp || 0} XP</div>
-        </div>
-
-        <div style="display: flex; gap: 10px;">
-          <button type="button" class="btn primary-btn btn-edit-profile" style="flex: 1;">Edit Profile ✏️</button>
-          <button type="button" class="btn secondary-btn btn-close-profile" style="flex: 1;">Close</button>
-        </div>
-      </div>
-    `;
-
-    modal.querySelectorAll('.btn-close-profile').forEach(b => b.addEventListener('click', () => modal.classList.add('hidden')));
-    modal.querySelector('.btn-edit-profile')?.addEventListener('click', () => renderProfileContent(modal, true, true));
-  }
 }
 
 

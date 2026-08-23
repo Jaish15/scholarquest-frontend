@@ -3,7 +3,7 @@
    Handles catalog rendering, purchasing, equips, bundles
    ========================================== */
 
-import { state, saveState, updateUI, changeTheme, heal } from '../app.js';
+import { state, saveState, updateUI, changeTheme, heal, HERO_DISPLAY_DATA } from '../app.js';
 import { updateAvatarRender } from './avatar.js';
 
 // Pet companion passive perk definitions
@@ -21,15 +21,6 @@ export const SHOP_ITEMS = [
   { id: 'baby_dragon',    name: 'Golden Baby Dragon',   category: 'pets', type: 'pet', price: 120, img: './assets/items/baby_dragon.png',    desc: 'Sparkling golden baby dragon companion (Perk: +2% XP from CodeScroll challenges)' },
   { id: 'magic_cat',      name: 'Wizard Black Cat',     category: 'pets', type: 'pet', price: 80,  img: './assets/items/magic_cat.png',      desc: 'Mystical black wizard cat wearing a pointed hat (Perk: +2% XP from Focus Arena)' },
   { id: 'silver_serpent', name: 'Slytherin Silver Serpent', category: 'pets', type: 'pet', price: 110, img: './assets/items/silver_serpent.png', desc: 'Noble green & silver winged serpent familiar (Perk: +5 bonus Coins per completed quiz/challenge)' },
-
-  // 👕 Outfits, Cloaks & Apparel Pieces
-  { id: 'gryffindor_cape',   name: 'Gryffindor Velvet Cape',     category: 'outfits', type: 'outfit', price: 60,  img: './assets/items/gryffindor_cape.png', desc: 'Scarlet & gold Gryffindor wizard cloak with gold clasp' },
-  { id: 'slytherin_robe',    name: 'Slytherin Emerald Robe',    category: 'outfits', type: 'outfit', price: 60,  img: './assets/heroes/draco_malfoy.png',   desc: 'Emerald & silver Slytherin wizard robes with silver crest' },
-  { id: 'scholar_vest',      name: 'Scholar Tweed Vest & Shirt',category: 'outfits', type: 'outfit', price: 40,  img: './assets/heroes/scholar.png',        desc: 'Pink & brown scholar vest and shirt with brass buttons' },
-  { id: 'apprentice_apron',  name: 'Apprentice Leather Apron',  category: 'outfits', type: 'outfit', price: 40,  img: './assets/heroes/apprentice.png',     desc: 'Green craftsperson leather apron with tool loops' },
-  { id: 'farmer_tunic',      name: 'Farmer Rustic Linen Tunic', category: 'outfits', type: 'outfit', price: 30,  img: './assets/heroes/peasant.png',        desc: 'Rustic brown linen farmer tunic for daily hard work' },
-  { id: 'knight_tabard',     name: 'Guardian Armor Tabard',     category: 'outfits', type: 'outfit', price: 80,  img: './assets/heroes/knight.png',         desc: 'Silver & gold steel knight chest tabard armor' },
-  { id: 'royal_gown',        name: 'Royal Purple Velvet Gown',  category: 'outfits', type: 'outfit', price: 120, img: './assets/heroes/royal.png',          desc: 'Royal purple velvet gown with gold embroidery' },
 
   // Head & Hand Medieval Accessories
   { id: 'scroll_quill',    name: 'Scholar Scroll & Quill',     category: 'accessories', type: 'hand', price: 60,  img: './assets/items/scroll_quill.png',    desc: 'Medieval leather scroll with gold seal & quill (+15 Quiz Power)' },
@@ -103,6 +94,55 @@ export function updateShopAndInventoryUI() {
   renderInventory();
 }
 
+export function equipItem(slot, itemId) {
+  if (!state.equipped) {
+    state.equipped = { head: 'none', hand: 'none', pet: 'none' };
+  }
+  state.equipped[slot] = itemId;
+  saveState();
+  updateUI();
+  updateShopAndInventoryUI();
+}
+
+export function unequipItem(slot) {
+  if (!state.equipped) {
+    state.equipped = { head: 'none', hand: 'none', pet: 'none' };
+  }
+  state.equipped[slot] = 'none';
+  saveState();
+  updateUI();
+  updateShopAndInventoryUI();
+}
+
+export function toggleEquipItem(itemId) {
+  const item = SHOP_ITEMS.find(i => i.id === itemId);
+  if (!item) return;
+
+  if (item.category === 'themes') {
+    changeTheme(item.target);
+    alert(`🎨 Visual theme changed to ${item.name}!`);
+    saveState();
+    updateUI();
+    updateShopAndInventoryUI();
+    return;
+  }
+
+  let slot = item.type; // 'head', 'hand', or 'pet'
+  if (item.category === 'pets') slot = 'pet';
+
+  if (!slot || (slot !== 'head' && slot !== 'hand' && slot !== 'pet')) return;
+
+  if (!state.equipped) {
+    state.equipped = { head: 'none', hand: 'none', pet: 'none' };
+  }
+
+  if (state.equipped[slot] === item.id) {
+    unequipItem(slot);
+  } else {
+    equipItem(slot, item.id);
+  }
+}
+
 export function updatePodiumDisplay(overrideState = null, previewItemName = '') {
   const equipped = overrideState || (state && state.equipped ? state.equipped : { head: 'none', hand: 'none', pet: 'none' });
   const isPreview = !!overrideState;
@@ -114,6 +154,28 @@ export function updatePodiumDisplay(overrideState = null, previewItemName = '') 
   const headItem = SHOP_ITEMS.find(item => item.id === headEquip);
   const handItem = SHOP_ITEMS.find(item => item.id === handEquip);
   const petItem = SHOP_ITEMS.find(item => item.id === petEquip);
+
+  // Sync main hero character image & labels on 3D Projection Stage
+  const shopPodiumImg = document.getElementById('shop-podium-img');
+  const shopPodiumName = document.getElementById('shop-podium-name');
+  const shopPodiumClass = document.getElementById('shop-podium-class');
+
+  const avatarId = (state && state.avatar && state.avatar.id) ? state.avatar.id : 'peasant';
+  const heroData = (HERO_DISPLAY_DATA && HERO_DISPLAY_DATA[avatarId]) ? HERO_DISPLAY_DATA[avatarId] : (HERO_DISPLAY_DATA ? HERO_DISPLAY_DATA['peasant'] : null);
+
+  if (shopPodiumImg) {
+    if (heroData && heroData.sprite) {
+      shopPodiumImg.src = heroData.sprite;
+    }
+    shopPodiumImg.style.display = 'block';
+  }
+
+  if (shopPodiumName) {
+    shopPodiumName.textContent = heroData ? heroData.name : 'The Scholar';
+  }
+  if (shopPodiumClass) {
+    shopPodiumClass.textContent = heroData ? `Active ${heroData.name}` : 'Active Hero';
+  }
 
   // Sync slot name labels on top of 3D Podium stage
   const slotHeadName = document.getElementById('slot-head-name');
@@ -136,7 +198,7 @@ export function updatePodiumDisplay(overrideState = null, previewItemName = '') 
   // Update podium image overlays
   const headImgEl = document.getElementById('shop-podium-head');
   if (headImgEl) {
-    if (headItem) {
+    if (headItem && headItem.img) {
       headImgEl.src = headItem.img;
       headImgEl.style.display = 'block';
     } else {
@@ -146,7 +208,7 @@ export function updatePodiumDisplay(overrideState = null, previewItemName = '') 
 
   const handImgEl = document.getElementById('shop-podium-hand');
   if (handImgEl) {
-    if (handItem) {
+    if (handItem && handItem.img) {
       handImgEl.src = handItem.img;
       handImgEl.style.display = 'block';
     } else {
@@ -154,13 +216,14 @@ export function updatePodiumDisplay(overrideState = null, previewItemName = '') 
     }
   }
 
+  const petContainer = document.getElementById('shop-podium-pet-container');
   const petImgEl = document.getElementById('shop-podium-pet');
-  if (petImgEl) {
-    if (petItem) {
+  if (petContainer && petImgEl) {
+    if (petItem && petItem.img) {
       petImgEl.src = petItem.img;
-      petImgEl.style.display = 'block';
+      petContainer.style.display = 'flex';
     } else {
-      petImgEl.style.display = 'none';
+      petContainer.style.display = 'none';
     }
   }
 
@@ -254,7 +317,13 @@ function renderShopCatalog() {
 
   // 2. My Collection / Owned Items Section
   if (activeCategory === 'owned') {
-    const ownedItems = state.inventory.map(id => SHOP_ITEMS.find(item => item.id === id)).filter(Boolean);
+    const uniqueOwnedIds = [...new Set(state.inventory || [])];
+    const ownedItems = uniqueOwnedIds.map(id => SHOP_ITEMS.find(item => item.id === id)).filter(Boolean);
+
+    const countBadge = document.getElementById('owned-count');
+    if (countBadge) {
+      countBadge.textContent = ownedItems.length;
+    }
 
     if (ownedItems.length === 0) {
       container.innerHTML = `
@@ -275,7 +344,12 @@ function renderShopCatalog() {
     };
 
     ownedItems.forEach(item => {
-      const isEquipped = state.equipped && (state.equipped.head === item.id || state.equipped.hand === item.id || state.equipped.pet === item.id);
+      const equipped = state.equipped || {};
+      const isEquipped = (
+        equipped.head === item.id ||
+        equipped.hand === item.id ||
+        equipped.pet === item.id
+      );
 
       const card = document.createElement('div');
       card.className = 'shop-item-card';
@@ -303,8 +377,7 @@ function renderShopCatalog() {
 
       card.querySelector('.equip-owned-btn')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        equipOrActivateItem(item);
-        renderShopCatalog();
+        toggleEquipItem(item.id);
       });
 
       container.appendChild(card);
@@ -517,7 +590,7 @@ function renderInventory() {
   
   equippedContainer.innerHTML = '';
   
-  // 1. Render Equipped Items slots
+  // Render Equipped Items slots
   const headEquip = (state.equipped && state.equipped.head) || 'none';
   const handEquip = (state.equipped && state.equipped.hand) || 'none';
   const petEquip = (state.equipped && state.equipped.pet) || 'none';
@@ -531,22 +604,25 @@ function renderInventory() {
   
   const petPerk = petItem && PET_BONUSES[petItem.id] ? PET_BONUSES[petItem.id].perkText : null;
 
-  equippedContainer.innerHTML = `
-    <div class="equip-box" style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 60px; height: 60px; background: rgba(18,14,9,0.8); border: 1px dashed rgba(245,158,11,0.3); border-radius: 12px; padding: 4px;" title="${headItem ? headItem.name : 'Empty Head Slot'}">
-      ${headItem ? `<img src="${headItem.img}" style="width: 34px; height: 34px; object-fit: contain;" title="${headItem.name}">` : '<span style="font-size: 10px; color: rgba(245,232,215,0.3);">Head</span>'}
-      ${headItem ? `<button class="btn btn-sm secondary-btn unequip-btn" data-slot="head" style="position: absolute; top: -6px; right: -6px; font-size: 9px; width: 18px; height: 18px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #ef4444; color: white; border: none; cursor: pointer;">✕</button>` : ''}
+  const slotsData = [
+    { slot: 'head', label: 'HEAD', item: headItem, icon: '👑' },
+    { slot: 'hand', label: 'HAND', item: handItem, icon: '⚔️' },
+    { slot: 'pet',  label: 'PET',  item: petItem,  icon: '🐾' }
+  ];
+
+  equippedContainer.innerHTML = slotsData.map(({ slot, label, item, icon }) => `
+    <div class="equip-slot-card" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;">
+      <div class="equip-box" style="position: relative; display: flex; align-items: center; justify-content: center; width: 60px; height: 60px; background: rgba(18,14,9,0.85); border: 1px dashed ${item ? 'rgba(245,158,11,0.6)' : 'rgba(245,158,11,0.25)'}; border-radius: 12px; padding: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.4);" title="${item ? item.name : 'Empty ' + label + ' Slot'}">
+        ${item ? `<img src="${item.img}" style="width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));" title="${item.name}">` : `<span style="font-size: 18px; opacity: 0.3;">${icon}</span>`}
+        ${item ? `<button class="btn btn-sm secondary-btn unequip-btn" data-slot="${slot}" style="position: absolute; top: -6px; right: -6px; font-size: 9px; width: 18px; height: 18px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #ef4444; color: white; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5);" title="Unequip ${item.name}">✕</button>` : ''}
+      </div>
+      <div style="font-size: 10px; text-align: center; line-height: 1.2; width: 100%;">
+        <div style="color: rgba(245,232,215,0.4); font-weight: 700; font-size: 9px;">${label}</div>
+        <div style="color: ${item ? '#f59e0b' : 'rgba(245,232,215,0.3)'}; font-weight: 800; font-size: 10px; max-width: 75px; margin: 0 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item ? item.name : 'None'}">${item ? item.name : 'None'}</div>
+      </div>
     </div>
-    <div class="equip-box" style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 60px; height: 60px; background: rgba(18,14,9,0.8); border: 1px dashed rgba(245,158,11,0.3); border-radius: 12px; padding: 4px;" title="${handItem ? handItem.name : 'Empty Hand Slot'}">
-      ${handItem ? `<img src="${handItem.img}" style="width: 34px; height: 34px; object-fit: contain;" title="${handItem.name}">` : '<span style="font-size: 10px; color: rgba(245,232,215,0.3);">Hand</span>'}
-      ${handItem ? `<button class="btn btn-sm secondary-btn unequip-btn" data-slot="hand" style="position: absolute; top: -6px; right: -6px; font-size: 9px; width: 18px; height: 18px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #ef4444; color: white; border: none; cursor: pointer;">✕</button>` : ''}
-    </div>
-    <div class="equip-box" style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 60px; height: 60px; background: rgba(18,14,9,0.8); border: 1px dashed rgba(245,158,11,0.3); border-radius: 12px; padding: 4px;" title="${petItem ? petItem.name : 'Empty Pet Slot'}">
-      ${petItem ? `<img src="${petItem.img}" style="width: 34px; height: 34px; object-fit: contain;" title="${petItem.name}">` : '<span style="font-size: 10px; color: rgba(245,232,215,0.3);">Pet</span>'}
-      ${petItem ? `<button class="btn btn-sm secondary-btn unequip-btn" data-slot="pet" style="position: absolute; top: -6px; right: -6px; font-size: 9px; width: 18px; height: 18px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #ef4444; color: white; border: none; cursor: pointer;">✕</button>` : ''}
-    </div>
-  `;
+  `).join('');
   
-  // Existing perk badge element or new update
   let perkEl = document.getElementById('equipped-pet-perk-badge');
   if (!perkEl) {
     perkEl = document.createElement('div');
@@ -563,39 +639,14 @@ function renderInventory() {
   
   // Attach unequip click listeners
   equippedContainer.querySelectorAll('.unequip-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const slot = btn.getAttribute('data-slot');
-      if (state.equipped) {
-        state.equipped[slot] = 'none';
-      }
-      saveState();
-      updateUI();
-      renderInventory();
+      unequipItem(slot);
     });
   });
 }
 
 function equipOrActivateItem(item) {
-  if (!state.equipped) {
-    state.equipped = { head: 'none', hand: 'none', pet: 'none' };
-  }
-  
-  if (item.category === 'accessories') {
-    state.equipped[item.type] = item.id;
-    alert(`🛡️ Equipped ${item.name} in your ${item.type} slot!`);
-  } else if (item.category === 'outfits') {
-  } else if (item.category === 'outfits') {
-    state.equipped.outfit = item.id;
-    alert(`👕 Equipped ${item.name}! Your hero is wearing ${item.name} on the 3D Projection Stage!`);
-  } else if (item.category === 'pets') {
-    state.equipped.pet = item.id;
-    alert(`🐾 ${item.name} is now accompanying your hero!`);
-  } else if (item.category === 'themes') {
-    changeTheme(item.target);
-    alert(`🎨 Visual theme changed to ${item.name}!`);
-  }
-  
-  saveState();
-  updateUI();
-  renderInventory();
+  toggleEquipItem(item.id);
 }

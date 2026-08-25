@@ -5,9 +5,37 @@
 
 import { state, addXP, addCoins, takeDamage, saveState, updateUI } from '../app.js';
 
+const MOTIVATIONAL_QUOTES = [
+  { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle" },
+  { text: "Small daily improvements over time lead to stunning results.", author: "Robin Sharma" },
+  { text: "Discipline is choosing between what you want now and what you want most.", author: "Abraham Lincoln" },
+  { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+  { text: "Motivation is what gets you started. Habit is what keeps you going.", author: "Jim Ryun" },
+  { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+  { text: "Step by step, day by day, consistency breeds mastery.", author: "Dojo Wisdom" },
+  { text: "Energy and persistence conquer all things.", author: "Benjamin Franklin" },
+  { text: "Focus on the process, not the outcome. The results will follow.", author: "Scholar Principle" }
+];
+
+export function updateDailyMotivation() {
+  const quoteElem = document.getElementById('daily-quote-text');
+  const authorElem = document.getElementById('daily-quote-author');
+  if (!quoteElem || !authorElem) return;
+
+  const today = new Date();
+  const dateSeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  const quoteIndex = dateSeed % MOTIVATIONAL_QUOTES.length;
+  const quote = MOTIVATIONAL_QUOTES[quoteIndex];
+
+  quoteElem.textContent = `"${quote.text}"`;
+  authorElem.textContent = `— ${quote.author}`;
+}
+
 export function initHabits() {
   renderHabitsList();
   setupHabitsEvents();
+  updateDailyMotivation();
 }
 
 function setupHabitsEvents() {

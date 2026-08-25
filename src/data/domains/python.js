@@ -743,6 +743,11 @@ export const PYTHON_CODE_CHALLENGES = [
     starterCode: `function squareNum(n) {\n  return n * n;\n}\n\nconsole.log(squareNum(6));`,
     hint: 'Multiply `n * n` or use `Math.pow(n, 2)`.',
     explanation: 'Squaring a number means multiplying it by itself.',
+    stage3Quiz: {
+      question: 'Which expression correctly calculates the square of a number n?',
+      options: ['n * n', 'n + n', 'n / n', 'n % n'],
+      correctIndex: 0
+    },
     validator: `if (typeof squareNum !== 'function') throw new Error('squareNum is not defined.'); if (squareNum(5) !== 25) throw new Error('squareNum(5) must equal 25.');`
   },
   {
@@ -751,6 +756,11 @@ export const PYTHON_CODE_CHALLENGES = [
     starterCode: `function celsiusToFahrenheit(c) {\n  return (c * 9 / 5) + 32;\n}\n\nconsole.log(celsiusToFahrenheit(0));`,
     hint: 'Use formula `(c * 9/5) + 32`.',
     explanation: 'Standard formula converting Celsius temperatures into Fahrenheit degrees.',
+    stage3Quiz: {
+      question: 'What is the correct mathematical formula to convert Celsius (c) to Fahrenheit?',
+      options: ['(c * 9 / 5) + 32', '(c + 32) * 9 / 5', 'c * 100 / 32', 'c - 32'],
+      correctIndex: 0
+    },
     validator: `if (typeof celsiusToFahrenheit !== 'function') throw new Error('celsiusToFahrenheit is not defined.'); if (celsiusToFahrenheit(0) !== 32) throw new Error('0C must equal 32F.'); if (celsiusToFahrenheit(100) !== 212) throw new Error('100C must equal 212F.');`
   },
   {
@@ -759,6 +769,11 @@ export const PYTHON_CODE_CHALLENGES = [
     starterCode: `function isEven(n) {\n  return n % 2 === 0;\n}\n\nconsole.log(isEven(4));`,
     hint: 'Use modulo operator `n % 2 === 0`.',
     explanation: 'Even numbers have a zero remainder when divided by 2.',
+    stage3Quiz: {
+      question: 'Which modulo condition checks if an integer n is even?',
+      options: ['n % 2 === 0', 'n % 2 === 1', 'n / 2 === 1', 'n * 2 === 0'],
+      correctIndex: 0
+    },
     validator: `if (typeof isEven !== 'function') throw new Error('isEven is not defined.'); if (!isEven(8)) throw new Error('isEven(8) must equal true.'); if (isEven(7)) throw new Error('isEven(7) must equal false.');`
   },
   {
@@ -767,6 +782,11 @@ export const PYTHON_CODE_CHALLENGES = [
     starterCode: `function getStrLen(str) {\n  return str.length;\n}\n\nconsole.log(getStrLen("Python"));`,
     hint: 'Use `.length` property.',
     explanation: 'Returns total character count.',
+    stage3Quiz: {
+      question: 'What property returns the total character count of a string in JavaScript?',
+      options: ['str.length', 'str.size()', 'str.count()', 'str.capacity'],
+      correctIndex: 0
+    },
     validator: `if (typeof getStrLen !== 'function') throw new Error('getStrLen is not defined.'); if (getStrLen("Python") !== 6) throw new Error('getStrLen("Python") must return 6.');`
   },
   {

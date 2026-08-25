@@ -7,7 +7,7 @@ import { initQuizzes } from './modules/quiz.js';
 import { initFocus } from './modules/focus.js';
 import { initHabits } from './modules/habits.js';
 import { initStudySync } from './modules/studysync.js';
-import { initCodeScroll } from './modules/codescroll.js';
+import { initCodeScroll, setupLeetCodeEvents } from './modules/codescroll.js';
 import { initShop, updateShopAndInventoryUI, updatePodiumDisplay } from './modules/shop.js';
 import api, { auth } from './api.js';
 
@@ -507,8 +507,8 @@ function generateDailyQuests() {
         <span class="quest-name">${q.name}</span>
         <span class="quest-reward">+${q.reward} XP / +${q.coins} Coins</span>
       </div>
-      <div>
-        ${q.completed ? '<span class="quest-status">Completed</span>' : '<span class="text-muted text-sm">Active</span>'}
+      <div class="quest-status-col">
+        ${q.completed ? '<span class="quest-badge completed">Completed</span>' : '<span class="quest-badge active">Active</span>'}
       </div>
     `;
     container.appendChild(el);
@@ -2105,6 +2105,8 @@ function renderReportCardPage() {
   document.getElementById('btn-download-scroll')?.addEventListener('click', () => {
     generateReportCardPNG();
   });
+
+  setupLeetCodeEvents();
 }
 
 function generateReportCardPNG() {

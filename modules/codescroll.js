@@ -100,7 +100,8 @@ function setIdeMode(mode) {
   const tabSandbox = document.getElementById('tab-mode-sandbox');
   const langSelectContainer = document.getElementById('sandbox-lang-select-container');
   const langBadge = document.getElementById('current-lesson-lang');
-  const helpBar = document.getElementById('codescroll-help-bar');
+  const botBlob = document.getElementById('codescroll-bot-blob');
+  const chatWindow = document.getElementById('codescroll-chatbot-window');
   const btnSubmit = document.getElementById('btn-submit-code');
   const btnShare = document.getElementById('btn-share-scholarcircle');
   const titleEl = document.getElementById('current-lesson-title');
@@ -116,7 +117,7 @@ function setIdeMode(mode) {
     if (tabSandbox) tabSandbox.className = 'btn btn-sm secondary-btn';
     if (langSelectContainer) langSelectContainer.style.display = 'none';
     if (langBadge) langBadge.style.display = 'inline-block';
-    if (helpBar) helpBar.style.display = 'flex';
+    if (botBlob) botBlob.style.display = 'flex';
     if (btnSubmit) btnSubmit.style.display = 'inline-flex';
     if (btnShare) btnShare.style.display = 'inline-flex';
     if (modeIndicatorEl) modeIndicatorEl.innerText = 'Challenge Quest';
@@ -128,7 +129,12 @@ function setIdeMode(mode) {
     if (tabSandbox) tabSandbox.className = 'btn btn-sm primary-btn';
     if (langSelectContainer) langSelectContainer.style.display = 'flex';
     if (langBadge) langBadge.style.display = 'none';
-    if (helpBar) helpBar.style.display = 'none';
+    if (botBlob) botBlob.style.display = 'none';
+    if (chatWindow) chatWindow.style.display = 'none';
+    if (btnSubmit) btnSubmit.style.display = 'none';
+    if (btnShare) btnShare.style.display = 'none';
+    if (hintDrawer) hintDrawer.style.display = 'none';
+    if (modeIndicatorEl) modeIndicatorEl.innerText = 'Free Practice';
     if (btnSubmit) btnSubmit.style.display = 'none';
     if (btnShare) btnShare.style.display = 'none';
     if (hintDrawer) hintDrawer.style.display = 'none';
@@ -145,8 +151,13 @@ function setIdeMode(mode) {
   }
 }
 
+let stage2Attempts = 0;
+let stage2Passed = false;
+
 function resetHelpStage() {
   helpStage = 0;
+  stage2Attempts = 0;
+  stage2Passed = false;
   const btnHelp = document.getElementById('btn-codescroll-help');
   const indicator = document.getElementById('codescroll-help-stage-indicator');
   const drawer = document.getElementById('codescroll-hint-drawer');
@@ -157,8 +168,192 @@ function resetHelpStage() {
   }
   if (indicator) indicator.innerText = 'Click Help for progressive guidance';
   if (drawer) {
-    drawer.style.display = 'none';
     drawer.innerHTML = '';
+  }
+  closeChatbotWindow();
+}
+
+function getCodeExplanationBullets(challenge) {
+  const title = (challenge.title || '').replace(/^\d+\.\s*/, '');
+  const domain = challenge.domain || 'JavaScript';
+
+  if (title.toLowerCase().includes('square')) {
+    return [
+      "<b>Function Signature & Input:</b> Receives a numerical parameter <code>n</code> representing the value to be squared.",
+      "<b>Core Arithmetic Operation:</b> Computes <code>n * n</code> (or <code>Math.pow(n, 2)</code>) to multiply the number by itself.",
+      "<b>Return Pipeline:</b> Sends the calculated exponential product directly back to the caller function.",
+      "<b>Validation Assertion Check:</b> Passes test inputs like <code>squareNum(5)</code> and confirms the return value equals <code>25</code>."
+    ];
+  }
+
+  if (title.toLowerCase().includes('temperature') || title.toLowerCase().includes('celsius')) {
+    return [
+      "<b>Parameter Handling:</b> Accepts temperature value <code>c</code> measured in Celsius degrees.",
+      "<b>Scale Factor Transformation:</b> Performs <code>c * 9 / 5</code> to scale the 100° Celsius boiling span into the 180° Fahrenheit span.",
+      "<b>Freezing Baseline Offset:</b> Adds <code>+ 32</code> to adjust the zero-point offset from 0°C to 32°F.",
+      "<b>Assertion Verification:</b> Guarantees <code>0°C</code> evaluates to <code>32°F</code> and <code>100°C</code> evaluates to <code>212°F</code>."
+    ];
+  }
+
+  if (title.toLowerCase().includes('even')) {
+    return [
+      "<b>Integer Parameter:</b> Accepts an integer argument <code>n</code>.",
+      "<b>Modulo Remainder Operator:</b> Calculates <code>n % 2</code> to determine the remainder when divided by 2.",
+      "<b>Boolean Decision Logic:</b> Evaluates <code>n % 2 === 0</code>, returning <code>true</code> for even numbers and <code>false</code> for odd numbers.",
+      "<b>Assertion Edge Cases:</b> Correctly validates even numbers (e.g. <code>4</code>, <code>8</code>) while returning <code>false</code> for <code>7</code>."
+    ];
+  }
+
+  if (title.toLowerCase().includes('length') || title.toLowerCase().includes('len')) {
+    return [
+      "<b>String Input:</b> Receives a string argument <code>str</code>.",
+      "<b>Native Property Inspection:</b> Reads the string's built-in <code>.length</code> property.",
+      "<b>Character Measurement:</b> Evaluates total UTF-16 character code units present in the string sequence.",
+      "<b>Assertion Verification:</b> Measures <code>'Python'</code> and returns <code>6</code> total characters."
+    ];
+  }
+
+  if (title.toLowerCase().includes('max') || title.toLowerCase().includes('largest')) {
+    return [
+      "<b>Parameter Pair:</b> Accepts two numeric arguments <code>a</code> and <code>b</code>.",
+      "<b>Ternary Magnitude Comparison:</b> Evaluates <code>a > b ? a : b</code> (or <code>Math.max(a, b)</code>) to compare values.",
+      "<b>Output Selection:</b> Selects and returns whichever argument holds the greater numerical value.",
+      "<b>Assertion Test:</b> Evaluating <code>getMax(10, 20)</code> correctly identifies and returns <code>20</code>."
+    ];
+  }
+
+  if (challenge.explanation && challenge.explanation.length > 20) {
+    return [
+      `<b>Core Algorithmic Objective:</b> ${escapeHTML(challenge.explanation)}`,
+      `<b>Input & Logic Sequence:</b> Inspects problem parameters and processes operations step-by-step.`,
+      `<b>Return & Assertion Check:</b> Produces calculated result matching automated unit test requirements.`
+    ];
+  }
+
+  return [
+    `<b>Problem Overview:</b> Solves the <b>${escapeHTML(title)}</b> challenge requirement in ${escapeHTML(domain)}.`,
+    `<b>Control Flow & Calculations:</b> Reads parameters, executes target data/arithmetic transformations, and handles edge conditions.`,
+    `<b>Validation Result:</b> Sends computed output through return pipeline, passing all test suite assertions.`
+  ];
+}
+
+function getStage3Quiz(challenge) {
+  if (challenge && challenge.stage3Quiz && challenge.stage3Quiz.question && Array.isArray(challenge.stage3Quiz.options)) {
+    return challenge.stage3Quiz;
+  }
+
+  const title = (challenge.title || '').replace(/^\d+\.\s*/, '');
+  const domain = challenge.domain || 'JavaScript';
+
+  if (title.toLowerCase().includes('square')) {
+    return {
+      question: "Which expression correctly calculates the square of a number n?",
+      options: ["n * n", "n + n", "n / n", "n % n"],
+      correctIndex: 0
+    };
+  }
+
+  if (title.toLowerCase().includes('temperature') || title.toLowerCase().includes('celsius')) {
+    return {
+      question: "What is the correct mathematical formula to convert Celsius (c) to Fahrenheit?",
+      options: ["(c * 9 / 5) + 32", "(c + 32) * 9 / 5", "c * 100 / 32", "c - 32"],
+      correctIndex: 0
+    };
+  }
+
+  if (title.toLowerCase().includes('even')) {
+    return {
+      question: "Which modulo condition checks if an integer n is even?",
+      options: ["n % 2 === 0", "n % 2 === 1", "n / 2 === 1", "n * 2 === 0"],
+      correctIndex: 0
+    };
+  }
+
+  if (title.toLowerCase().includes('length') || title.toLowerCase().includes('len')) {
+    return {
+      question: "What property returns the character length of a string in JavaScript?",
+      options: ["str.length", "str.size()", "str.count()", "str.capacity"],
+      correctIndex: 0
+    };
+  }
+
+  if (title.toLowerCase().includes('max') || title.toLowerCase().includes('largest')) {
+    return {
+      question: "Which method returns the larger of two numbers a and b in JavaScript?",
+      options: ["Math.max(a, b)", "Math.min(a, b)", "a + b", "Math.abs(a - b)"],
+      correctIndex: 0
+    };
+  }
+
+  if (title.toLowerCase().includes('sum') || title.toLowerCase().includes('add')) {
+    return {
+      question: "Which approach correctly calculates the total sum of an array of numbers?",
+      options: [
+        "Use array.reduce((acc, num) => acc + num, 0)",
+        "Use array.slice(0, 2)",
+        "Use array.filter(num => num > 0)",
+        "Use array.reverse()"
+      ],
+      correctIndex: 0
+    };
+  }
+
+  return {
+    question: `Before unlocking the solution for "${title}", what is the primary objective of this ${domain} challenge?`,
+    options: [
+      `Implementing core function logic that passes validation tests`,
+      `Ignoring function return values and console output`,
+      `Declaring global variables without returning a result`,
+      `Writing an infinite loop with no termination condition`
+    ],
+    correctIndex: 0
+  };
+}
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+export function openChatbotWindow() {
+  const chatWindow = document.getElementById('codescroll-chatbot-window');
+  const drawer = document.getElementById('codescroll-hint-drawer');
+  if (!chatWindow) return;
+
+  chatWindow.style.display = 'flex';
+  if (drawer) {
+    drawer.style.display = 'block';
+    if (helpStage === 0 && !drawer.innerHTML.trim()) {
+      const challenge = currentDomainChallenges[activeChallengeIndex];
+      const challengeTitle = challenge ? challenge.title.replace(/^\d+\.\s*/, '') : 'this quest';
+      drawer.innerHTML = `
+        <div class="guidance-welcome-msg" style="text-align: center; padding: 24px 12px; color: rgba(245,232,215,0.85);">
+          <div style="font-size: 32px; margin-bottom: 8px;">🧙‍♂️</div>
+          <div style="font-size: 13px; font-weight: 900; color: #f59e0b; margin-bottom: 6px;">Greetings, Scholar!</div>
+          <div style="font-size: 11px; color: rgba(245,232,215,0.7); line-height: 1.5; max-width: 290px; margin: 0 auto 12px;">
+            I am your Quest Mentor. Click the <b>"💡 Need Help?"</b> button above to unlock progressive hints and solution code for <b>${escapeHTML(challengeTitle)}</b>!
+          </div>
+        </div>
+      `;
+    }
+  }
+}
+
+export function closeChatbotWindow() {
+  const chatWindow = document.getElementById('codescroll-chatbot-window');
+  if (chatWindow) {
+    chatWindow.style.display = 'none';
+  }
+}
+
+export function toggleChatbotWindow() {
+  const chatWindow = document.getElementById('codescroll-chatbot-window');
+  if (!chatWindow) return;
+  const isHidden = chatWindow.style.display === 'none' || getComputedStyle(chatWindow).display === 'none';
+  if (isHidden) {
+    openChatbotWindow();
+  } else {
+    closeChatbotWindow();
   }
 }
 
@@ -169,50 +364,221 @@ function handleHelpButtonClick() {
   const drawer = document.getElementById('codescroll-hint-drawer');
   const btnHelp = document.getElementById('btn-codescroll-help');
   const indicator = document.getElementById('codescroll-help-stage-indicator');
-  if (!drawer) return;
 
-  helpStage++;
-  drawer.style.display = 'block';
+  if (helpStage < 2) {
+    helpStage++;
+  } else if (helpStage === 2 && stage2Passed) {
+    helpStage = 3;
+  }
 
-  if (helpStage === 1) {
-    // Stage 1: General Conceptual Hint
-    const conceptHint = challenge.hintStage1 || challenge.hint || `Focus on understanding the problem inputs and expected return value for ${challenge.title}.`;
-    drawer.innerHTML = `
-      <div style="font-size: 12px; font-weight: 800; color: #f59e0b; margin-bottom: 6px;">💡 Stage 1 — General Conceptual Hint</div>
-      <div style="font-size: 12px; color: #f5e8d7; line-height: 1.5;">${conceptHint}</div>
+  openChatbotWindow();
+
+  const conceptHint = challenge.hintStage1 || challenge.hint || `Focus on understanding the problem inputs and expected return value for ${challenge.title}.`;
+  const explanationBullets = getCodeExplanationBullets(challenge);
+
+  let rawSolution = challenge.hintStage3 || challenge.solution || challenge.validator || '';
+  let formattedCode = rawSolution.trim();
+  if (formattedCode.includes('if (') && !formattedCode.includes('\n')) {
+    formattedCode = formattedCode
+      .replace(/;\s*/g, ';\n')
+      .replace(/{\s*/g, '{\n  ')
+      .replace(/}\s*/g, '}\n');
+  }
+  if (!formattedCode) {
+    formattedCode = `// Reference Implementation for ${challenge.title}\nfunction solve() {\n  return true;\n}`;
+  }
+
+  let chatHTML = `<div class="guidance-chat-stream" style="display: flex; flex-direction: column; gap: 14px;">`;
+
+  // Stage 1 Message — Basic Help
+  if (helpStage >= 1) {
+    chatHTML += `
+      <div class="chat-msg-row" style="display: flex; gap: 10px; align-items: flex-start;">
+        <div class="chat-avatar" style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #f59e0b; overflow: hidden; background: #000; flex-shrink: 0; box-shadow: 0 0 6px rgba(245,158,11,0.3);">
+          <img src="assets/chatbot.jpeg" alt="Quest Mentor Bot" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="chat-bubble" style="flex: 1; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3); border-radius: 12px; border-top-left-radius: 2px; padding: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <span style="font-size: 12px; font-weight: 800; color: #f59e0b;">Quest Mentor Bot • Stage 1 — Basic Help</span>
+            <span style="font-size: 10px; font-weight: 800; background: rgba(245,158,11,0.2); color: #f59e0b; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(245,158,11,0.3);">Stage 1/3</span>
+          </div>
+          <div style="font-size: 12px; color: #f5e8d7; line-height: 1.5;">${escapeHTML(conceptHint)}</div>
+        </div>
+      </div>
     `;
-    if (btnHelp) btnHelp.innerText = '💡 Need more help? (Stage 2/3)';
-    if (indicator) indicator.innerText = 'Stage 1/3: General Concept Shown';
-  } else if (helpStage === 2) {
-    // Stage 2: Specific Hint & Partial Approach / Pseudocode
-    const conceptHint = challenge.hintStage1 || challenge.hint || `Focus on understanding the problem inputs and expected return value.`;
-    const approachHint = challenge.hintStage2 || challenge.explanation || `Step 1: Parse/inspect function arguments.\nStep 2: Apply logic statements.\nStep 3: Return computed result.`;
-    drawer.innerHTML = `
-      <div style="font-size: 12px; font-weight: 800; color: #f59e0b; margin-bottom: 6px;">💡 Stage 1 — General Concept</div>
-      <div style="font-size: 12px; color: rgba(245,232,215,0.7); margin-bottom: 10px;">${conceptHint}</div>
-      <div style="font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 6px;">🧩 Stage 2 — Specific Approach & Pseudocode</div>
-      <div style="font-size: 12px; color: #f5e8d7; line-height: 1.5; white-space: pre-line;">${approachHint}</div>
-    `;
-    if (btnHelp) btnHelp.innerText = '🔓 View Full Solution (Stage 3/3)';
-    if (indicator) indicator.innerText = 'Stage 2/3: Pseudocode & Approach Shown';
-  } else {
-    // Stage 3: Full Solution Code & Explanation
-    const conceptHint = challenge.hintStage1 || challenge.hint || `Focus on understanding the problem inputs.`;
-    const approachHint = challenge.hintStage2 || challenge.explanation || `Apply logic statements and return computed output.`;
-    const solutionCode = challenge.hintStage3 || challenge.solution || challenge.validator || `// Solution for ${challenge.title}\nfunction solve() {\n  return true;\n}`;
-    drawer.innerHTML = `
-      <div style="font-size: 12px; font-weight: 800; color: #f59e0b; margin-bottom: 6px;">💡 Stage 1 — General Concept</div>
-      <div style="font-size: 12px; color: rgba(245,232,215,0.7); margin-bottom: 10px;">${conceptHint}</div>
-      <div style="font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 6px;">🧩 Stage 2 — Specific Approach</div>
-      <div style="font-size: 12px; color: rgba(245,232,215,0.7); margin-bottom: 10px; white-space: pre-line;">${approachHint}</div>
-      <div style="font-size: 12px; font-weight: 800; color: #10b981; margin-bottom: 6px;">🔓 Stage 3 — Full Solution Code</div>
-      <pre style="margin: 0; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(16,185,129,0.3); border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 12px; color: #38bdf8; overflow-x: auto;">${solutionCode}</pre>
-    `;
-    if (btnHelp) {
-      btnHelp.innerText = '✅ Full Solution Displayed';
-      btnHelp.disabled = true;
+  }
+
+  // Stage 2 Message — Concept Check Quiz Gate
+  if (helpStage >= 2) {
+    const quiz = getStage3Quiz(challenge);
+
+    if (stage2Passed) {
+      // Stage 2 Quiz Passed / Unlocked
+      const isSuccess = stage2Attempts < 3;
+      const statusBanner = isSuccess
+        ? `<div style="font-size: 12px; font-weight: 800; color: #38bdf8;">🎉 Spot on, Scholar! Correct answer! Stage 3 unlocked below:</div>`
+        : `<div style="font-size: 12px; font-weight: 800; color: #f59e0b;">💡 No worries — 3 attempts used! Stage 3 unlocked below:</div>`;
+
+      chatHTML += `
+        <div class="chat-msg-row" style="display: flex; gap: 10px; align-items: flex-start;">
+          <div class="chat-avatar" style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #38bdf8; overflow: hidden; background: #000; flex-shrink: 0; box-shadow: 0 0 6px rgba(56,189,248,0.3);">
+            <img src="assets/chatbot.jpeg" alt="Quest Mentor Bot" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+          <div class="chat-bubble" style="flex: 1; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.3); border-radius: 12px; border-top-left-radius: 2px; padding: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <span style="font-size: 12px; font-weight: 800; color: #38bdf8;">Quest Mentor Bot • Stage 2 — Concept Check Quiz</span>
+              <span style="font-size: 10px; font-weight: 800; background: rgba(56,189,248,0.2); color: #38bdf8; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(56,189,248,0.3);">Stage 2/3 ✓</span>
+            </div>
+            ${statusBanner}
+          </div>
+        </div>
+      `;
+    } else {
+      // Stage 2 Quiz Active
+      const attemptText = `Attempt ${stage2Attempts + 1}/3`;
+      chatHTML += `
+        <div class="chat-msg-row" style="display: flex; gap: 10px; align-items: flex-start;">
+          <div class="chat-avatar" style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #38bdf8; overflow: hidden; background: #000; flex-shrink: 0; box-shadow: 0 0 6px rgba(56,189,248,0.3);">
+            <img src="assets/chatbot.jpeg" alt="Quest Mentor Bot" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+          <div class="chat-bubble" style="flex: 1; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.3); border-radius: 12px; border-top-left-radius: 2px; padding: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 12px; font-weight: 800; color: #38bdf8;">Quest Mentor Bot • Stage 2 — Concept Check Quiz</span>
+              <span style="font-size: 10px; font-weight: 800; background: rgba(56,189,248,0.2); color: #38bdf8; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(56,189,248,0.3);">${attemptText}</span>
+            </div>
+            <div style="font-size: 12px; color: #f5e8d7; margin-bottom: 10px; line-height: 1.5;">
+              Answer this quick question about <b>${escapeHTML((challenge.title || '').replace(/^\d+\.\s*/, ''))}</b> logic to unlock Stage 3:
+            </div>
+            <div style="font-size: 12px; font-weight: 800; color: #f59e0b; background: rgba(20,16,11,0.85); border: 1px solid rgba(245,158,11,0.35); padding: 10px 12px; border-radius: 8px; margin-bottom: 10px; line-height: 1.4;">
+              ❓ ${escapeHTML(quiz.question)}
+            </div>
+            <div class="stage2-quiz-options" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+              ${quiz.options.map((opt, optIdx) => `
+                <button class="btn btn-sm secondary-btn btn-stage2-option" data-opt-index="${optIdx}" style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 700; color: #f5e8d7; border-color: rgba(245,158,11,0.3); background: rgba(20,16,11,0.7); display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(245,158,11,0.2); color: #f59e0b; font-size: 10px; font-weight: 900; flex-shrink: 0;">${String.fromCharCode(65 + optIdx)}</span>
+                  <span>${escapeHTML(opt)}</span>
+                </button>
+              `).join('')}
+            </div>
+            <div id="stage2-quiz-feedback" style="font-size: 11px; font-weight: 800; min-height: 18px;"></div>
+          </div>
+        </div>
+      `;
     }
-    if (indicator) indicator.innerText = 'Stage 3/3: Full Solution Unlocked';
+  }
+
+  // Stage 3 Message — Deep-Dive Code Walkthrough & Reference Implementation (Unlocked after Stage 2 passed)
+  if (helpStage >= 3 || stage2Passed) {
+    const langLabel = challenge.lang || challenge.language || 'JavaScript';
+    chatHTML += `
+      <div class="chat-msg-row" style="display: flex; gap: 10px; align-items: flex-start;">
+        <div class="chat-avatar" style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #10b981; overflow: hidden; background: #000; flex-shrink: 0; box-shadow: 0 0 6px rgba(16,185,129,0.3);">
+          <img src="assets/chatbot.jpeg" alt="Quest Mentor Bot" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="chat-bubble" style="flex: 1; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; border-top-left-radius: 2px; padding: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <span style="font-size: 12px; font-weight: 800; color: #10b981;">Quest Mentor Bot • Stage 3 — Deep-Dive Code Walkthrough</span>
+            <span style="font-size: 10px; font-weight: 800; background: rgba(16,185,129,0.2); color: #10b981; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(16,185,129,0.3);">Stage 3/3</span>
+          </div>
+
+          <!-- PRIMARY CONTENT: 3-4 Bullet Point Code Walkthrough -->
+          <div style="font-size: 12px; color: #f5e8d7; line-height: 1.6; margin-bottom: 14px; background: rgba(14,10,8,0.8); padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(16,185,129,0.3);">
+            <div style="font-size: 12px; font-weight: 900; color: #10b981; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              <span>🧠 Step-by-Step Logic & Breakdown</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${explanationBullets.map(bullet => `
+                <div style="display: flex; gap: 8px; align-items: flex-start;">
+                  <span style="color: #10b981; font-weight: 900; font-size: 13px; line-height: 1.4;">•</span>
+                  <div style="flex: 1; font-size: 11.5px; color: rgba(245,232,215,0.9); line-height: 1.5;">${bullet}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- SECONDARY CONTENT: Reference Implementation Code Block (No "Solution" framing) -->
+          <div class="solution-code-container" style="background: rgba(10,8,6,0.95); border: 1px solid rgba(16,185,129,0.35); border-radius: 8px; overflow: hidden;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: rgba(16,185,129,0.15); border-bottom: 1px solid rgba(16,185,129,0.25);">
+              <span style="font-size: 11px; font-weight: 800; color: #10b981; font-family: monospace;">📖 Reference Implementation (${escapeHTML(langLabel)})</span>
+              <button class="btn btn-sm secondary-btn" id="btn-copy-solution-code" style="padding: 2px 8px; font-size: 10px; font-weight: 800; color: #38bdf8; border-color: rgba(56,189,248,0.4);">
+                📋 Copy Code
+              </button>
+            </div>
+            <pre style="margin: 0; padding: 12px; font-family: 'Fira Code', 'Courier New', monospace; font-size: 12px; line-height: 1.6; color: #38bdf8; overflow-x: auto; white-space: pre-wrap; word-break: break-word;"><code>${escapeHTML(formattedCode)}</code></pre>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  chatHTML += `</div>`;
+  drawer.innerHTML = chatHTML;
+
+  // Bind Stage 2 Quiz Option listeners if active
+  if (helpStage >= 2 && !stage2Passed) {
+    const quiz = getStage3Quiz(challenge);
+    const optionBtns = drawer.querySelectorAll('.btn-stage2-option');
+    const feedbackEl = document.getElementById('stage2-quiz-feedback');
+
+    optionBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const selectedIdx = parseInt(btn.getAttribute('data-opt-index'), 10);
+        if (selectedIdx === quiz.correctIndex) {
+          stage2Passed = true;
+          helpStage = 3;
+          handleHelpButtonClick();
+        } else {
+          stage2Attempts++;
+          if (stage2Attempts >= 3) {
+            stage2Passed = true;
+            helpStage = 3;
+            handleHelpButtonClick();
+          } else {
+            if (feedbackEl) {
+              feedbackEl.style.color = '#ef4444';
+              feedbackEl.innerText = `❌ Not quite! Try again. (Attempt ${stage2Attempts}/3)`;
+            }
+            btn.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+            btn.style.background = 'rgba(239, 68, 68, 0.15)';
+          }
+        }
+      });
+    });
+  }
+
+  // Bind Copy Code button listener if Stage 3 code is rendered
+  if (helpStage >= 3 || stage2Passed) {
+    const copyBtn = document.getElementById('btn-copy-solution-code');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(formattedCode).then(() => {
+          copyBtn.innerText = '✓ Copied!';
+          setTimeout(() => { copyBtn.innerText = '📋 Copy Code'; }, 2000);
+        }).catch(() => {
+          copyBtn.innerText = 'Failed to copy';
+        });
+      });
+    }
+  }
+
+  if (btnHelp) {
+    if (stage2Passed || helpStage >= 3) {
+      btnHelp.innerText = '✅ Stage 3 Unlocked';
+    } else if (helpStage === 1) {
+      btnHelp.innerText = '💡 Need Help? (Stage 2/3: Quiz)';
+    } else if (helpStage === 2) {
+      btnHelp.innerText = '💡 Take Quiz (Stage 2/3)';
+    }
+  }
+
+  if (indicator) {
+    if (stage2Passed || helpStage >= 3) {
+      indicator.innerText = 'Stage 3 Unlocked — Solution & Explanation';
+    } else if (helpStage === 1) {
+      indicator.innerText = 'Stage 1 — Basic Conceptual Hint';
+    } else if (helpStage === 2) {
+      indicator.innerText = 'Stage 2 — Concept Check Quiz';
+    }
   }
 }
 
@@ -227,10 +593,15 @@ async function openShareScholarCircleModal() {
   friendsListEl.innerHTML = '<div style="font-size: 12px; color: rgba(245,232,215,0.5); text-align: center; padding: 10px;">Loading ScholarCircle friends...</div>';
 
   try {
-    const res = await api.getFriendsList();
-
-    if (!res.ok) throw new Error(res.error || 'Failed to fetch friends');
-    const friends = (res.data && res.data.friends) || (Array.isArray(res.data) ? res.data : []);
+    let friends = [];
+    if (typeof window.getStudySyncFriends === 'function') {
+      friends = window.getStudySyncFriends();
+    }
+    if (!friends || friends.length === 0) {
+      const res = await api.getFriendsList();
+      if (!res.ok) throw new Error(res.error || 'Failed to fetch friends');
+      friends = (res.data && res.data.friends) || (Array.isArray(res.data) ? res.data : []);
+    }
 
     if (friends.length === 0) {
       friendsListEl.innerHTML = '<div style="font-size: 12px; color: rgba(245,232,215,0.5); text-align: center; padding: 10px;">No ScholarCircle friends found. Add friends in ScholarCircle first!</div>';
@@ -241,12 +612,16 @@ async function openShareScholarCircleModal() {
     const currentChallenge = currentDomainChallenges[activeChallengeIndex] || { title: 'Quest Challenge' };
 
     friends.forEach(friend => {
+      const isOnline = !!friend.online;
+      const statusText = isOnline ? 'Online' : 'Offline';
+      const statusColor = isOnline ? '#10b981' : 'rgba(245,232,215,0.5)';
+
       const item = document.createElement('div');
       item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px;';
       item.innerHTML = `
         <div>
           <div style="font-size: 12px; font-weight: 800; color: #f5e8d7;">${friend.username || friend.name || 'Scholar Friend'}</div>
-          <div style="font-size: 10px; color: #10b981;">LV ${friend.level || 1} &nbsp;•&nbsp; Online</div>
+          <div style="font-size: 10px; color: ${statusColor}; font-weight: 700;">LV ${friend.level || 1} &nbsp;•&nbsp; ${statusText}</div>
         </div>
         <button class="btn btn-sm primary-btn btn-send-share" data-friend-id="${friend.id || friend._id}" data-friend-name="${friend.username || friend.name}" style="padding: 3px 10px; font-size: 11px; font-weight: 800;">
           Share 📡
@@ -258,7 +633,16 @@ async function openShareScholarCircleModal() {
         const friendName = e.currentTarget.getAttribute('data-friend-name');
 
         const shareUrl = `${window.location.origin}/?view=codescroll&domain=${encodeURIComponent(selectedDomain)}&difficulty=${selectedDifficulty}&challengeIndex=${activeChallengeIndex}`;
-        const messageText = `⚔️ ScholarQuest Challenge Share!\nCheck out this challenge in CodeScroll: [${selectedDomain} - ${selectedDifficulty}] ${currentChallenge.title}\n👉 Open Quest: ${shareUrl}`;
+        const sharePayload = {
+          type: 'challenge_share',
+          domain: selectedDomain,
+          difficulty: selectedDifficulty,
+          title: currentChallenge.title,
+          xp: currentChallenge.xpReward || 30,
+          coins: currentChallenge.coinReward || 10,
+          url: shareUrl
+        };
+        const messageText = `[CHALLENGE_SHARE]${JSON.stringify(sharePayload)}`;
 
         if (statusEl) {
           statusEl.style.color = '#f59e0b';
@@ -342,6 +726,28 @@ function setupWorkspaceEvents() {
 
   // Progressive Help Button
   document.getElementById('btn-codescroll-help')?.addEventListener('click', handleHelpButtonClick);
+
+  // Floating Chatbot Blob & Window Close Listeners
+  const blobTrigger = document.getElementById('codescroll-bot-blob');
+  const closeWindowBtn = document.getElementById('btn-close-chatbot-window');
+
+  if (blobTrigger && !blobTrigger.dataset.bound) {
+    blobTrigger.dataset.bound = 'true';
+    blobTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleChatbotWindow();
+    });
+  }
+
+  if (closeWindowBtn && !closeWindowBtn.dataset.bound) {
+    closeWindowBtn.dataset.bound = 'true';
+    closeWindowBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeChatbotWindow();
+    });
+  }
 
   // Share to ScholarCircle Button & Modal Close
   document.getElementById('btn-share-scholarcircle')?.addEventListener('click', openShareScholarCircleModal);
@@ -499,12 +905,30 @@ function submitUserCode() {
   }
 }
 
+function updateLeetCodeHeaderPill(username) {
+  const pill = document.getElementById('leetcode-header-status-pill');
+  if (!pill) return;
+
+  if (username) {
+    pill.innerText = `Linked as @${username}`;
+    pill.style.background = 'rgba(16,185,129,0.15)';
+    pill.style.color = '#10b981';
+    pill.style.border = '1px solid rgba(16,185,129,0.3)';
+  } else {
+    pill.innerText = 'Not linked';
+    pill.style.background = 'rgba(245,158,11,0.12)';
+    pill.style.color = 'rgba(245,232,215,0.7)';
+    pill.style.border = '1px solid rgba(245,158,11,0.25)';
+  }
+}
+
 async function fetchAndDisplayLeetCodeStats(username) {
   const statusMsg = document.getElementById('leetcode-status-msg');
   const displayContainer = document.getElementById('leetcode-stats-display');
 
   if (!username) {
     if (displayContainer) displayContainer.style.display = 'none';
+    updateLeetCodeHeaderPill('');
     return;
   }
 
@@ -515,7 +939,14 @@ async function fetchAndDisplayLeetCodeStats(username) {
 
   try {
     const res = await fetch(`http://localhost:3000/api/codescroll/leetcode-stats/${encodeURIComponent(username)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      let errMsg = `HTTP ${res.status}`;
+      try {
+        const errJson = await res.json();
+        if (errJson && errJson.error) errMsg = errJson.error;
+      } catch (e) {}
+      throw new Error(errMsg);
+    }
     const data = await res.json();
 
     if (displayContainer) displayContainer.style.display = 'block';
@@ -542,15 +973,19 @@ async function fetchAndDisplayLeetCodeStats(username) {
       statusMsg.style.color = '#10b981';
       statusMsg.innerText = `✓ Linked to @${username}`;
     }
+
+    updateLeetCodeHeaderPill(username);
+
   } catch (err) {
     if (statusMsg) {
       statusMsg.style.color = '#ef4444';
       statusMsg.innerText = `Failed to load LeetCode stats for @${username}: ${err.message}`;
     }
+    updateLeetCodeHeaderPill('');
   }
 }
 
-function setupLeetCodeEvents() {
+export function setupLeetCodeEvents() {
   const btnLink = document.getElementById('btn-link-leetcode');
   const btnUnlink = document.getElementById('btn-unlink-leetcode');
   const usernameInput = document.getElementById('leetcode-username-input');
@@ -558,8 +993,17 @@ function setupLeetCodeEvents() {
   if (btnLink && !btnLink.dataset.bound) {
     btnLink.dataset.bound = 'true';
     btnLink.addEventListener('click', async () => {
+      const statusMsg = document.getElementById('leetcode-status-msg');
       const username = usernameInput ? usernameInput.value.trim() : '';
-      if (!username) return;
+
+      // Input Validation: LeetCode usernames cannot contain spaces or invalid characters
+      if (!username || /\s/.test(username) || /[^a-zA-Z0-9_-]/.test(username)) {
+        if (statusMsg) {
+          statusMsg.style.color = '#ef4444';
+          statusMsg.innerText = 'Enter a valid LeetCode username';
+        }
+        return;
+      }
 
       if (state && state.user) {
         state.user.leetcodeUsername = username;
@@ -596,6 +1040,7 @@ function setupLeetCodeEvents() {
       if (usernameInput) usernameInput.value = '';
       if (displayContainer) displayContainer.style.display = 'none';
       if (statusMsg) statusMsg.innerText = '';
+      updateLeetCodeHeaderPill('');
 
       try {
         const token = auth.getToken();
@@ -719,6 +1164,7 @@ function renderChallengesList() {
 
   pageChallenges.forEach((challenge, relativeIdx) => {
     const globalIdx = startIndex + relativeIdx;
+    const cleanTitle = (challenge.title || '').replace(/^\d+\.\s*/, '');
     const item = document.createElement('div');
     item.className = `lesson-item ${globalIdx === activeChallengeIndex ? 'active' : ''}`;
     item.style.cssText = `
@@ -730,7 +1176,7 @@ function renderChallengesList() {
 
     item.innerHTML = `
       <div class="lesson-info">
-        <div style="font-size: 12px; font-weight: 800; color: ${globalIdx === activeChallengeIndex ? '#f59e0b' : '#f5e8d7'};">${globalIdx + 1}. ${challenge.title}</div>
+        <div style="font-size: 12px; font-weight: 800; color: ${globalIdx === activeChallengeIndex ? '#f59e0b' : '#f5e8d7'};">${globalIdx + 1}. ${cleanTitle}</div>
         <div style="font-size: 10px; color: ${diffColor}; margin-top: 2px; font-weight: 800;">+${challenge.xpReward} XP / +${challenge.coinReward} Coins</div>
       </div>
       <div>

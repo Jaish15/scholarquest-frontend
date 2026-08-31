@@ -5,7 +5,7 @@
    ========================================== */
 
 import { state, addXP, addCoins, saveState, updateUI } from '../app.js';
-import { api, auth } from '../api.js';
+import { api, auth, API_BASE } from '../api.js';
 import { CODE_SCROLL_BANK } from '../src/data/codeScrollBank.js';
 import { PYTHON_CODE_CHALLENGES } from '../src/data/domains/python.js';
 import { JAVASCRIPT_CODE_CHALLENGES } from '../src/data/domains/javascript.js';
@@ -789,7 +789,7 @@ async function runSandboxCode() {
   if (btnRun) btnRun.disabled = true;
 
   try {
-    const res = await fetch('http://localhost:3000/api/codescroll/run', {
+    const res = await fetch(`${API_BASE}/codescroll/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, language })
@@ -797,6 +797,14 @@ async function runSandboxCode() {
 
     const data = await res.json();
     if (btnRun) btnRun.disabled = false;
+
+    if (!res.ok) {
+      if (consoleEl) {
+        consoleEl.style.color = '#ef4444';
+        consoleEl.innerText = `[Execution Error] ${data.error || 'Server error running code.'}`;
+      }
+      return;
+    }
 
     if (consoleEl) {
       if (data.stderr) {
@@ -938,7 +946,7 @@ async function fetchAndDisplayLeetCodeStats(username) {
   }
 
   try {
-    const res = await fetch(`http://localhost:3000/api/codescroll/leetcode-stats/${encodeURIComponent(username)}`);
+    const res = await fetch(`${API_BASE}/codescroll/leetcode-stats/${encodeURIComponent(username)}`);
     if (!res.ok) {
       let errMsg = `HTTP ${res.status}`;
       try {
@@ -1012,7 +1020,7 @@ export function setupLeetCodeEvents() {
 
       try {
         const token = auth.getToken();
-        await fetch('http://localhost:3000/api/user/leetcode', {
+        await fetch(`${API_BASE}/user/leetcode`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1044,7 +1052,7 @@ export function setupLeetCodeEvents() {
 
       try {
         const token = auth.getToken();
-        await fetch('http://localhost:3000/api/user/leetcode', {
+        await fetch(`${API_BASE}/user/leetcode`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -12,7 +12,8 @@
    ============================================================ */
 
 // ── Config ─────────────────────────────────────────────────────
-const API_BASE = 'http://localhost:3000/api';
+import { API_BASE, SERVER_URL } from './src/config.js';
+export { API_BASE, SERVER_URL };
 
 // ── Token Management ───────────────────────────────────────────
 export const auth = {
@@ -200,6 +201,12 @@ export const api = {
     };
   },
 
+  /**
+   * Get current authenticated user details from JWT token
+   */
+  async getCurrentUser() {
+    return await request('GET', '/auth/me');
+  },
 
   /** Request password reset email link */
   async forgotPassword(email) {
@@ -215,6 +222,21 @@ export const api = {
   logout() {
     auth.clearToken();
     console.log('[API] Logged out.');
+  },
+
+  /** Hard Delete Account & WIPE all associated data */
+  async deleteAccount() {
+    return await request('DELETE', '/auth/account');
+  },
+
+  /** Check if username is available */
+  async checkUsername(username) {
+    return await request('POST', '/auth/check-username', { username }, false);
+  },
+
+  /** Complete brand-new OAuth registration */
+  async completeOauthRegistration(pendingToken, username) {
+    return await request('POST', '/auth/oauth/complete-registration', { pendingToken, username }, false);
   },
 
 
@@ -371,10 +393,15 @@ export const api = {
   /** Check if backend is reachable */
   async ping() {
     try {
-      const res = await fetch('http://localhost:3000/', { method: 'GET' });
+      const res = await fetch(`${SERVER_URL}/health`, { method: 'GET' });
       return res.ok;
     } catch {
-      return false;
+      try {
+        const res2 = await fetch(`${SERVER_URL}/`, { method: 'GET' });
+        return res2.ok;
+      } catch {
+        return false;
+      }
     }
   }
 };

@@ -142,6 +142,36 @@
           </div>
         </div>
 
+        <!-- FORM 4: COMPLETE OAUTH REGISTRATION -->
+        <div id="pg-container-oauth-complete" class="login-form hidden">
+          <div style="text-align: center; margin-bottom: 16px;">
+            <span style="font-size: 28px;">🛡️</span>
+            <h3 style="font-size: 17px; font-weight: 800; color: #f59e0b; margin: 4px 0 2px;">Complete Your Registration</h3>
+            <p style="font-size: 11px; color: rgba(245,232,215,0.7); margin: 0;">Set your ScholarQuest username to finalize your account.</p>
+          </div>
+          <form id="pg-form-oauth-complete">
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="pg-oauth-fullname" style="font-size: 11px;"><i data-lucide="user"></i> Full Name</label>
+              <input type="text" id="pg-oauth-fullname" readonly style="opacity: 0.7; cursor: not-allowed; background: rgba(0,0,0,0.4);" />
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="pg-oauth-email" style="font-size: 11px;"><i data-lucide="mail"></i> Email Address</label>
+              <input type="email" id="pg-oauth-email" readonly style="opacity: 0.7; cursor: not-allowed; background: rgba(0,0,0,0.4);" />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="pg-oauth-username" style="font-size: 11px;"><i data-lucide="user-check"></i> Choose Username</label>
+              <input type="text" id="pg-oauth-username" required placeholder="e.g. KnightCoder" minlength="3" autocomplete="username" />
+              <span id="oauth-username-status" style="font-size: 11px; margin-top: 4px; font-weight: 700; display: block;"></span>
+            </div>
+            <button type="submit" class="btn primary-btn page-submit-btn" id="pg-btn-oauth-submit" style="width: 100%;">
+              <span>Finalize Account & Join Quest 🚀</span>
+            </button>
+          </form>
+          <div class="auth-form-footer-link" style="text-align: center; margin-top: 14px;">
+            <button type="button" class="btn-link" id="pg-btn-oauth-cancel">← Cancel & Back to Login</button>
+          </div>
+        </div>
+
         <!-- Social OAuth Sign-In Row (Centered Gold Glass Icons) -->
         <div class="social-auth-divider" style="display: flex; align-items: center; justify-content: center; text-align: center; width: 100%; max-width: 330px; margin: 20px auto 12px; color: rgba(245, 232, 215, 0.5); font-size: 11px; font-weight: 600;">
           <span style="padding: 0 10px; text-align: center;">or authenticate with</span>
@@ -153,13 +183,6 @@
           </button>
           <button type="button" class="social-auth-btn social-github" data-sso="github" title="Authenticate with GitHub" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; border-radius: 50%; background: rgba(38, 25, 11, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); outline: none;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="#f59e0b" style="display:block;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          </button>
-        </div>
-
-        <!-- Guest Preview & Switcher -->
-        <div class="login-guest-footer">
-          <button type="button" class="btn-link guest-link" id="btn-enter-guest">
-            Or continue in Guest Preview Mode 🏹
           </button>
         </div>
 
@@ -477,14 +500,16 @@
               </form>
             </div>
             
-            <!-- Leaderboard Sidecar -->
+            <!-- Quiz History Sidecar -->
             <div class="glass card quiz-leaderboard-card">
-              <div class="card-header">
-                <h2>Hall of Fame</h2>
-                <i data-lucide="trophy" class="text-gold"></i>
+              <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+                <h2 style="font-size: 16px; font-weight: 800; color: #f59e0b; margin: 0; display: flex; align-items: center; gap: 8px;">
+                  📜 Quiz History
+                </h2>
+                <span style="font-size: 11px; color: rgba(245,232,215,0.6); font-weight: 700;">Past 7 Days</span>
               </div>
-              <div class="leaderboard-list" id="quiz-leaderboards">
-                <!-- Injected dynamically -->
+              <div class="leaderboard-list" id="quiz-history-list" style="margin-top: 10px; max-height: 480px; overflow-y: auto;">
+                <!-- Injected dynamically by renderQuizHistory() -->
               </div>
             </div>
             
@@ -1325,15 +1350,53 @@ console.log(greet());
               </div>
             </form>
 
-            <!-- FOOTER ACTION (ONLY Sync Progress, NO Logout Button) -->
-            <div class="profile-actions" style="display: flex; justify-content: flex-end;">
+            <!-- FOOTER ACTIONS (Sync Progress & Delete Account) -->
+            <div class="profile-actions" style="display: flex; justify-content: flex-end; gap: 12px;">
               <button type="button" class="btn secondary-btn" id="btn-sync-state" style="padding: 10px 20px; font-size: 12px; font-weight: 700;">
                 <i data-lucide="refresh-cw"></i> Sync Progress
+              </button>
+              <button type="button" class="btn danger-btn" id="btn-delete-account-trigger" style="padding: 10px 20px; font-size: 12px; font-weight: 800; background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.4); border-radius: var(--radius-md); cursor: pointer;">
+                <i data-lucide="trash-2"></i> Delete Account
               </button>
             </div>
 
           </div>
         </section>
+
+  <!-- Delete Account Confirmation Modal -->
+  <div id="delete-account-modal" class="modal-overlay hidden" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); z-index: 10000; align-items: center; justify-content: center;">
+    <div class="glass card" style="width: 420px; max-width: 92%; padding: 24px; border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(18, 14, 10, 0.96); border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid rgba(239, 68, 68, 0.3);">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #ef4444; display: flex; align-items: center; gap: 8px;">
+          <span>⚠️</span> Delete Account Permanently
+        </h3>
+        <button type="button" id="btn-close-delete-modal" class="btn secondary-btn" style="padding: 2px 8px; font-size: 12px; background: transparent; border: none; color: #9ca3af; cursor: pointer;">✕</button>
+      </div>
+
+      <div style="font-size: 12px; color: #f3f4f6; line-height: 1.5; margin-bottom: 16px;">
+        <p style="margin: 0 0 10px; font-weight: 800; color: #f87171;">This action is permanent and irreversible!</p>
+        <p style="margin: 0 0 10px; color: rgba(245, 232, 215, 0.8);">
+          Deleting your account will completely wipe all your data from the backend including your Level/XP, coins, QuizForge history, CodeScroll progress, HabitDojo streaks, Report Card records, and ScholarCircle connections.
+        </p>
+        <p style="margin: 0; color: #f59e0b; font-weight: 800;">
+          To confirm deletion, type <code style="background: rgba(239,68,68,0.2); padding: 2px 6px; border-radius: 4px; color: #ef4444; font-weight: 900;">delete</code> below:
+        </p>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <input type="text" id="delete-confirm-input" class="glass-input" placeholder="Type 'delete' to confirm" autocomplete="off" style="width: 100%; padding: 10px 14px; background: rgba(10,10,18,0.9); border: 1px solid rgba(239,68,68,0.4); color: #f5e8d7; font-weight: 800; border-radius: 8px; font-size: 13px; box-sizing: border-box;" />
+      </div>
+
+      <div id="delete-modal-alert" class="auth-alert hidden" style="margin-bottom: 12px; font-size: 11px;"></div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" class="btn secondary-btn" id="btn-cancel-delete" style="padding: 9px 16px; font-size: 12px; font-weight: 700;">Cancel</button>
+        <button type="button" class="btn danger-btn" id="btn-confirm-delete" disabled style="padding: 9px 18px; font-size: 12px; font-weight: 800; background: #dc2626; color: #fff; border: 1px solid #ef4444; opacity: 0.4; cursor: not-allowed; border-radius: 8px;">
+          Confirm Delete Account
+        </button>
+      </div>
+    </div>
+  </div>
         
       </div>
     </main>
@@ -1576,6 +1639,20 @@ console.log(greet());
         <button type="submit" class="btn primary-btn auth-submit-btn" id="btn-submit-login">
           <span>Enter Realm ⚔️</span>
         </button>
+
+        <!-- Social OAuth Sign-In Row -->
+        <div class="social-auth-divider" style="display: flex; align-items: center; justify-content: center; text-align: center; width: 100%; max-width: 330px; margin: 16px auto 10px; color: rgba(245, 232, 215, 0.5); font-size: 11px; font-weight: 600;">
+          <span style="padding: 0 10px; text-align: center;">or authenticate with</span>
+        </div>
+
+        <div class="social-auth-row" style="display: flex; align-items: center; justify-content: center; gap: 18px; width: 100%; max-width: 330px; margin: 0 auto 8px;">
+          <button type="button" class="social-auth-btn social-google" data-sso="google" title="Authenticate with Google" style="width: 44px; height: 44px; min-width: 44px; max-width: 44px; border-radius: 50%; background: rgba(38, 25, 11, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); outline: none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#f59e0b" style="display:block;"><path d="M12.24 10.285V13.4h6.887c-.58 3.407-3.418 5.617-6.887 5.617-4.14 0-7.5-3.36-7.5-7.5s3.36-7.5 7.5-7.5c1.86 0 3.56.68 4.88 1.8l2.36-2.36C17.5 1.7 15 1 12.24 1 6.03 1 1 6.03 1 12.24S6.03 23.48 12.24 23.48c6.48 0 11.88-4.66 11.88-11.88 0-.79-.08-1.57-.22-2.315H12.24z"/></svg>
+          </button>
+          <button type="button" class="social-auth-btn social-github" data-sso="github" title="Authenticate with GitHub" style="width: 44px; height: 44px; min-width: 44px; max-width: 44px; border-radius: 50%; background: rgba(38, 25, 11, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); outline: none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#f59e0b" style="display:block;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          </button>
+        </div>
       </form>
 
       <!-- FORM 2: REGISTER -->

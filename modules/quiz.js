@@ -5,28 +5,12 @@
    ========================================== */
 
 import { state, addXP, addCoins, saveState, updateUI } from '../app.js';
+import { QUIZFORGE_ALL_QUESTIONS } from '../src/quizforge/data/index.js';
 import { QUIZ_BANK } from '../src/data/quizBank.js';
-import { PYTHON_QUIZ_QUESTIONS } from '../src/data/domains/python.js';
-import { JAVASCRIPT_QUIZ_QUESTIONS } from '../src/data/domains/javascript.js';
-import { UML_QUIZ_QUESTIONS } from '../src/data/domains/uml.js';
-import { SOFTWARE_TESTING_QUIZ_QUESTIONS } from '../src/data/domains/softwareTesting.js';
-import { ADVANCED_JAVA_QUIZ_QUESTIONS } from '../src/data/domains/advancedJava.js';
-import { RUBY_QUIZ_QUESTIONS } from '../src/data/domains/ruby.js';
-import { ML_QUIZ_QUESTIONS } from '../src/data/domains/machineLearning.js';
-import { DL_QUIZ_QUESTIONS } from '../src/data/domains/deepLearning.js';
-import { CYBERSECURITY_QUIZ_QUESTIONS } from '../src/data/domains/cybersecurity.js';
 
-// Aggregate 1,080 Quiz Questions across all 9 Domains & 3 Tiers
+// Aggregate QuizForge Questions across all 9 Domains & 3 Tiers
 export const FULL_QUIZ_BANK = [
-  ...PYTHON_QUIZ_QUESTIONS,
-  ...JAVASCRIPT_QUIZ_QUESTIONS,
-  ...UML_QUIZ_QUESTIONS,
-  ...SOFTWARE_TESTING_QUIZ_QUESTIONS,
-  ...ADVANCED_JAVA_QUIZ_QUESTIONS,
-  ...RUBY_QUIZ_QUESTIONS,
-  ...ML_QUIZ_QUESTIONS,
-  ...DL_QUIZ_QUESTIONS,
-  ...CYBERSECURITY_QUIZ_QUESTIONS,
+  ...QUIZFORGE_ALL_QUESTIONS,
   ...QUIZ_BANK
 ];
 
@@ -50,7 +34,7 @@ export function initQuizzes() {
   renderDomainFilterBar();
   setupDifficultyFilters();
   renderQuizList();
-  renderLeaderboard();
+  renderQuizHistory();
   setupEventListeners();
 }
 
@@ -490,10 +474,27 @@ function finishQuiz() {
   addXP(xpGain);
   addCoins(coinGain);
 
+  // Record Quiz Attempt to History
+  const attemptRecord = {
+    id: 'qa_' + Date.now(),
+    domain: selectedDomainFilter,
+    difficulty: selectedDifficultyFilter,
+    correct: score,
+    wrong: activeQuizQuestions.length - score,
+    total: activeQuizQuestions.length,
+    timestamp: Date.now()
+  };
+
+  if (!Array.isArray(state.quizHistory)) {
+    state.quizHistory = [];
+  }
+  state.quizHistory.unshift(attemptRecord);
+
   if (!state.stats) state.stats = {};
   state.stats.quizzesCompleted = (state.stats.quizzesCompleted || 0) + 1;
   saveState();
   updateUI();
+  renderQuizHistory();
   renderQuizResultsFriendComparison();
 }
 
@@ -572,4 +573,76 @@ function shuffleArray(arr) {
     [array[i], array[j]] = [array[j], array[i]];
   }
   return array;
+}
+
+export function renderQuizHistory() {
+  const container = document.getElementById('quiz-history-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  const attempts = (Array.isArray(state.quizHistory) ? state.quizHistory : [])
+    .filter(a => a && typeof a.timestamp === 'number' && a.timestamp >= sevenDaysAgo);
+
+  if (attempts.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 28px 12px; color: rgba(245,232,215,0.6); font-size: 12px;">
+        <div style="font-size: 28px; margin-bottom: 8px;">📜</div>
+        <p style="margin: 0; font-weight: 700; color: #f5e8d7; line-height: 1.4;">
+          No quizzes taken this week yet — start one to see your history here!
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  const domainIcons = {
+    'Python': '🐍', 'JavaScript': '⚡', 'UML': '📐',
+    'Software Testing': '🧪', 'Advanced Java': '☕',
+    'Ruby Programming': '💎', 'Machine Learning': '🤖',
+    'Deep Learning': '🧠', 'Cybersecurity': '🛡️'
+  };
+
+  attempts.forEach(attempt => {
+    const item = document.createElement('div');
+    item.className = 'quiz-history-item';
+    item.style.cssText = `
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 10px 12px; border-radius: 10px; margin-bottom: 8px;
+      background: rgba(20,16,11,0.7); border: 1px solid rgba(245,158,11,0.25);
+    `;
+
+    const diffColor = attempt.difficulty === 'Beginner' ? '#10b981' : (attempt.difficulty === 'Intermediate' ? '#f59e0b' : '#ef4444');
+    const timeAgoStr = formatTimeAgo(attempt.timestamp);
+
+    item.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 13px; font-weight: 800; color: #f5e8d7; display: flex; align-items: center; gap: 6px;">
+          <span>${domainIcons[attempt.domain] || '📘'}</span> ${attempt.domain}
+        </span>
+        <span style="font-size: 10px; font-weight: 800; color: ${diffColor}; background: rgba(20,16,11,0.9); border: 1px solid ${diffColor}; padding: 1px 6px; border-radius: 4px;">
+          ${attempt.difficulty}
+        </span>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-top: 2px;">
+        <div style="display: flex; gap: 10px; font-weight: 700;">
+          <span style="color: #10b981;">✅ Correct: ${attempt.correct}</span>
+          <span style="color: #ef4444;">❌ Wrong: ${attempt.wrong}</span>
+        </div>
+        <span style="color: rgba(245,232,215,0.5); font-size: 10px;">${timeAgoStr}</span>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function formatTimeAgo(timestamp) {
+  const diffSec = Math.floor((Date.now() - timestamp) / 1000);
+  if (diffSec < 60) return 'Just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  return `${diffDays}d ago`;
 }

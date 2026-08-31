@@ -9,7 +9,7 @@ import { initHabits } from './modules/habits.js';
 import { initStudySync } from './modules/studysync.js';
 import { initCodeScroll, setupLeetCodeEvents } from './modules/codescroll.js';
 import { initShop, updateShopAndInventoryUI, updatePodiumDisplay } from './modules/shop.js';
-import api, { auth } from './api.js';
+import api, { auth, API_BASE } from './api.js';
 
 
 // Default State Configuration (Clean, Zeroed for New Users)
@@ -161,6 +161,7 @@ async function loadState() {
       equipped: { ...DEFAULT_STATE.equipped, ...(loadedState.equipped || {}) },
       inventory: loadedState.inventory || DEFAULT_STATE.inventory,
       habits: (loadedState.habits && loadedState.habits.length > 0) ? loadedState.habits : DEFAULT_STATE.habits,
+      quizHistory: Array.isArray(loadedState.quizHistory) ? loadedState.quizHistory : [],
       loginDates: Array.isArray(loadedState.loginDates) ? loadedState.loginDates : [],
       loginStreak: typeof loadedState.loginStreak === 'number' ? loadedState.loginStreak : 0
     };
@@ -748,10 +749,11 @@ function initAuth() {
 
   const ssoParam = urlParams.get('sso');
   const errorParam = urlParams.get('error');
+  const pendingOauthParam = urlParams.get('pending_oauth');
+  let activePendingToken = pendingOauthParam || null;
 
   const pgGotoForgot = document.getElementById('pg-goto-forgot');
   const pgGotoLogin = document.getElementById('pg-goto-login');
-  const btnEnterGuest = document.getElementById('btn-enter-guest');
 
   // Modal elements
   const modal = document.getElementById('auth-modal');
@@ -807,6 +809,33 @@ function initAuth() {
   if (errorParam) {
     showLoginScreen();
     showPgAlert('OAuth sign-in was cancelled or failed. Please try again.', 'error');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (pendingOauthParam) {
+    console.log('[Auth Engine] Pending brand-new OAuth registration token detected.');
+    let pendingData = null;
+    try {
+      const parts = pendingOauthParam.split('.');
+      if (parts.length === 3) {
+        pendingData = JSON.parse(atob(parts[1]));
+      }
+    } catch (e) {
+      console.error('[Auth Engine] Failed to decode pending OAuth token', e);
+    }
+
+    showLoginScreen();
+    switchPageTab('oauth-complete');
+
+    if (pendingData) {
+      const fullnameEl = document.getElementById('pg-oauth-fullname');
+      const emailEl = document.getElementById('pg-oauth-email');
+      const usernameEl = document.getElementById('pg-oauth-username');
+
+      if (fullnameEl) fullnameEl.value = pendingData.fullName || '';
+      if (emailEl) emailEl.value = pendingData.email || '';
+      if (usernameEl) usernameEl.value = pendingData.suggestedUsername || '';
+
+      showPgAlert(`Verified ${pendingData.provider ? pendingData.provider.toUpperCase() : 'OAuth'} identity! Please confirm your username to complete registration.`, 'success');
+    }
     window.history.replaceState({}, document.title, window.location.pathname);
   } else if ((ssoParam === 'google' || ssoParam === 'github') && resetToken) {
     console.log(`[Auth Engine] ${ssoParam.toUpperCase()} OAuth callback detected. Storing session token...`);
@@ -869,12 +898,8 @@ function initAuth() {
     const el = document.getElementById('profile-alert');
     if (!el) return;
     el.className = `auth-alert ${type}`;
-    el.textContent = msg;
     el.innerText = msg;
     el.classList.remove('hidden');
-    if (typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
   }
 
   function hideProfileAlert() {
@@ -884,9 +909,14 @@ function initAuth() {
     el.innerText = '';
   }
 
-  // Update Top Header Pill
+  // Header User Avatar & Username Update
   function updateAuthHeaderBtn() {
-    if (!btnOpenAuth || !authBtnLabel) return;
+    if (!authBtnLabel || !btnOpenAuth) return;
+    if (!auth.isLoggedIn()) {
+      authBtnLabel.innerText = 'Log In / Register';
+      btnOpenAuth.classList.remove('logged-in');
+      return;
+    }
     const username = state.profile?.fullName || state.username || localStorage.getItem('sq_username') || 'Jayasri';
     authBtnLabel.innerText = username;
     btnOpenAuth.classList.add('logged-in');
@@ -899,9 +929,12 @@ function initAuth() {
     hidePgAlert();
     [pgTabLogin, pgTabRegister, pgTabForgot].forEach(tab => tab?.classList.remove('active'));
 
+    const pgContainerOauthComplete = document.getElementById('pg-container-oauth-complete');
+
     pgFormLogin?.classList.add('hidden');
     pgFormRegister?.classList.add('hidden');
     pgContainerForgot?.classList.add('hidden');
+    if (pgContainerOauthComplete) pgContainerOauthComplete.classList.add('hidden');
 
     if (targetTab === 'login') {
       pgTabLogin?.classList.add('active');
@@ -909,6 +942,8 @@ function initAuth() {
     } else if (targetTab === 'register') {
       pgTabRegister?.classList.add('active');
       pgFormRegister?.classList.remove('hidden');
+    } else if (targetTab === 'oauth-complete') {
+      if (pgContainerOauthComplete) pgContainerOauthComplete.classList.remove('hidden');
     } else if (targetTab === 'forgot') {
       pgTabForgot?.classList.add('active');
       pgContainerForgot?.classList.remove('hidden');
@@ -929,15 +964,95 @@ function initAuth() {
   if (pgGotoForgot) pgGotoForgot.addEventListener('click', () => switchPageTab('forgot'));
   if (pgGotoLogin) pgGotoLogin.addEventListener('click', () => switchPageTab('login'));
 
-  if (btnEnterGuest) {
-    btnEnterGuest.addEventListener('click', () => {
-      auth.setToken('guest_token_' + Date.now());
-      auth.setUserId('guest_user_1');
-      state.username = 'Guest Scholar';
-      localStorage.setItem('sq_username', 'Guest Scholar');
-      updateUI();
-      updateAuthHeaderBtn();
-      showAppScreen();
+  // ── BRAND-NEW OAUTH REGISTRATION FORM CONTROLLER ─────────────
+  const pgFormOauthComplete = document.getElementById('pg-form-oauth-complete');
+  const pgBtnOauthSubmit = document.getElementById('pg-btn-oauth-submit');
+  const pgBtnOauthCancel = document.getElementById('pg-btn-oauth-cancel');
+  const oauthUsernameInput = document.getElementById('pg-oauth-username');
+  const oauthUsernameStatus = document.getElementById('oauth-username-status');
+
+  if (oauthUsernameInput) {
+    let checkTimeout = null;
+    oauthUsernameInput.addEventListener('input', () => {
+      const uname = oauthUsernameInput.value.trim();
+      if (checkTimeout) clearTimeout(checkTimeout);
+      if (uname.length < 3) {
+        if (oauthUsernameStatus) {
+          oauthUsernameStatus.innerText = 'Username must be at least 3 characters.';
+          oauthUsernameStatus.style.color = '#ef4444';
+        }
+        return;
+      }
+      checkTimeout = setTimeout(async () => {
+        const checkRes = await api.checkUsername(uname);
+        if (oauthUsernameStatus) {
+          if (checkRes.ok && checkRes.data && checkRes.data.available) {
+            oauthUsernameStatus.innerText = '✓ Username is available!';
+            oauthUsernameStatus.style.color = '#10b981';
+          } else {
+            oauthUsernameStatus.innerText = '✗ Username is already taken.';
+            oauthUsernameStatus.style.color = '#ef4444';
+          }
+        }
+      }, 300);
+    });
+  }
+
+  if (pgFormOauthComplete) {
+    pgFormOauthComplete.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hidePgAlert();
+
+      const username = oauthUsernameInput ? oauthUsernameInput.value.trim() : '';
+
+      if (!activePendingToken) {
+        showPgAlert('OAuth session expired. Please sign in with Google or GitHub again.', 'error');
+        switchPageTab('login');
+        return;
+      }
+
+      if (username.length < 3) {
+        showPgAlert('Username must be at least 3 characters long.', 'error');
+        return;
+      }
+
+      if (pgBtnOauthSubmit) {
+        pgBtnOauthSubmit.disabled = true;
+        pgBtnOauthSubmit.innerText = 'Creating Account... ⚔️';
+      }
+
+      const res = await api.completeOauthRegistration(activePendingToken, username);
+
+      if (pgBtnOauthSubmit) {
+        pgBtnOauthSubmit.disabled = false;
+        pgBtnOauthSubmit.innerHTML = '<span>Finalize Account & Join Quest 🚀</span>';
+      }
+
+      if (res.ok && res.data.user) {
+        activePendingToken = null;
+        showPgAlert('⚔️ Account created successfully! Starting your quest...', 'success');
+
+        auth.setToken(res.data.token);
+        auth.setUserId(res.data.user.id);
+        state.username = res.data.user.username;
+        state.email = res.data.user.email;
+        localStorage.setItem('sq_username', res.data.user.username);
+        state = { ...state, ...res.data.user };
+
+        updateUI();
+        updateAuthHeaderBtn();
+        showAppScreen();
+      } else {
+        showPgAlert(res.error || 'Failed to finalize OAuth registration.', 'error');
+      }
+    });
+  }
+
+  if (pgBtnOauthCancel) {
+    pgBtnOauthCancel.addEventListener('click', () => {
+      activePendingToken = null;
+      switchPageTab('login');
+      hidePgAlert();
     });
   }
 
@@ -950,7 +1065,7 @@ function initAuth() {
       if (provider === 'google') {
         showPgAlert('Redirecting to Google OAuth... ⚔️', 'success');
         setTimeout(() => {
-          window.location.href = 'http://localhost:3000/api/auth/google';
+          window.location.href = `${API_BASE}/auth/google`;
         }, 300);
         return;
       }
@@ -958,7 +1073,7 @@ function initAuth() {
       if (provider === 'github') {
         showPgAlert('Redirecting to GitHub OAuth... 🐙', 'success');
         setTimeout(() => {
-          window.location.href = 'http://localhost:3000/api/auth/github';
+          window.location.href = `${API_BASE}/auth/github`;
         }, 300);
         return;
       }
@@ -1485,6 +1600,104 @@ function initAuth() {
         if (profileViewMode) profileViewMode.classList.remove('hidden');
       } else {
         showProfileAlert(res.error || 'Current password is incorrect.', 'error');
+      }
+    });
+  }
+
+  // ── DELETE ACCOUNT MODAL CONTROLLER ─────────────────────────────
+  const btnDeleteTrigger = document.getElementById('btn-delete-account-trigger');
+  const deleteModal = document.getElementById('delete-account-modal');
+  const btnCloseDeleteModal = document.getElementById('btn-close-delete-modal');
+  const btnCancelDelete = document.getElementById('btn-cancel-delete');
+  const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+  const deleteConfirmInput = document.getElementById('delete-confirm-input');
+  const deleteModalAlert = document.getElementById('delete-modal-alert');
+
+  function openDeleteModal() {
+    if (!deleteModal) return;
+    if (deleteConfirmInput) deleteConfirmInput.value = '';
+    if (btnConfirmDelete) {
+      btnConfirmDelete.disabled = true;
+      btnConfirmDelete.style.opacity = '0.4';
+      btnConfirmDelete.style.cursor = 'not-allowed';
+    }
+    if (deleteModalAlert) {
+      deleteModalAlert.classList.add('hidden');
+      deleteModalAlert.innerText = '';
+    }
+    deleteModal.classList.remove('hidden');
+    deleteModal.style.display = 'flex';
+  }
+
+  function closeDeleteModal() {
+    if (!deleteModal) return;
+    deleteModal.classList.add('hidden');
+    deleteModal.style.display = 'none';
+  }
+
+  if (btnDeleteTrigger) {
+    btnDeleteTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      openDeleteModal();
+    });
+  }
+
+  if (btnCloseDeleteModal) btnCloseDeleteModal.addEventListener('click', closeDeleteModal);
+  if (btnCancelDelete) btnCancelDelete.addEventListener('click', closeDeleteModal);
+
+  if (deleteConfirmInput && btnConfirmDelete) {
+    deleteConfirmInput.addEventListener('input', () => {
+      const val = deleteConfirmInput.value.trim().toLowerCase();
+      if (val === 'delete') {
+        btnConfirmDelete.disabled = false;
+        btnConfirmDelete.style.opacity = '1';
+        btnConfirmDelete.style.cursor = 'pointer';
+      } else {
+        btnConfirmDelete.disabled = true;
+        btnConfirmDelete.style.opacity = '0.4';
+        btnConfirmDelete.style.cursor = 'not-allowed';
+      }
+    });
+  }
+
+  if (btnConfirmDelete) {
+    btnConfirmDelete.addEventListener('click', async () => {
+      const val = deleteConfirmInput ? deleteConfirmInput.value.trim().toLowerCase() : '';
+      if (val !== 'delete') return;
+
+      btnConfirmDelete.disabled = true;
+      btnConfirmDelete.innerText = 'Wiping Data... ⏳';
+
+      const res = await api.deleteAccount();
+
+      if (res.ok) {
+        // Hard logout and wipe local state
+        closeDeleteModal();
+        api.logout();
+        auth.clearToken();
+        const currUserKey = getUserStorageKey();
+        localStorage.removeItem(currUserKey);
+        localStorage.removeItem('scholarquest_state');
+        localStorage.removeItem('sq_server_state');
+        localStorage.removeItem('sq_username');
+
+        state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+        window.state = state;
+
+        updateAuthHeaderBtn();
+        updateUI();
+        showLoginScreen();
+
+        setTimeout(() => {
+          showPgAlert('⚔️ Your account and all associated data have been permanently deleted.', 'success');
+        }, 300);
+      } else {
+        btnConfirmDelete.disabled = false;
+        btnConfirmDelete.innerText = 'Confirm Delete Account';
+        if (deleteModalAlert) {
+          deleteModalAlert.innerText = res.error || 'Failed to delete account.';
+          deleteModalAlert.classList.remove('hidden');
+        }
       }
     });
   }

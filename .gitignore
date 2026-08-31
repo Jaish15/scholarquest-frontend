@@ -22,5 +22,9 @@ build/
 .idea/
 *.swp
 
+# Firebase
+.firebase/
+firebase-debug.log*
+
 # Logs
 *.log

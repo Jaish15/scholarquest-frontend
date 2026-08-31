@@ -4,7 +4,7 @@
    ============================================================ */
 
 import { state, addXP, addCoins, saveState, updateUI } from '../app.js';
-import { api, auth } from '../api.js';
+import { api, auth, SERVER_URL } from '../api.js';
 
 // Socket.io Client Instance & Active State
 let socket = null;
@@ -77,7 +77,7 @@ function initSocketConnection() {
   }
 
   try {
-    socket = io('http://localhost:3000', {
+    socket = io(SERVER_URL, {
       transports: ['websocket', 'polling'],
       autoConnect: true,
       reconnection: true,
@@ -88,6 +88,7 @@ function initSocketConnection() {
     // Remove existing event listeners to prevent duplicate listener accumulation
     socket.off('connect');
     socket.off('disconnect');
+    socket.off('friends:list');
     socket.off('user:status');
     socket.off('dm:receive');
     socket.off('dm:sent');
@@ -114,6 +115,26 @@ function initSocketConnection() {
     socket.on('disconnect', () => {
       console.warn('⚠️ [StudySync Socket] Disconnected from server');
       window.studySyncConnected = false;
+    });
+
+    // Real-Time Online Friends List Sync on Registration
+    socket.on('friends:list', (data) => {
+      if (data && Array.isArray(data.friends)) {
+        data.friends.forEach(srvFriend => {
+          const local = friendsList.find(f => f.id === srvFriend.id);
+          if (local) {
+            local.online = !!srvFriend.online;
+          }
+        });
+        renderFriendsList();
+        if (activeFriend) {
+          const match = friendsList.find(f => f.id === activeFriend.id);
+          if (match) {
+            activeFriend.online = !!match.online;
+            updateActiveChatHeader(activeFriend);
+          }
+        }
+      }
     });
 
     // Real-Time Online / Offline Status Updates
@@ -299,6 +320,7 @@ function updateBadgesAndCounters() {
 
 // ── 4. RENDER FRIENDS LIST ──────────────────────────────────────────────────
 function renderFriendsList() {
+  updateBadgesAndCounters();
   const container = document.getElementById('friends-list-container');
   if (!container) return;
 
@@ -726,7 +748,7 @@ function renderChatFeed(messages) {
 
 function renderAttachmentHTML(att) {
   if (!att) return '';
-  const fileUrl = att.url.startsWith('http') ? att.url : `http://localhost:3000${att.url}`;
+  const fileUrl = att.url.startsWith('http') ? att.url : `${SERVER_URL}${att.url}`;
   const fileName = escapeHTML(att.originalName || att.fileName || 'file');
   const fileSizeFormatted = formatFileSize(att.fileSize || 0);
 

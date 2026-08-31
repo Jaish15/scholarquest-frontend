@@ -790,6 +790,7 @@ function initAuth() {
       mainAppContainer.classList.remove('hidden');
     }
     if (window.lucide) window.lucide.createIcons();
+    initStudySync();
   }
 
   function showLoginScreen() {

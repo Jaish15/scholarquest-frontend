@@ -55,160 +55,169 @@ export function initStudySync() {
 }
 
 // ── 2. SOCKET.IO REAL-TIME CONNECTION ───────────────────────────────────────
-let socketListenersInitialized = false;
 let lastBattleInviteTime = 0;
 
-function initSocketConnection() {
+export function initSocketConnection() {
   if (typeof io === 'undefined') {
     console.warn('[StudySync Socket] Socket.io library not loaded.');
     return;
   }
 
-  if (socket && socket.connected) {
-    // Already connected — ensure current user is registered on socket
-    const userId = getMyUserId();
-    const username = getMyUsername();
-    socket.emit('user:register', { userId, username });
-    return;
-  }
+  const userId = getMyUserId();
+  const username = getMyUsername();
 
-  if (socketListenersInitialized && socket) {
-    return;
-  }
+  if (!socket) {
+    try {
+      socket = io(SERVER_URL, {
+        transports: ['websocket', 'polling'],
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 20,
+        reconnectionDelay: 1000
+      });
 
-  try {
-    socket = io(SERVER_URL, {
-      transports: ['websocket', 'polling'],
-      autoConnect: true,
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000
-    });
+      socket.on('connect', () => {
+        console.log('📡 [StudySync Socket] Connected to real-time server:', socket.id);
+        window.studySyncConnected = true;
 
-    // Remove existing event listeners to prevent duplicate listener accumulation
-    socket.off('connect');
-    socket.off('disconnect');
-    socket.off('friends:list');
-    socket.off('user:status');
-    socket.off('dm:receive');
-    socket.off('dm:sent');
-    socket.off('dm:typing');
-    socket.off('friend:request');
-    socket.off('friend:response');
-    socket.off('battle:invite');
+        // Register current user on socket
+        const currentUserId = getMyUserId();
+        const currentUsername = getMyUsername();
+        if (currentUserId && currentUserId !== 'guest_user') {
+          socket.emit('user:register', { userId: currentUserId, username: currentUsername });
+        }
 
-    socketListenersInitialized = true;
+        // Refresh friends
+        loadFriendsAndRequests();
+      });
 
-    socket.on('connect', () => {
-      console.log('📡 [StudySync Socket] Connected to real-time server:', socket.id);
-      window.studySyncConnected = true;
+      socket.on('reconnect', () => {
+        console.log('🔄 [StudySync Socket] Reconnected to server');
+        window.studySyncConnected = true;
+        const currentUserId = getMyUserId();
+        const currentUsername = getMyUsername();
+        if (currentUserId && currentUserId !== 'guest_user') {
+          socket.emit('user:register', { userId: currentUserId, username: currentUsername });
+        }
+        loadFriendsAndRequests();
+      });
 
-      // Register current user on socket
-      const userId = getMyUserId();
-      const username = getMyUsername();
-      socket.emit('user:register', { userId, username });
+      socket.on('disconnect', () => {
+        console.warn('⚠️ [StudySync Socket] Disconnected from server');
+        window.studySyncConnected = false;
+      });
 
-      // Refresh friends
-      loadFriendsAndRequests();
-    });
-
-    socket.on('disconnect', () => {
-      console.warn('⚠️ [StudySync Socket] Disconnected from server');
-      window.studySyncConnected = false;
-    });
-
-    // Real-Time Online Friends List Sync on Registration
-    socket.on('friends:list', (data) => {
-      if (data && Array.isArray(data.friends)) {
-        data.friends.forEach(srvFriend => {
-          const local = friendsList.find(f => f.id === srvFriend.id);
-          if (local) {
-            local.online = !!srvFriend.online;
+      // Real-Time Online Friends List Sync on Registration
+      socket.on('friends:list', (data) => {
+        if (data && Array.isArray(data.friends)) {
+          data.friends.forEach(srvFriend => {
+            const local = friendsList.find(f => f.id === srvFriend.id);
+            if (local) {
+              local.online = !!srvFriend.online;
+            }
+          });
+          renderFriendsList();
+          if (activeFriend) {
+            const match = friendsList.find(f => f.id === activeFriend.id);
+            if (match) {
+              activeFriend.online = !!match.online;
+              updateActiveChatHeader(activeFriend);
+            }
           }
-        });
-        renderFriendsList();
-        if (activeFriend) {
-          const match = friendsList.find(f => f.id === activeFriend.id);
-          if (match) {
-            activeFriend.online = !!match.online;
+        }
+      });
+
+      // Real-Time Online / Offline Status Updates
+      socket.on('user:status', (data) => {
+        if (!data || !data.userId) return;
+        const friend = friendsList.find(f => f.id === data.userId);
+        if (friend) {
+          friend.online = !!data.online;
+          renderFriendsList();
+          if (activeFriend && activeFriend.id === data.userId) {
+            activeFriend.online = !!data.online;
             updateActiveChatHeader(activeFriend);
           }
         }
-      }
-    });
+      });
 
-    // Real-Time Online / Offline Status Updates
-    socket.on('user:status', (data) => {
-      if (!data || !data.userId) return;
-      const friend = friendsList.find(f => f.id === data.userId);
-      if (friend) {
-        friend.online = !!data.online;
-        renderFriendsList();
-        if (activeFriend && activeFriend.id === data.userId) {
-          activeFriend.online = !!data.online;
-          updateActiveChatHeader(activeFriend);
+      // Real-Time Direct Message Received
+      socket.on('dm:receive', (msg) => {
+        if (!msg) return;
+        handleIncomingDirectMessage(msg);
+      });
+
+      // Confirmation of Sent Message
+      socket.on('dm:sent', (data) => {
+        if (data && data.success && data.message) {
+          // Message sent confirmation
         }
-      }
-    });
+      });
 
-    // Real-Time Direct Message Received
-    socket.on('dm:receive', (msg) => {
-      if (!msg) return;
-      handleIncomingDirectMessage(msg);
-    });
-
-    // Confirmation of Sent Message
-    socket.on('dm:sent', (data) => {
-      if (data && data.success && data.message) {
-        // Message sent confirmation
-      }
-    });
-
-    // Real-Time Typing Indicator
-    socket.on('dm:typing', (data) => {
-      if (!data || !activeFriend) return;
-      if (data.senderId === activeFriend.id) {
-        const indicator = document.getElementById('chat-typing-indicator');
-        const typingUser = document.getElementById('typing-username');
-        if (indicator && typingUser) {
-          typingUser.textContent = activeFriend.username;
-          if (data.isTyping) {
-            indicator.classList.remove('hidden');
-          } else {
-            indicator.classList.add('hidden');
+      // Real-Time Typing Indicator
+      socket.on('dm:typing', (data) => {
+        if (!data || !activeFriend) return;
+        if (data.senderId === activeFriend.id) {
+          const indicator = document.getElementById('chat-typing-indicator');
+          const typingUser = document.getElementById('typing-username');
+          if (indicator && typingUser) {
+            typingUser.textContent = activeFriend.username;
+            if (data.isTyping) {
+              indicator.classList.remove('hidden');
+            } else {
+              indicator.classList.add('hidden');
+            }
           }
         }
-      }
-    });
+      });
 
-    // Real-Time Friend Request Received
-    socket.on('friend:request', (data) => {
-      showAlertToast(`📬 Friend request received from ${data?.user?.username || 'a scholar'}!`, 'success');
-      loadFriendsAndRequests();
-    });
+      // Real-Time Friend Request Received
+      socket.on('friend:request', (data) => {
+        showAlertToast(`📬 Friend request received from ${data?.user?.username || 'a scholar'}!`, 'success');
+        loadFriendsAndRequests();
+      });
 
-    // Real-Time Friend Request Response (Accepted / Declined)
-    socket.on('friend:response', (data) => {
-      if (data && data.action === 'accept') {
-        showAlertToast(`⚔️ ${data.user?.username || 'Scholar'} accepted your friend request!`, 'success');
-      }
-      loadFriendsAndRequests();
-    });
+      // Real-Time Friend Request Response (Accepted / Declined)
+      socket.on('friend:response', (data) => {
+        if (data && data.action === 'accept') {
+          showAlertToast(`⚔️ ${data.user?.username || 'Scholar'} accepted your friend request!`, 'success');
+        }
+        loadFriendsAndRequests();
+      });
 
-    // Real-Time Battle Reminder Received (Centered Modal Popup)
-    socket.on('battle:invite', (data) => {
-      const now = Date.now();
-      if (now - lastBattleInviteTime < 1000) return; // ignore duplicate emissions within 1s
-      lastBattleInviteTime = now;
+      // Real-Time Battle Reminder Received (Centered Modal Popup)
+      socket.on('battle:invite', (data) => {
+        const now = Date.now();
+        if (now - lastBattleInviteTime < 1000) return; // ignore duplicate emissions within 1s
+        lastBattleInviteTime = now;
 
-      const senderName = data?.senderName || 'A Scholar';
-      showBattleInviteModal(senderName);
-    });
+        const senderName = data?.senderName || 'A Scholar';
+        showBattleInviteModal(senderName);
+      });
 
-  } catch (err) {
-    console.error('[StudySync Socket Error]:', err.message);
+    } catch (err) {
+      console.error('[StudySync Socket Error]:', err.message);
+    }
+  }
+
+  // If socket already exists, ensure active connection and user registration
+  if (socket) {
+    if (!socket.connected) {
+      socket.connect();
+    } else if (userId && userId !== 'guest_user') {
+      socket.emit('user:register', { userId, username });
+    }
   }
 }
+
+// Auto-reconnect & re-register socket when tab becomes visible
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    initSocketConnection();
+  }
+});
+
+
 
 // Centered Battle Invite Modal Popup
 export function showBattleInviteModal(senderName) {
@@ -944,6 +953,10 @@ function clearPendingAttachment() {
 function handleIncomingDirectMessage(msg) {
   const currentUserId = getMyUserId();
   const senderId = msg.senderId;
+
+  if (senderId === currentUserId) {
+    return;
+  }
 
   // Update friend item in list
   const friend = friendsList.find(f => f.id === senderId);

@@ -809,18 +809,35 @@ function initAuth() {
   // 🚀 PAGE LOAD AUTHORIZATION & SOCIAL OAUTH ROUTER
   if (errorParam) {
     showLoginScreen();
-    showPgAlert('OAuth sign-in was cancelled or failed. Please try again.', 'error');
+    const errorMessages = {
+      google_auth_failed: 'Google sign-in was cancelled or failed. Please try again.',
+      github_auth_failed: 'GitHub sign-in was cancelled or failed. Please try again.',
+      google_oauth_credentials_missing: 'Google OAuth credentials are not configured on the backend.',
+      github_oauth_credentials_missing: 'GitHub OAuth credentials are not configured on the backend.'
+    };
+    showPgAlert(errorMessages[errorParam] || `Authentication failed: ${errorParam}`, 'error');
     window.history.replaceState({}, document.title, window.location.pathname);
-  } else if (pendingOauthParam) {
+  } else if (pendingOauthParam || urlParams.get('oauth_pending')) {
     console.log('[Auth Engine] Pending brand-new OAuth registration token detected.');
     let pendingData = null;
-    try {
-      const parts = pendingOauthParam.split('.');
-      if (parts.length === 3) {
-        pendingData = JSON.parse(atob(parts[1]));
+    if (pendingOauthParam) {
+      try {
+        const parts = pendingOauthParam.split('.');
+        if (parts.length === 3) {
+          pendingData = JSON.parse(atob(parts[1]));
+        }
+      } catch (e) {
+        console.error('[Auth Engine] Failed to decode pending OAuth token', e);
       }
-    } catch (e) {
-      console.error('[Auth Engine] Failed to decode pending OAuth token', e);
+    }
+    if (!pendingData && urlParams.get('oauth_pending')) {
+      pendingData = {
+        provider: urlParams.get('provider') || 'google',
+        providerId: urlParams.get('providerId') || '',
+        email: urlParams.get('email') || '',
+        fullName: urlParams.get('fullName') || '',
+        suggestedUsername: urlParams.get('suggestedUsername') || ''
+      };
     }
 
     showLoginScreen();
@@ -838,13 +855,17 @@ function initAuth() {
       showPgAlert(`Verified ${pendingData.provider ? pendingData.provider.toUpperCase() : 'OAuth'} identity! Please confirm your username to complete registration.`, 'success');
     }
     window.history.replaceState({}, document.title, window.location.pathname);
-  } else if ((ssoParam === 'google' || ssoParam === 'github') && resetToken) {
-    console.log(`[Auth Engine] ${ssoParam.toUpperCase()} OAuth callback detected. Storing session token...`);
+  } else if (((ssoParam === 'google' || ssoParam === 'github') && resetToken) || (resetToken && (urlParams.has('userId') || ssoParam))) {
+    const ssoProvider = ssoParam || 'OAuth';
+    console.log(`[Auth Engine] ${ssoProvider.toUpperCase()} callback detected. Storing session token...`);
     auth.setToken(resetToken);
+    if (urlParams.has('userId')) {
+      auth.setUserId(urlParams.get('userId'));
+    }
     window.history.replaceState({}, document.title, window.location.pathname);
 
     api.getCurrentUser().then(res => {
-      if (res.ok && res.data.user) {
+      if (res.ok && res.data && res.data.user) {
         auth.setUserId(res.data.user.id);
         state.username = res.data.user.username;
         localStorage.setItem('sq_username', res.data.user.username);
@@ -1066,7 +1087,8 @@ function initAuth() {
       if (provider === 'google') {
         showPgAlert('Redirecting to Google OAuth... ⚔️', 'success');
         setTimeout(() => {
-          window.location.href = `${API_BASE}/auth/google`;
+          const originParam = encodeURIComponent(window.location.origin);
+          window.location.href = `${API_BASE}/auth/google?origin=${originParam}`;
         }, 300);
         return;
       }
@@ -1074,7 +1096,8 @@ function initAuth() {
       if (provider === 'github') {
         showPgAlert('Redirecting to GitHub OAuth... 🐙', 'success');
         setTimeout(() => {
-          window.location.href = `${API_BASE}/auth/github`;
+          const originParam = encodeURIComponent(window.location.origin);
+          window.location.href = `${API_BASE}/auth/github?origin=${originParam}`;
         }, 300);
         return;
       }
